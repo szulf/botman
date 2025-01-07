@@ -20,10 +20,10 @@ GameState game_state;
 // gonna leave it for now tbh
 
 // TODO
-// maybe make this easier somehow
+// add ghost eating
 //
 // TODO
-// add ghost eating
+// add winning after eating all pellets on map
 //
 // TODO
 // Add a portal to the passage in the middle of the map
@@ -38,6 +38,13 @@ GameState game_state;
 // TODO
 // think of a complete movement remake
 // so that it works on all fps
+//
+// TODO
+// maybe make this easier somehow
+//
+// TODO
+// maybe add some randomization to ghosts movement
+// dont really know how
 
 // TODO
 // move this
@@ -52,21 +59,21 @@ auto dijkstra(const Vec2& pacman_pos, const Vec2& ghost_pos) -> std::vector<Vec2
     const Vec2 pv = {pacman_pos.x - game_state.MAP_POS.x - 1, pacman_pos.y - game_state.MAP_POS.y - 1};
     const Vec2 gv = {ghost_pos.x - game_state.MAP_POS.x - 1, ghost_pos.y - game_state.MAP_POS.y - 1};
 
-    uint8_t rows = 17;
-    uint8_t cols = 23;
+    constexpr uint8_t rows = 17;
+    constexpr uint8_t cols = 23;
 
-    std::vector<Vec2> directions = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    constexpr std::array directions{Vec2{-1, 0}, Vec2{1, 0}, Vec2{0, -1}, Vec2{0, 1}};
     std::vector<std::vector<int32_t>> dist(rows, std::vector(cols, std::numeric_limits<int32_t>::max()));
     std::vector<std::vector<Vec2>> parent(rows, std::vector(cols, Vec2{-1, -1}));
 
-    auto cmp = [](const Node& a, const Node& b) {return a.cost > b.cost; };
+    constexpr auto cmp = [](const Node& a, const Node& b) {return a.cost > b.cost; };
     std::priority_queue<Node, std::vector<Node>, decltype(cmp)> pq;
     pq.push({gv, 0});
     dist[gv.x][gv.y] = 0;
 
     while (!pq.empty())
     {
-        Node curr = pq.top();
+        const Node curr = pq.top();
         pq.pop();
 
         if (curr.pos.x == pv.x && curr.pos.y == pv.y)
@@ -82,11 +89,11 @@ auto dijkstra(const Vec2& pacman_pos, const Vec2& ghost_pos) -> std::vector<Vec2
 
         for (const auto& dir : directions)
         {
-            Vec2 nv = {curr.pos.x + dir.x, curr.pos.y + dir.y};
+            const Vec2 nv = {curr.pos.x + dir.x, curr.pos.y + dir.y};
 
             if (nv.x >= 0 && nv.x < rows && nv.y >= 0 && nv.y < cols && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::WALL && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::SPAWNER)
             {
-                int new_cost = curr.cost + 1;
+                const int new_cost = curr.cost + 1;
 
                 if (new_cost < dist[nv.x][nv.y])
                 {
@@ -136,10 +143,10 @@ auto main() -> int
         dijkstra(get_grid_from_pos(pacman.get_pos()), get_grid_from_pos(ghosts[4].get_pos())),
     };
 
-    float start_time = GetTime();
+    const float start_time = GetTime();
     while (!WindowShouldClose())
     {
-        float current_frame = GetTime();
+        const float current_frame = GetTime();
         game_state.delta_time = current_frame - last_frame;
         last_frame = current_frame;
 
@@ -227,9 +234,9 @@ auto main() -> int
             {
                 if (IsKeyDown(KEY_LEFT_CONTROL))
                 {
-                        // Place starting player square
-                    Vec2 mouse_pos = GetMousePosition();
-                    Vec2 grid_pos = get_grid_from_pos(mouse_pos);
+                    // Place starting player square
+                    const Vec2 mouse_pos = GetMousePosition();
+                    const Vec2 grid_pos = get_grid_from_pos(mouse_pos);
                     if (game_state.map[grid_pos.x][grid_pos.y] == Tile::EMPTY)
                     {
                         game_state.map[game_state.start_pos.x][game_state.start_pos.y] = Tile::EMPTY;
@@ -240,8 +247,8 @@ auto main() -> int
                 else if (IsKeyDown(KEY_LEFT_SHIFT))
                 {
                     // Place pellets
-                    Vec2 mouse_pos = GetMousePosition();
-                    Vec2 grid_pos = get_grid_from_pos(mouse_pos);
+                    const Vec2 mouse_pos = GetMousePosition();
+                    const Vec2 grid_pos = get_grid_from_pos(mouse_pos);
                     if (game_state.map[grid_pos.x][grid_pos.y] == Tile::EMPTY)
                     {
                         game_state.pellets.push_back(grid_pos);
@@ -251,8 +258,8 @@ auto main() -> int
                 else if (IsKeyDown(KEY_LEFT_ALT))
                 {
                     // Place ghost spawner
-                    Vec2 mouse_pos = GetMousePosition();
-                    Vec2 grid_pos = get_grid_from_pos(mouse_pos);
+                    const Vec2 mouse_pos = GetMousePosition();
+                    const Vec2 grid_pos = get_grid_from_pos(mouse_pos);
                     if (game_state.map[grid_pos.x][grid_pos.y] == Tile::EMPTY)
                     {
                         game_state.map[game_state.spawner_pos.x][game_state.spawner_pos.y] = Tile::EMPTY;
@@ -263,8 +270,8 @@ auto main() -> int
                 else
                 {
                     // Place wall
-                    Vec2 mouse_pos = GetMousePosition();
-                    Vec2 grid_pos = get_grid_from_pos(mouse_pos);
+                    const Vec2 mouse_pos = GetMousePosition();
+                    const Vec2 grid_pos = get_grid_from_pos(mouse_pos);
                     if (game_state.map[grid_pos.x][grid_pos.y] == Tile::EMPTY)
                     {
                         game_state.walls.push_back(grid_pos);
@@ -275,11 +282,11 @@ auto main() -> int
             if (IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
             {
                 // Remove wall and pellets
-                Vec2 mouse_pos = GetMousePosition();
-                Vec2 grid_pos = get_grid_from_pos(mouse_pos);
+                const Vec2 mouse_pos = GetMousePosition();
+                const Vec2 grid_pos = get_grid_from_pos(mouse_pos);
                 if (game_state.map[grid_pos.x][grid_pos.y] == Tile::WALL)
                 {
-                    auto it = std::ranges::find(game_state.walls, grid_pos);
+                    const auto it = std::ranges::find(game_state.walls, grid_pos);
                     if (it != game_state.walls.end())
                     {
                         game_state.walls.erase(it);
@@ -288,7 +295,7 @@ auto main() -> int
                 }
                 else if (game_state.map[grid_pos.x][grid_pos.y] == Tile::PELLET)
                 {
-                    auto it = std::ranges::find(game_state.pellets, grid_pos);
+                    const auto it = std::ranges::find(game_state.pellets, grid_pos);
                     if (it != game_state.pellets.end())
                     {
                         game_state.pellets.erase(it);
@@ -303,13 +310,12 @@ auto main() -> int
 
         draw_boundaries();
 
-        // walls from edit mode and map file
-        for (auto& wall : game_state.walls)
+        for (const auto& wall : game_state.walls)
         {
             draw_wall(wall);
         }
 
-        for (auto& pellet : game_state.pellets)
+        for (const auto& pellet : game_state.pellets)
         {
             draw_pellet(pellet);
         }

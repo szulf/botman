@@ -22,11 +22,11 @@ public:
 
 private:
     Vec2 m_movement{0, 0};
-    Vec2 m_pos;
+    Vec2 m_pos{};
     bool m_moving{false};
 
-    Rectangle m_src_rect;
-    Rectangle m_dest_rect;
+    Rectangle m_src_rect{};
+    Rectangle m_dest_rect{};
 
-    const Texture2D m_sprite;
+    const Texture2D m_sprite{};
 };

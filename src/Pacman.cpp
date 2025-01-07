@@ -5,7 +5,7 @@
 #include "raymath.h"
 #include <print>
 
-Pacman::Pacman(const Vec2& start_pos, std::filesystem::path sprite_path) : m_movement {Vec2{0, 0}}, m_pos{get_pos_from_grid(start_pos)}, m_rotation{0.0f}, m_next_move{Movement::LEFT}, m_time_between_moves{0.0f}, m_sprite{LoadTexture(sprite_path.c_str())}
+Pacman::Pacman(const Vec2& start_pos, std::filesystem::path sprite_path) : m_pos{get_pos_from_grid(start_pos)}, m_next_move{Movement::LEFT}, m_sprite{LoadTexture(sprite_path.c_str())}
 {
     m_src_rect = {0.0f, 0.0f, static_cast<float>(m_sprite.width), static_cast<float>(m_sprite.height)};
     m_dest_rect = {m_pos.x, m_pos.y, static_cast<float>(m_sprite.width), static_cast<float>(m_sprite.height)};
@@ -149,7 +149,7 @@ auto Pacman::update_pos() -> void
     m_dest_rect.y = m_pos.y;
 }
 
-auto Pacman::collides(const Rectangle& rect) -> bool
+auto Pacman::collides(const Rectangle& rect) const -> bool
 {
     return CheckCollisionRecs(m_dest_rect, rect);
 }
