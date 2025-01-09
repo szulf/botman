@@ -54,7 +54,7 @@ auto Ghost::update_pos() -> void
         return;
     }
 
-    m_pos += m_movement * (game_state.delta_time * (game_state.MOVE_SPEED - 20));
+    m_pos += m_movement * (game_state.delta_time * (game_state.MOVE_SPEED * 0.85f));
     m_dest_rect.x = m_pos.x;
     m_dest_rect.y = m_pos.y;
 }

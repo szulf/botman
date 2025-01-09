@@ -20,21 +20,26 @@ enum class Tile
     PELLET,
     START_POS,
     SPAWNER,
+    EATING_BALL,
 };
 
 auto get_grid_from_pos(const Vec2& pos) -> Vec2;
 
-auto get_pos_from_grid(const Vec2& pos) -> Vec2;
+auto get_pos_from_grid(const Vec2& grid_pos) -> Vec2;
 
 auto get_center_of(const Vec2& pos) -> Vec2;
 
 auto in_about_center_of_grid(const Vec2& pos) -> bool;
+
+auto get_opposite_grid_pos(const Vec2& grid_pos) -> Vec2;
 
 auto draw_wall(const Vec2& grid_pos) -> void;
 
 auto draw_spawner() -> void;
 
 auto draw_pellet(const Vec2& grid_pos) -> void;
+
+auto draw_eating_ball(const Vec2& grid_pos) -> void;
 
 auto draw_grid() -> void;
 

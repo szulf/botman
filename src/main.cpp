@@ -8,6 +8,7 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
+#include <numeric>
 #include <print>
 #include <queue>
 #include "raylib.h"
@@ -59,12 +60,9 @@ auto dijkstra(const Vec2& pacman_pos, const Vec2& ghost_pos) -> std::vector<Vec2
     const Vec2 pv = {pacman_pos.x - game_state.MAP_POS.x - 1, pacman_pos.y - game_state.MAP_POS.y - 1};
     const Vec2 gv = {ghost_pos.x - game_state.MAP_POS.x - 1, ghost_pos.y - game_state.MAP_POS.y - 1};
 
-    constexpr uint8_t rows = 17;
-    constexpr uint8_t cols = 23;
-
     constexpr std::array directions{Vec2{-1, 0}, Vec2{1, 0}, Vec2{0, -1}, Vec2{0, 1}};
-    std::vector<std::vector<int32_t>> dist(rows, std::vector(cols, std::numeric_limits<int32_t>::max()));
-    std::vector<std::vector<Vec2>> parent(rows, std::vector(cols, Vec2{-1, -1}));
+    std::vector<std::vector<int32_t>> dist(game_state.MAP_WIDTH, std::vector(game_state.MAP_HEIGHT, std::numeric_limits<int32_t>::max()));
+    std::vector<std::vector<Vec2>> parent(game_state.MAP_WIDTH, std::vector(game_state.MAP_HEIGHT, Vec2{-1, -1}));
 
     constexpr auto cmp = [](const Node& a, const Node& b) {return a.cost > b.cost; };
     std::priority_queue<Node, std::vector<Node>, decltype(cmp)> pq;
@@ -91,7 +89,7 @@ auto dijkstra(const Vec2& pacman_pos, const Vec2& ghost_pos) -> std::vector<Vec2
         {
             const Vec2 nv = {curr.pos.x + dir.x, curr.pos.y + dir.y};
 
-            if (nv.x >= 0 && nv.x < rows && nv.y >= 0 && nv.y < cols && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::WALL && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::SPAWNER)
+            if (nv.x >= 0 && nv.x < game_state.MAP_WIDTH && nv.y >= 0 && nv.y < game_state.MAP_HEIGHT && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::WALL && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::SPAWNER)
             {
                 const int new_cost = curr.cost + 1;
 
@@ -173,6 +171,8 @@ auto main() -> int
         {
             if (editing_mode)
             {
+                // TODO
+                // reset ghosts position here
                 std::ranges::find(game_state.walls, Vec2{1, 2});
                 editing_mode = false;
                 pacman.reset_movement();
@@ -190,7 +190,7 @@ auto main() -> int
             game_state.freeze = false;
         }
 
-        if (!game_state.freeze)
+        if (!game_state.freeze && !editing_mode)
         {
             if (in_about_center_of_grid(pacman.get_pos()))
             {
@@ -208,6 +208,21 @@ auto main() -> int
                     auto it = std::ranges::find(game_state.pellets, pos);
                     game_state.pellets.erase(it);
                 }
+
+                // Collecting eating balls
+                if (game_state.map[pos.x][pos.y] == Tile::EATING_BALL)
+                {
+                    game_state.eating_mode = GetTime() + 5.0f;
+                    game_state.map[pos.x][pos.y] = Tile::EMPTY;
+                    auto it = std::ranges::find(game_state.eating_balls, pos);
+                    game_state.eating_balls.erase(it);
+                }
+
+                // disabling eating mode
+                if (game_state.eating_mode <= GetTime())
+                {
+                    game_state.eating_mode = 0.0f;
+                }
             }
             pacman.update_pos();
 
@@ -220,8 +235,19 @@ auto main() -> int
 
                 if (in_about_center_of_grid(ghost.get_pos()))
                 {
-                    ghost.move(paths[i]);
-                    paths[i] = dijkstra(get_grid_from_pos(pacman.get_pos()), get_grid_from_pos(ghost.get_pos()));
+                    // if in eating mode
+                    if (game_state.eating_mode > GetTime())
+                    {
+                        ghost.move(paths[i]);
+                        const Vec2 opposite_pacman_pos = get_opposite_grid_pos(get_grid_from_pos(pacman.get_pos()));
+                        paths[i] = dijkstra(get_grid_from_pos(opposite_pacman_pos), get_grid_from_pos(ghost.get_pos()));
+                        std::println("{}", paths[i].empty());
+                    }
+                    else
+                    {
+                        ghost.move(paths[i]);
+                        paths[i] = dijkstra(get_grid_from_pos(pacman.get_pos()), get_grid_from_pos(ghost.get_pos()));
+                    }
                 }
                 ghost.update_pos();
                 i++;
@@ -251,8 +277,8 @@ auto main() -> int
                     const Vec2 grid_pos = get_grid_from_pos(mouse_pos);
                     if (game_state.map[grid_pos.x][grid_pos.y] == Tile::EMPTY)
                     {
-                        game_state.pellets.push_back(grid_pos);
                         game_state.map[grid_pos.x][grid_pos.y] = Tile::PELLET;
+                        game_state.pellets.emplace_back(grid_pos);
                     }
                 }
                 else if (IsKeyDown(KEY_LEFT_ALT))
@@ -265,6 +291,17 @@ auto main() -> int
                         game_state.map[game_state.spawner_pos.x][game_state.spawner_pos.y] = Tile::EMPTY;
                         game_state.map[grid_pos.x][grid_pos.y] = Tile::SPAWNER;
                         game_state.spawner_pos = grid_pos;
+                    }
+                }
+                else if (IsKeyDown(KEY_SPACE))
+                {
+                    // Place ghost eating ball
+                    const Vec2 mouse_pos = GetMousePosition();
+                    const Vec2 grid_pos = get_grid_from_pos(mouse_pos);
+                    if (game_state.map[grid_pos.x][grid_pos.y] == Tile::EMPTY)
+                    {
+                        game_state.map[grid_pos.x][grid_pos.y] = Tile::EATING_BALL;
+                        game_state.eating_balls.emplace_back(grid_pos);
                     }
                 }
                 else
@@ -320,6 +357,11 @@ auto main() -> int
             draw_pellet(pellet);
         }
 
+        for (const auto& eating_ball : game_state.eating_balls)
+        {
+            draw_eating_ball(eating_ball);
+        }
+
         draw_grid();
 
         draw_spawner();
@@ -327,18 +369,19 @@ auto main() -> int
         if (!editing_mode)
         {
             pacman.draw();
+
+            for (const auto& ghost : ghosts)
+            {
+                ghost.draw();
+
+                // if (pacman.collides(ghost.get_dest_rect()))
+                // {
+                //     game_state.freeze = true;
+                //     DrawText("you lose!", 200, 200, 50, BLACK);
+                // }
+            }
         }
 
-        for (const auto& ghost : ghosts)
-        {
-            ghost.draw();
-
-            // if (pacman.collides(ghost.get_dest_rect()))
-            // {
-            //     game_state.freeze = true;
-            //     DrawText("you lose!", 200, 200, 50, BLACK);
-            // }
-        }
 
         DrawFPS(10, 10);
         DrawText(std::to_string(game_state.score).c_str(), 100, 100, 20, BLACK);
@@ -347,5 +390,6 @@ auto main() -> int
     }
 
     CloseWindow();
+
     return 0;
 }

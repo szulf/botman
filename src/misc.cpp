@@ -11,21 +11,21 @@ auto get_grid_from_pos(const Vec2& pos) -> Vec2
     return {std::floor(pos.x / game_state.GRID_WIDTH), std::floor(pos.y / game_state.GRID_HEIGHT)};
 }
 
-auto get_pos_from_grid(const Vec2& pos) -> Vec2
+auto get_pos_from_grid(const Vec2& grid_pos) -> Vec2
 {
-    return {(pos.x * game_state.GRID_WIDTH) + (game_state.GRID_WIDTH / 2.0f), (pos.y * game_state.GRID_HEIGHT) + (game_state.GRID_HEIGHT / 2.0f)};
+    return {(grid_pos.x * game_state.GRID_WIDTH) + (game_state.GRID_WIDTH / 2.0f), (grid_pos.y * game_state.GRID_HEIGHT) + (game_state.GRID_HEIGHT / 2.0f)};
 }
 
 auto get_center_of(const Vec2& pos) -> Vec2
 {
-    Vec2 grid_pos = get_grid_from_pos(pos);
+    const Vec2 grid_pos = get_grid_from_pos(pos);
     return {(grid_pos.x * game_state.GRID_WIDTH) + (game_state.GRID_WIDTH / 2.0f), (grid_pos.y * game_state.GRID_HEIGHT) + (game_state.GRID_HEIGHT / 2.0f)};
 }
 
 auto in_about_center_of_grid(const Vec2& pos) -> bool
 {
-    Vec2 about_pos = {std::floor(pos.x), std::floor(pos.y)};
-    Vec2 center_pos = get_center_of(pos);
+    const Vec2 about_pos = {std::floor(pos.x), std::floor(pos.y)};
+    const Vec2 center_pos = get_center_of(pos);
 
     for (int i = 0; i <= 5; i++)
     {
@@ -38,25 +38,39 @@ auto in_about_center_of_grid(const Vec2& pos) -> bool
     return false;
 }
 
+auto get_opposite_grid_pos(const Vec2& grid_pos) -> Vec2
+{
+    const Vec2 local_grid_pos = {grid_pos.x - game_state.MAP_POS.x - 1, grid_pos.y - game_state.MAP_POS.y - 1};
+    std::println("{} {}", game_state.MAP_WIDTH - 2 - local_grid_pos.x, game_state.MAP_HEIGHT - 2 - local_grid_pos.y);
+    return {game_state.MAP_WIDTH - 2 - local_grid_pos.x + game_state.MAP_POS.x + 1, game_state.MAP_HEIGHT - 2 - local_grid_pos.y + game_state.MAP_POS.y + 1};
+}
+
 auto draw_wall(const Vec2& grid_pos) -> void
 {
-    Vec2 pos = get_pos_from_grid(grid_pos);
-    Rectangle rect = {pos.x, pos.y, game_state.GRID_WIDTH, game_state.GRID_HEIGHT};
+    const Vec2 pos = get_pos_from_grid(grid_pos);
+    const Rectangle rect = {pos.x, pos.y, game_state.GRID_WIDTH, game_state.GRID_HEIGHT};
     DrawRectanglePro(rect, {game_state.GRID_WIDTH / 2.0f, game_state.GRID_HEIGHT / 2.0f}, 0.0f, BLACK);
 }
 
 auto draw_spawner() -> void
 {
-    Vec2 pos = get_pos_from_grid(game_state.spawner_pos);
-    Rectangle rect = {pos.x, pos.y, game_state.GRID_WIDTH, game_state.GRID_HEIGHT};
+    const Vec2 pos = get_pos_from_grid(game_state.spawner_pos);
+    const Rectangle rect = {pos.x, pos.y, game_state.GRID_WIDTH, game_state.GRID_HEIGHT};
     DrawRectanglePro(rect, {game_state.GRID_WIDTH / 2.0f, game_state.GRID_HEIGHT / 2.0f}, 0.0f, RED);
 }
 
 auto draw_pellet(const Vec2& grid_pos) -> void
 {
-    Vec2 pos = get_pos_from_grid(grid_pos);
-    Rectangle rect = {pos.x, pos.y, game_state.PELLET_WIDTH, game_state.PELLET_HEIGHT};
+    const Vec2 pos = get_pos_from_grid(grid_pos);
+    const Rectangle rect = {pos.x, pos.y, game_state.PELLET_WIDTH, game_state.PELLET_HEIGHT};
     DrawRectanglePro(rect, {game_state.PELLET_WIDTH / 2.0f, game_state.PELLET_HEIGHT / 2.0f}, 0.0f, BLACK);
+}
+
+auto draw_eating_ball(const Vec2& grid_pos) -> void
+{
+    const Vec2 pos = get_pos_from_grid(grid_pos);
+    const Rectangle rect = {pos.x, pos.y, game_state.EATING_BALL_WIDTH, game_state.EATING_BALL_HEIGHT};
+    DrawRectanglePro(rect, {game_state.EATING_BALL_WIDTH / 2.0f, game_state.EATING_BALL_HEIGHT / 2.0f}, 0.0f, RED);
 }
 
 auto draw_grid() -> void
@@ -122,6 +136,10 @@ auto load_map() -> void
                     game_state.spawner_pos = {static_cast<float>(j) + game_state.MAP_POS.x, static_cast<float>(i) + game_state.MAP_POS.y};
                     game_state.map[j + game_state.MAP_POS.x][i + game_state.MAP_POS.y] = Tile::SPAWNER;
                     break;
+                case 'E':
+                    game_state.eating_balls.push_back({static_cast<float>(j) + game_state.MAP_POS.x, static_cast<float>(i) + game_state.MAP_POS.y});
+                    game_state.map[j + game_state.MAP_POS.x][i + game_state.MAP_POS.y] = Tile::EATING_BALL;
+                    break;
             }
         }
     }
@@ -132,12 +150,10 @@ auto save_map() -> void
     std::ofstream file{ROOT_PATH "/map.txt"};
     file << "#################\n";
 
-    uint8_t rows = 22;
-    uint8_t cols = 17;
-    for (uint8_t i = 1; i <= rows - 2; i++)
+    for (uint8_t i = 1; i <= game_state.MAP_HEIGHT - 2; i++)
     {
         file << "#";
-        for (uint8_t j = 1; j <= cols - 2; j++)
+        for (uint8_t j = 1; j <= game_state.MAP_WIDTH - 2; j++)
         {
             switch (game_state.map[j + game_state.MAP_POS.x][i + game_state.MAP_POS.y])
             {
@@ -155,6 +171,9 @@ auto save_map() -> void
                     break;
                 case Tile::SPAWNER:
                     file << "G";
+                    break;
+                case Tile::EATING_BALL:
+                    file << "E";
                     break;
             }
         }
