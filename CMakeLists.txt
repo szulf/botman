@@ -30,9 +30,9 @@ add_executable(MazeMuncher
     src/main.cpp
     src/raygui_impl.c
     src/GameState.hpp
-    src/Pacman.cpp src/Pacman.hpp
+    src/Robot.cpp src/Robot.hpp
     src/misc.cpp src/misc.hpp
-    src/Ghost.cpp src/Ghost.hpp
+    src/Bug.cpp src/Bug.hpp
 )
 
 if (NOT CMAKE_BUILD_TYPE)

@@ -1,34 +1,33 @@
-#include "Pacman.hpp"
+#include "Robot.hpp"
 #include "GameState.hpp"
 #include "misc.hpp"
 #include "raylib.h"
 #include "raymath.h"
 #include <print>
 
-Pacman::Pacman(const Vec2& start_pos, std::filesystem::path sprite_path) : m_pos{get_pos_from_grid(start_pos)}, m_next_move{Movement::LEFT}, m_sprite{LoadTexture(sprite_path.c_str())}
+Robot::Robot(const Vec2& start_pos, std::filesystem::path sprite_path) : m_pos{get_pos_from_grid(start_pos)}, m_next_move{Movement::LEFT}, m_sprite{LoadTexture(sprite_path.c_str())}
 {
-    m_src_rect = {0.0f, 0.0f, static_cast<float>(m_sprite.width), static_cast<float>(m_sprite.height)};
-    m_dest_rect = {m_pos.x, m_pos.y, static_cast<float>(m_sprite.width), static_cast<float>(m_sprite.height)};
+    m_src_rect = {0, 0, game_state.GRID_WIDTH, game_state.GRID_HEIGHT};
+    m_dest_rect = {m_pos.x, m_pos.y, game_state.GRID_WIDTH, game_state.GRID_HEIGHT};
 }
 
-Pacman::~Pacman()
+Robot::~Robot()
 {
     UnloadTexture(m_sprite);
 }
 
-auto Pacman::draw() const -> void
+auto Robot::draw() const -> void
 {
-    DrawTexturePro(m_sprite, m_src_rect, m_dest_rect, {m_sprite.width / 2.0f, m_sprite.height / 2.0f}, m_rotation, WHITE);
+    DrawTexturePro(m_sprite, m_src_rect, m_dest_rect, {game_state.GRID_WIDTH / 2.0f, game_state.GRID_HEIGHT / 2.0f}, m_rotation, WHITE);
 }
 
-auto Pacman::move(const Movement& movement) -> void
+auto Robot::move(const Movement& movement) -> void
 {
     switch (movement) {
         case Movement::UP:
             if (m_movement == Vec2{0.0f, 1.0f})
             {
                 m_movement = {0.0f, -1.0f};
-                m_rotation = 270.0f;
             }
             else
             {
@@ -41,7 +40,6 @@ auto Pacman::move(const Movement& movement) -> void
             if (m_movement == Vec2{0.0f, -1.0f})
             {
                 m_movement = {0.0f, 1.0f};
-                m_rotation = 90.0f;
             }
             else
             {
@@ -54,7 +52,7 @@ auto Pacman::move(const Movement& movement) -> void
             if (m_movement == Vec2{1.0f, 0.0f})
             {
                 m_movement = {-1.0f, 0.0f};
-                m_rotation = 180.0f;
+                m_src_rect.width = -std::abs(m_src_rect.width);
             }
             else
             {
@@ -67,7 +65,7 @@ auto Pacman::move(const Movement& movement) -> void
             if (m_movement == Vec2{-1.0f, 0.0f})
             {
                 m_movement = {1.0f, 0.0f};
-                m_rotation = 0.0f;
+                m_src_rect.width = std::abs(m_src_rect.width);
             }
             else
             {
@@ -81,14 +79,14 @@ auto Pacman::move(const Movement& movement) -> void
     }
 }
 
-auto Pacman::reset_movement() -> void
+auto Robot::reset_movement() -> void
 {
     m_movement = {0.0f, 0.0f};
     m_next_move = Movement::LEFT;
     m_pos = get_pos_from_grid(game_state.start_pos);
 }
 
-auto Pacman::rotate() -> void
+auto Robot::rotate() -> void
 {
     Vec2 next_pos = get_grid_from_pos(m_pos);
     switch (m_next_move) {
@@ -97,7 +95,6 @@ auto Pacman::rotate() -> void
             if (game_state.map[next_pos.x][next_pos.y] != Tile::WALL && game_state.map[next_pos.x][next_pos.y] != Tile::SPAWNER)
             {
                 m_movement = {0.0f, -1.0f};
-                m_rotation = 270.0f;
                 m_pos = get_center_of(m_pos);
             }
             break;
@@ -106,7 +103,6 @@ auto Pacman::rotate() -> void
             if (game_state.map[next_pos.x][next_pos.y] != Tile::WALL && game_state.map[next_pos.x][next_pos.y] != Tile::SPAWNER)
             {
                 m_movement = {0.0f, 1.0f};
-                m_rotation = 90.0f;
                 m_pos = get_center_of(m_pos);
             }
             break;
@@ -115,8 +111,8 @@ auto Pacman::rotate() -> void
             if (game_state.map[next_pos.x][next_pos.y] != Tile::WALL && game_state.map[next_pos.x][next_pos.y] != Tile::SPAWNER)
             {
                 m_movement = {-1.0f, 0.0f};
-                m_rotation = 180.0f;
                 m_pos = get_center_of(m_pos);
+                m_src_rect.width = -std::abs(m_src_rect.width);
             }
             break;
         case Movement::RIGHT:
@@ -124,8 +120,8 @@ auto Pacman::rotate() -> void
             if (game_state.map[next_pos.x][next_pos.y] != Tile::WALL && game_state.map[next_pos.x][next_pos.y] != Tile::SPAWNER)
             {
                 m_movement = {1.0f, 0.0f};
-                m_rotation = 0.0f;
                 m_pos = get_center_of(m_pos);
+                m_src_rect.width = std::abs(m_src_rect.width);
             }
             break;
         default:
@@ -139,17 +135,28 @@ auto Pacman::rotate() -> void
     {
         m_movement = {0.0f, 0.0f};
         m_pos = get_center_of(m_pos);
+        m_frame = 0;
+    }
+
+    if (m_movement != Vec2{0, 0})
+    {
+        m_frame++;
+        if (m_frame > 3)
+        {
+            m_frame = 0;
+        }
     }
 }
 
-auto Pacman::update_pos() -> void
+auto Robot::update_pos() -> void
 {
     m_pos += m_movement * (game_state.delta_time * game_state.MOVE_SPEED);
     m_dest_rect.x = m_pos.x;
     m_dest_rect.y = m_pos.y;
+    m_src_rect.x = 32 * m_frame;
 }
 
-auto Pacman::collides(const Rectangle& rect) const -> bool
+auto Robot::collides(const Rectangle& rect) const -> bool
 {
     return CheckCollisionRecs(m_dest_rect, rect);
 }

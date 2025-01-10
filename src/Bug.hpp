@@ -4,11 +4,11 @@
 #include <filesystem>
 #include <vector>
 
-class Ghost
+class Bug
 {
 public:
-    Ghost(const Vec2& start_pos, std::filesystem::path sprite_path);
-    ~Ghost();
+    Bug(const Vec2& start_pos, std::filesystem::path sprite_path);
+    ~Bug();
 
     auto draw() const -> void;
     auto move(const std::vector<Vec2>& moves) -> void;
@@ -27,6 +27,7 @@ private:
 
     Rectangle m_src_rect{};
     Rectangle m_dest_rect{};
+    uint8_t m_frame{};
 
     const Texture2D m_sprite{};
 };

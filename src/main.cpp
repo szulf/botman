@@ -1,6 +1,6 @@
 #include "GameState.hpp"
-#include "Ghost.hpp"
-#include "Pacman.hpp"
+#include "Bug.hpp"
+#include "Robot.hpp"
 #include "misc.hpp"
 
 #include <algorithm>
@@ -8,7 +8,6 @@
 #include <cmath>
 #include <cstdint>
 #include <limits>
-#include <numeric>
 #include <print>
 #include <queue>
 #include "raylib.h"
@@ -30,11 +29,6 @@ GameState game_state;
 // Add a portal to the passage in the middle of the map
 // represented as numbers in the map editor
 // dont really know how to do this
-//
-// TODO
-// add animations
-// pacman moves mouth
-// ghosts move eyes
 //
 // TODO
 // think of a complete movement remake
@@ -118,13 +112,13 @@ auto main() -> int
 
     load_map();
 
-    Pacman pacman{game_state.start_pos, ROOT_PATH "/assets/pacman.png"};
-    std::array ghosts = {
-        Ghost{game_state.spawner_pos, ROOT_PATH "/assets/ghost_red.png"},
-        Ghost{game_state.spawner_pos, ROOT_PATH "/assets/ghost_red.png"},
-        Ghost{game_state.spawner_pos, ROOT_PATH "/assets/ghost_red.png"},
-        Ghost{game_state.spawner_pos, ROOT_PATH "/assets/ghost_red.png"},
-        Ghost{game_state.spawner_pos, ROOT_PATH "/assets/ghost_red.png"},
+    Robot robot{game_state.start_pos, ROOT_PATH "/assets/robot.png"};
+    std::array bugs = {
+        Bug{game_state.spawner_pos, ROOT_PATH "/assets/bug.png"},
+        Bug{game_state.spawner_pos, ROOT_PATH "/assets/bug.png"},
+        Bug{game_state.spawner_pos, ROOT_PATH "/assets/bug.png"},
+        Bug{game_state.spawner_pos, ROOT_PATH "/assets/bug.png"},
+        Bug{game_state.spawner_pos, ROOT_PATH "/assets/bug.png"},
     };
 
     bool editing_mode = false;
@@ -134,11 +128,11 @@ auto main() -> int
     SetTargetFPS(game_state.FPS);
 
     auto paths = std::array{
-        dijkstra(get_grid_from_pos(pacman.get_pos()), get_grid_from_pos(ghosts[0].get_pos())),
-        dijkstra(get_grid_from_pos(pacman.get_pos()), get_grid_from_pos(ghosts[1].get_pos())),
-        dijkstra(get_grid_from_pos(pacman.get_pos()), get_grid_from_pos(ghosts[2].get_pos())),
-        dijkstra(get_grid_from_pos(pacman.get_pos()), get_grid_from_pos(ghosts[3].get_pos())),
-        dijkstra(get_grid_from_pos(pacman.get_pos()), get_grid_from_pos(ghosts[4].get_pos())),
+        dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[0].get_pos())),
+        dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[1].get_pos())),
+        dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[2].get_pos())),
+        dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[3].get_pos())),
+        dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[4].get_pos())),
     };
 
     const float start_time = GetTime();
@@ -152,19 +146,19 @@ auto main() -> int
         {
             if (IsKeyPressed(KEY_UP))
             {
-                pacman.move(Movement::UP);
+                robot.move(Movement::UP);
             }
             else if (IsKeyPressed(KEY_DOWN))
             {
-                pacman.move(Movement::DOWN);
+                robot.move(Movement::DOWN);
             }
             else if (IsKeyPressed(KEY_LEFT))
             {
-                pacman.move(Movement::LEFT);
+                robot.move(Movement::LEFT);
             }
             else if (IsKeyPressed(KEY_RIGHT))
             {
-                pacman.move(Movement::RIGHT);
+                robot.move(Movement::RIGHT);
             }
         }
         if (IsKeyPressed(KEY_E))
@@ -175,7 +169,7 @@ auto main() -> int
                 // reset ghosts position here
                 std::ranges::find(game_state.walls, Vec2{1, 2});
                 editing_mode = false;
-                pacman.reset_movement();
+                robot.reset_movement();
                 save_map();
             }
             else
@@ -192,15 +186,15 @@ auto main() -> int
 
         if (!game_state.freeze && !editing_mode)
         {
-            if (in_about_center_of_grid(pacman.get_pos()))
+            if (in_about_center_of_grid(robot.get_pos()))
             {
                 // TODO
                 // maybe change this function name
                 // and separate wall check
-                pacman.rotate();
+                robot.rotate();
 
                 // Collecting pellets
-                Vec2 pos = get_grid_from_pos(pacman.get_pos());
+                Vec2 pos = get_grid_from_pos(robot.get_pos());
                 if (game_state.map[pos.x][pos.y] == Tile::PELLET)
                 {
                     game_state.score += 10;
@@ -224,9 +218,9 @@ auto main() -> int
                     game_state.eating_mode = 0.0f;
                 }
             }
-            pacman.update_pos();
+            robot.update_pos();
 
-            for (uint8_t i = 0; auto& ghost : ghosts)
+            for (uint8_t i = 0; auto& ghost : bugs)
             {
                 if (current_frame - start_time > (i + 1) * 2)
                 {
@@ -239,14 +233,13 @@ auto main() -> int
                     if (game_state.eating_mode > GetTime())
                     {
                         ghost.move(paths[i]);
-                        const Vec2 opposite_pacman_pos = get_opposite_grid_pos(get_grid_from_pos(pacman.get_pos()));
+                        const Vec2 opposite_pacman_pos = get_opposite_grid_pos(get_grid_from_pos(robot.get_pos()));
                         paths[i] = dijkstra(get_grid_from_pos(opposite_pacman_pos), get_grid_from_pos(ghost.get_pos()));
-                        std::println("{}", paths[i].empty());
                     }
                     else
                     {
                         ghost.move(paths[i]);
-                        paths[i] = dijkstra(get_grid_from_pos(pacman.get_pos()), get_grid_from_pos(ghost.get_pos()));
+                        paths[i] = dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(ghost.get_pos()));
                     }
                 }
                 ghost.update_pos();
@@ -368,9 +361,9 @@ auto main() -> int
 
         if (!editing_mode)
         {
-            pacman.draw();
+            robot.draw();
 
-            for (const auto& ghost : ghosts)
+            for (const auto& ghost : bugs)
             {
                 ghost.draw();
 
