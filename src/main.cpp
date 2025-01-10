@@ -20,10 +20,10 @@ GameState game_state;
 // gonna leave it for now tbh
 
 // TODO
-// add ghost eating
+// add bug smashing
 //
 // TODO
-// add winning after eating all pellets on map
+// add winning after collecting all pellets on map
 //
 // TODO
 // Add a portal to the passage in the middle of the map
@@ -38,7 +38,7 @@ GameState game_state;
 // maybe make this easier somehow
 //
 // TODO
-// maybe add some randomization to ghosts movement
+// maybe add some randomization to bugs movement
 // dont really know how
 
 // TODO
@@ -49,10 +49,10 @@ struct Node
     int32_t cost;
 };
 
-auto dijkstra(const Vec2& pacman_pos, const Vec2& ghost_pos) -> std::vector<Vec2>
+auto dijkstra(const Vec2& robot_pos, const Vec2& bug_pos) -> std::vector<Vec2>
 {
-    const Vec2 pv = {pacman_pos.x - game_state.MAP_POS.x - 1, pacman_pos.y - game_state.MAP_POS.y - 1};
-    const Vec2 gv = {ghost_pos.x - game_state.MAP_POS.x - 1, ghost_pos.y - game_state.MAP_POS.y - 1};
+    const Vec2 pv = {robot_pos.x - game_state.MAP_POS.x - 1, robot_pos.y - game_state.MAP_POS.y - 1};
+    const Vec2 bv = {bug_pos.x - game_state.MAP_POS.x - 1, bug_pos.y - game_state.MAP_POS.y - 1};
 
     constexpr std::array directions{Vec2{-1, 0}, Vec2{1, 0}, Vec2{0, -1}, Vec2{0, 1}};
     std::vector<std::vector<int32_t>> dist(game_state.MAP_WIDTH, std::vector(game_state.MAP_HEIGHT, std::numeric_limits<int32_t>::max()));
@@ -60,8 +60,8 @@ auto dijkstra(const Vec2& pacman_pos, const Vec2& ghost_pos) -> std::vector<Vec2
 
     constexpr auto cmp = [](const Node& a, const Node& b) {return a.cost > b.cost; };
     std::priority_queue<Node, std::vector<Node>, decltype(cmp)> pq;
-    pq.push({gv, 0});
-    dist[gv.x][gv.y] = 0;
+    pq.push({bv, 0});
+    dist[bv.x][bv.y] = 0;
 
     while (!pq.empty())
     {
@@ -71,7 +71,7 @@ auto dijkstra(const Vec2& pacman_pos, const Vec2& ghost_pos) -> std::vector<Vec2
         if (curr.pos.x == pv.x && curr.pos.y == pv.y)
         {
             std::vector<Vec2> path;
-            for (auto at = pv; at != gv; at = parent[at.x][at.y])
+            for (auto at = pv; at != bv; at = parent[at.x][at.y])
             {
                 path.push_back(at);
             }
@@ -83,7 +83,7 @@ auto dijkstra(const Vec2& pacman_pos, const Vec2& ghost_pos) -> std::vector<Vec2
         {
             const Vec2 nv = {curr.pos.x + dir.x, curr.pos.y + dir.y};
 
-            if (nv.x >= 0 && nv.x < game_state.MAP_WIDTH && nv.y >= 0 && nv.y < game_state.MAP_HEIGHT && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::WALL && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::SPAWNER)
+            if ((nv.x >= 0 && nv.x < game_state.MAP_WIDTH && nv.y >= 0 && nv.y < game_state.MAP_HEIGHT && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::WALL && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::SPAWNER) || (nv == pv && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] == Tile::WALL))
             {
                 const int new_cost = curr.cost + 1;
 
@@ -166,7 +166,7 @@ auto main() -> int
             if (editing_mode)
             {
                 // TODO
-                // reset ghosts position here
+                // reset bugs position here
                 std::ranges::find(game_state.walls, Vec2{1, 2});
                 editing_mode = false;
                 robot.reset_movement();
@@ -203,46 +203,46 @@ auto main() -> int
                     game_state.pellets.erase(it);
                 }
 
-                // Collecting eating balls
-                if (game_state.map[pos.x][pos.y] == Tile::EATING_BALL)
+                // Collecting hammers
+                if (game_state.map[pos.x][pos.y] == Tile::HAMMER)
                 {
-                    game_state.eating_mode = GetTime() + 5.0f;
+                    game_state.smashing_mode = GetTime() + 5.0f;
                     game_state.map[pos.x][pos.y] = Tile::EMPTY;
-                    auto it = std::ranges::find(game_state.eating_balls, pos);
-                    game_state.eating_balls.erase(it);
+                    auto it = std::ranges::find(game_state.hammers, pos);
+                    game_state.hammers.erase(it);
                 }
 
-                // disabling eating mode
-                if (game_state.eating_mode <= GetTime())
+                // disabling smashing mode
+                if (game_state.smashing_mode <= GetTime())
                 {
-                    game_state.eating_mode = 0.0f;
+                    game_state.smashing_mode = 0.0f;
                 }
             }
             robot.update_pos();
 
-            for (uint8_t i = 0; auto& ghost : bugs)
+            for (uint8_t i = 0; auto& bug : bugs)
             {
                 if (current_frame - start_time > (i + 1) * 2)
                 {
-                    ghost.start_moving();
+                    bug.start_moving();
                 }
 
-                if (in_about_center_of_grid(ghost.get_pos()))
+                if (in_about_center_of_grid(bug.get_pos()))
                 {
                     // if in eating mode
-                    if (game_state.eating_mode > GetTime())
+                    if (game_state.smashing_mode > GetTime())
                     {
-                        ghost.move(paths[i]);
+                        bug.move(paths[i]);
                         const Vec2 opposite_pacman_pos = get_opposite_grid_pos(get_grid_from_pos(robot.get_pos()));
-                        paths[i] = dijkstra(get_grid_from_pos(opposite_pacman_pos), get_grid_from_pos(ghost.get_pos()));
+                        paths[i] = dijkstra(opposite_pacman_pos, get_grid_from_pos(bug.get_pos()));
                     }
                     else
                     {
-                        ghost.move(paths[i]);
-                        paths[i] = dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(ghost.get_pos()));
+                        bug.move(paths[i]);
+                        paths[i] = dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bug.get_pos()));
                     }
                 }
-                ghost.update_pos();
+                bug.update_pos();
                 i++;
             }
         }
@@ -276,7 +276,7 @@ auto main() -> int
                 }
                 else if (IsKeyDown(KEY_LEFT_ALT))
                 {
-                    // Place ghost spawner
+                    // Place bug spawner
                     const Vec2 mouse_pos = GetMousePosition();
                     const Vec2 grid_pos = get_grid_from_pos(mouse_pos);
                     if (game_state.map[grid_pos.x][grid_pos.y] == Tile::EMPTY)
@@ -288,13 +288,13 @@ auto main() -> int
                 }
                 else if (IsKeyDown(KEY_SPACE))
                 {
-                    // Place ghost eating ball
+                    // Place bug eating ball
                     const Vec2 mouse_pos = GetMousePosition();
                     const Vec2 grid_pos = get_grid_from_pos(mouse_pos);
                     if (game_state.map[grid_pos.x][grid_pos.y] == Tile::EMPTY)
                     {
-                        game_state.map[grid_pos.x][grid_pos.y] = Tile::EATING_BALL;
-                        game_state.eating_balls.emplace_back(grid_pos);
+                        game_state.map[grid_pos.x][grid_pos.y] = Tile::HAMMER;
+                        game_state.hammers.emplace_back(grid_pos);
                     }
                 }
                 else
@@ -350,7 +350,7 @@ auto main() -> int
             draw_pellet(pellet);
         }
 
-        for (const auto& eating_ball : game_state.eating_balls)
+        for (const auto& eating_ball : game_state.hammers)
         {
             draw_eating_ball(eating_ball);
         }
@@ -363,11 +363,11 @@ auto main() -> int
         {
             robot.draw();
 
-            for (const auto& ghost : bugs)
+            for (const auto& bug : bugs)
             {
-                ghost.draw();
+                bug.draw();
 
-                // if (pacman.collides(ghost.get_dest_rect()))
+                // if (pacman.collides(bug.get_dest_rect()))
                 // {
                 //     game_state.freeze = true;
                 //     DrawText("you lose!", 200, 200, 50, BLACK);

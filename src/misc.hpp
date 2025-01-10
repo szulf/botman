@@ -20,7 +20,7 @@ enum class Tile
     PELLET,
     START_POS,
     SPAWNER,
-    EATING_BALL,
+    HAMMER,
 };
 
 auto get_grid_from_pos(const Vec2& pos) -> Vec2;

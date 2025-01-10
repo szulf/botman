@@ -41,6 +41,13 @@ auto Bug::move(const std::vector<Vec2>& moves) -> void
     const Vec2 last_movement = m_movement;
     m_movement = moves[0] - grid_pos;
 
+    const Vec2 next_pos = grid_pos + m_movement;
+    if (game_state.map[next_pos.x + game_state.MAP_POS.x + 1][next_pos.y + game_state.MAP_POS.y + 1] == Tile::WALL)
+    {
+        m_movement = {0, 0};
+        m_frame = 0;
+    }
+
     if (last_movement != m_movement)
     {
         m_pos = get_center_of(m_pos);

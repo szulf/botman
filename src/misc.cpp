@@ -41,8 +41,7 @@ auto in_about_center_of_grid(const Vec2& pos) -> bool
 auto get_opposite_grid_pos(const Vec2& grid_pos) -> Vec2
 {
     const Vec2 local_grid_pos = {grid_pos.x - game_state.MAP_POS.x - 1, grid_pos.y - game_state.MAP_POS.y - 1};
-    std::println("{} {}", game_state.MAP_WIDTH - 2 - local_grid_pos.x, game_state.MAP_HEIGHT - 2 - local_grid_pos.y);
-    return {game_state.MAP_WIDTH - 2 - local_grid_pos.x + game_state.MAP_POS.x + 1, game_state.MAP_HEIGHT - 2 - local_grid_pos.y + game_state.MAP_POS.y + 1};
+    return {game_state.MAP_WIDTH - 2 - local_grid_pos.x + game_state.MAP_POS.x, game_state.MAP_HEIGHT - 2 - local_grid_pos.y + game_state.MAP_POS.y};
 }
 
 auto draw_wall(const Vec2& grid_pos) -> void
@@ -136,9 +135,9 @@ auto load_map() -> void
                     game_state.spawner_pos = {static_cast<float>(j) + game_state.MAP_POS.x, static_cast<float>(i) + game_state.MAP_POS.y};
                     game_state.map[j + game_state.MAP_POS.x][i + game_state.MAP_POS.y] = Tile::SPAWNER;
                     break;
-                case 'E':
-                    game_state.eating_balls.push_back({static_cast<float>(j) + game_state.MAP_POS.x, static_cast<float>(i) + game_state.MAP_POS.y});
-                    game_state.map[j + game_state.MAP_POS.x][i + game_state.MAP_POS.y] = Tile::EATING_BALL;
+                case 'H':
+                    game_state.hammers.push_back({static_cast<float>(j) + game_state.MAP_POS.x, static_cast<float>(i) + game_state.MAP_POS.y});
+                    game_state.map[j + game_state.MAP_POS.x][i + game_state.MAP_POS.y] = Tile::HAMMER;
                     break;
             }
         }
@@ -172,8 +171,8 @@ auto save_map() -> void
                 case Tile::SPAWNER:
                     file << "G";
                     break;
-                case Tile::EATING_BALL:
-                    file << "E";
+                case Tile::HAMMER:
+                    file << "H";
                     break;
             }
         }

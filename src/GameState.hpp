@@ -33,12 +33,12 @@ struct GameState
     int32_t score{0};
     float delta_time{0.0f};
     bool freeze{false};
-    float eating_mode{0.0f};
+    float smashing_mode{0.0f};
 
     std::array<std::array<Tile, HEIGHT / GRID_HEIGHT>, WIDTH / GRID_WIDTH> map{};
     std::vector<Vec2> walls{};
     std::vector<Vec2> pellets{};
-    std::vector<Vec2> eating_balls{};
+    std::vector<Vec2> hammers{};
 };
 
 extern GameState game_state;
