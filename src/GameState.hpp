@@ -9,7 +9,7 @@ struct GameState
 {
     static constexpr uint16_t WIDTH{1920};
     static constexpr uint16_t HEIGHT{1080};
-    static constexpr uint16_t FPS{0};
+    static constexpr uint16_t FPS{165};
 
     static constexpr uint8_t GRID_WIDTH{32};
     static constexpr uint8_t GRID_HEIGHT{32};

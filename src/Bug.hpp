@@ -14,16 +14,17 @@ public:
     auto move(const std::vector<Vec2>& moves) -> void;
     auto update_pos() -> void;
 
-    inline auto start_moving() -> void { m_moving = true; }
+    inline auto live() -> void { m_alive = true; }
+    inline auto die() -> void { m_alive = false; }
 
     inline auto get_pos() const -> const Vec2& { return m_pos; }
 
-    inline auto get_dest_rect() const -> const Rectangle& { return m_dest_rect; }
+    inline auto get_rect() const -> const Rectangle& { return m_dest_rect; }
 
 private:
     Vec2 m_movement{0, 0};
     Vec2 m_pos{};
-    bool m_moving{false};
+    bool m_alive{true};
 
     Rectangle m_src_rect{};
     Rectangle m_dest_rect{};

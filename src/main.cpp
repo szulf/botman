@@ -7,9 +7,7 @@
 #include <array>
 #include <cmath>
 #include <cstdint>
-#include <limits>
 #include <print>
-#include <queue>
 #include "raylib.h"
 #include "raymath.h"
 
@@ -36,69 +34,17 @@ GameState game_state;
 //
 // TODO
 // maybe make this easier somehow
+// might not be necessary anymore
 //
 // TODO
 // maybe add some randomization to bugs movement
 // dont really know how
-
+//
 // TODO
-// move this
-struct Node
-{
-    Vec2 pos;
-    int32_t cost;
-};
-
-auto dijkstra(const Vec2& robot_pos, const Vec2& bug_pos) -> std::vector<Vec2>
-{
-    const Vec2 pv = {robot_pos.x - game_state.MAP_POS.x - 1, robot_pos.y - game_state.MAP_POS.y - 1};
-    const Vec2 bv = {bug_pos.x - game_state.MAP_POS.x - 1, bug_pos.y - game_state.MAP_POS.y - 1};
-
-    constexpr std::array directions{Vec2{-1, 0}, Vec2{1, 0}, Vec2{0, -1}, Vec2{0, 1}};
-    std::vector<std::vector<int32_t>> dist(game_state.MAP_WIDTH, std::vector(game_state.MAP_HEIGHT, std::numeric_limits<int32_t>::max()));
-    std::vector<std::vector<Vec2>> parent(game_state.MAP_WIDTH, std::vector(game_state.MAP_HEIGHT, Vec2{-1, -1}));
-
-    constexpr auto cmp = [](const Node& a, const Node& b) {return a.cost > b.cost; };
-    std::priority_queue<Node, std::vector<Node>, decltype(cmp)> pq;
-    pq.push({bv, 0});
-    dist[bv.x][bv.y] = 0;
-
-    while (!pq.empty())
-    {
-        const Node curr = pq.top();
-        pq.pop();
-
-        if (curr.pos.x == pv.x && curr.pos.y == pv.y)
-        {
-            std::vector<Vec2> path;
-            for (auto at = pv; at != bv; at = parent[at.x][at.y])
-            {
-                path.push_back(at);
-            }
-            std::ranges::reverse(path);
-            return path;
-        }
-
-        for (const auto& dir : directions)
-        {
-            const Vec2 nv = {curr.pos.x + dir.x, curr.pos.y + dir.y};
-
-            if ((nv.x >= 0 && nv.x < game_state.MAP_WIDTH && nv.y >= 0 && nv.y < game_state.MAP_HEIGHT && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::WALL && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::SPAWNER) || (nv == pv && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] == Tile::WALL))
-            {
-                const int new_cost = curr.cost + 1;
-
-                if (new_cost < dist[nv.x][nv.y])
-                {
-                    dist[nv.x][nv.y] = new_cost;
-                    pq.push({nv, new_cost});
-                    parent[nv.x][nv.y] = curr.pos;
-                }
-            }
-        }
-    }
-
-    return {};
-}
+// make a gui for the map editor
+//
+// TODO
+// make a gui for the entrance screen
 
 auto main() -> int
 {
@@ -128,14 +74,14 @@ auto main() -> int
     SetTargetFPS(game_state.FPS);
 
     auto paths = std::array{
-        dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[0].get_pos())),
-        dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[1].get_pos())),
-        dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[2].get_pos())),
-        dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[3].get_pos())),
-        dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[4].get_pos())),
+        find_shortest_path(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[0].get_pos())),
+        find_shortest_path(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[1].get_pos())),
+        find_shortest_path(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[2].get_pos())),
+        find_shortest_path(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[3].get_pos())),
+        find_shortest_path(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bugs[4].get_pos())),
     };
 
-    const float start_time = GetTime();
+    // const float start_time = GetTime();
     while (!WindowShouldClose())
     {
         const float current_frame = GetTime();
@@ -167,7 +113,7 @@ auto main() -> int
             {
                 // TODO
                 // reset bugs position here
-                std::ranges::find(game_state.walls, Vec2{1, 2});
+                // dont know if necessary
                 editing_mode = false;
                 robot.reset_movement();
                 save_map();
@@ -222,10 +168,12 @@ auto main() -> int
 
             for (uint8_t i = 0; auto& bug : bugs)
             {
-                if (current_frame - start_time > (i + 1) * 2)
-                {
-                    bug.start_moving();
-                }
+                // TODO
+                // need to change this
+                // if (current_frame - start_time > (i + 1) * 2)
+                // {
+                //     bug.live();
+                // }
 
                 if (in_about_center_of_grid(bug.get_pos()))
                 {
@@ -234,14 +182,24 @@ auto main() -> int
                     {
                         bug.move(paths[i]);
                         const Vec2 opposite_pacman_pos = get_opposite_grid_pos(get_grid_from_pos(robot.get_pos()));
-                        paths[i] = dijkstra(opposite_pacman_pos, get_grid_from_pos(bug.get_pos()));
+                        paths[i] = find_shortest_path(opposite_pacman_pos, get_grid_from_pos(bug.get_pos()));
                     }
                     else
                     {
                         bug.move(paths[i]);
-                        paths[i] = dijkstra(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bug.get_pos()));
+                        paths[i] = find_shortest_path(get_grid_from_pos(robot.get_pos()), get_grid_from_pos(bug.get_pos()));
                     }
                 }
+
+                // if in eating mode
+                if (game_state.smashing_mode > GetTime())
+                {
+                    if (robot.collides(bug.get_rect()))
+                    {
+                        bug.die();
+                    }
+                }
+
                 bug.update_pos();
                 i++;
             }
@@ -332,6 +290,15 @@ auto main() -> int
                         game_state.map[grid_pos.x][grid_pos.y] = Tile::EMPTY;
                     }
                 }
+                else if (game_state.map[grid_pos.x][grid_pos.y] == Tile::HAMMER)
+                {
+                    const auto it = std::ranges::find(game_state.hammers, grid_pos);
+                    if (it != game_state.pellets.end())
+                    {
+                        game_state.hammers.erase(it);
+                        game_state.map[grid_pos.x][grid_pos.y] = Tile::EMPTY;
+                    }
+                }
             }
         }
 
@@ -350,9 +317,9 @@ auto main() -> int
             draw_pellet(pellet);
         }
 
-        for (const auto& eating_ball : game_state.hammers)
+        for (const auto& hammer : game_state.hammers)
         {
-            draw_eating_ball(eating_ball);
+            draw_hammer(hammer);
         }
 
         draw_grid();

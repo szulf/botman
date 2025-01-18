@@ -2,9 +2,11 @@
 #include "GameState.hpp"
 #include "raylib.h"
 #include "raymath.h"
+#include <algorithm>
 #include <cmath>
 #include <print>
 #include <fstream>
+#include <queue>
 
 auto get_grid_from_pos(const Vec2& pos) -> Vec2
 {
@@ -65,7 +67,7 @@ auto draw_pellet(const Vec2& grid_pos) -> void
     DrawRectanglePro(rect, {game_state.PELLET_WIDTH / 2.0f, game_state.PELLET_HEIGHT / 2.0f}, 0.0f, BLACK);
 }
 
-auto draw_eating_ball(const Vec2& grid_pos) -> void
+auto draw_hammer(const Vec2& grid_pos) -> void
 {
     const Vec2 pos = get_pos_from_grid(grid_pos);
     const Rectangle rect = {pos.x, pos.y, game_state.EATING_BALL_WIDTH, game_state.EATING_BALL_HEIGHT};
@@ -180,4 +182,55 @@ auto save_map() -> void
     }
 
     file << "#################\n";
+}
+
+auto find_shortest_path(const Vec2& robot_pos, const Vec2& bug_pos) -> std::vector<Vec2>
+{
+    const Vec2 pv = {robot_pos.x - game_state.MAP_POS.x - 1, robot_pos.y - game_state.MAP_POS.y - 1};
+    const Vec2 bv = {bug_pos.x - game_state.MAP_POS.x - 1, bug_pos.y - game_state.MAP_POS.y - 1};
+
+    constexpr std::array directions{Vec2{-1, 0}, Vec2{1, 0}, Vec2{0, -1}, Vec2{0, 1}};
+    std::vector<std::vector<int32_t>> dist{game_state.MAP_WIDTH, std::vector(game_state.MAP_HEIGHT, std::numeric_limits<int32_t>::max())};
+    std::vector<std::vector<Vec2>> parent(game_state.MAP_WIDTH, std::vector(game_state.MAP_HEIGHT, Vec2{-1, -1}));
+
+    constexpr auto cmp = [](const Node& a, const Node& b) {return a.cost > b.cost; };
+    std::priority_queue<Node, std::vector<Node>, decltype(cmp)> pq;
+    pq.push({bv, 0});
+    dist[bv.x][bv.y] = 0;
+
+    while (!pq.empty())
+    {
+        const Node curr = pq.top();
+        pq.pop();
+
+        if (curr.pos.x == pv.x && curr.pos.y == pv.y)
+        {
+            std::vector<Vec2> path;
+            for (auto at = pv; at != bv; at = parent[at.x][at.y])
+            {
+                path.push_back(at);
+            }
+            std::ranges::reverse(path);
+            return path;
+        }
+
+        for (const auto& dir : directions)
+        {
+            const Vec2 nv = {curr.pos.x + dir.x, curr.pos.y + dir.y};
+
+            if ((nv.x >= 0 && nv.x < game_state.MAP_WIDTH && nv.y >= 0 && nv.y < game_state.MAP_HEIGHT && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::WALL && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] != Tile::SPAWNER) || (nv == pv && game_state.map[nv.x + game_state.MAP_POS.x + 1][nv.y + game_state.MAP_POS.y + 1] == Tile::WALL))
+            {
+                const int new_cost = curr.cost + 1;
+
+                if (new_cost < dist[nv.x][nv.y])
+                {
+                    dist[nv.x][nv.y] = new_cost;
+                    pq.push({nv, new_cost});
+                    parent[nv.x][nv.y] = curr.pos;
+                }
+            }
+        }
+    }
+
+    return {};
 }

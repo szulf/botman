@@ -23,7 +23,7 @@ auto Bug::draw() const -> void
 
 auto Bug::move(const std::vector<Vec2>& moves) -> void
 {
-    if (!m_moving)
+    if (!m_alive)
     {
         return;
     }
@@ -71,7 +71,7 @@ auto Bug::move(const std::vector<Vec2>& moves) -> void
 
 auto Bug::update_pos() -> void
 {
-    if (!m_moving)
+    if (!m_alive)
     {
         return;
     }

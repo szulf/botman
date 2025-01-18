@@ -137,15 +137,6 @@ auto Robot::rotate() -> void
         m_pos = get_center_of(m_pos);
         m_frame = 0;
     }
-
-    if (m_movement != Vec2{0, 0})
-    {
-        m_frame++;
-        if (m_frame > 3)
-        {
-            m_frame = 0;
-        }
-    }
 }
 
 auto Robot::update_pos() -> void

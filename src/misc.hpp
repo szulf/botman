@@ -1,6 +1,8 @@
 #pragma once
 
 #include "raylib.h"
+#include <cstdint>
+#include <vector>
 
 typedef Vector2 Vec2;
 
@@ -39,7 +41,7 @@ auto draw_spawner() -> void;
 
 auto draw_pellet(const Vec2& grid_pos) -> void;
 
-auto draw_eating_ball(const Vec2& grid_pos) -> void;
+auto draw_hammer(const Vec2& grid_pos) -> void;
 
 auto draw_grid() -> void;
 
@@ -48,3 +50,10 @@ auto draw_boundaries() -> void;
 auto load_map() -> void;
 
 auto save_map() -> void;
+
+struct Node
+{
+    Vec2 pos;
+    int32_t cost;
+};
+auto find_shortest_path(const Vec2& robot_pos, const Vec2& bug_pos) -> std::vector<Vec2>;
