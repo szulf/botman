@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project(MazeMuncher
+project(botman
     VERSION 1.0
     LANGUAGES CXX C
 )
@@ -26,13 +26,12 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(raylib raygui)
 
-add_executable(MazeMuncher
+add_executable(botman
     src/main.cpp
-    src/raygui_impl.c
-    src/GameState.hpp
-    src/Robot.cpp src/Robot.hpp
-    src/misc.cpp src/misc.hpp
-    src/Bug.cpp src/Bug.hpp
+    src/constants.hpp
+    src/game.cpp src/game.hpp
+    src/map.cpp src/map.hpp
+    src/texture_manager.cpp src/texture_manager.hpp
 )
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -45,6 +44,6 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
 endif()
 
-target_link_libraries(MazeMuncher PUBLIC raylib)
-target_include_directories(MazeMuncher PRIVATE ${FETCHCONTENT_BASE_DIR}/raygui-src/src)
-target_compile_definitions(MazeMuncher PRIVATE ROOT_PATH="${CMAKE_SOURCE_DIR}")
+target_link_libraries(botman PUBLIC raylib)
+target_include_directories(botman PRIVATE ${FETCHCONTENT_BASE_DIR}/raygui-src/src)
+target_compile_definitions(botman PRIVATE ROOT_PATH="${CMAKE_SOURCE_DIR}")
