@@ -5,15 +5,6 @@
 namespace botman
 {
 
-TextureManager::TextureManager(std::span<std::string> texture_ids)
-{
-    for (const auto& t_id : texture_ids)
-    {
-        auto texture = ::LoadTexture((ROOT_PATH "/assets/" + t_id).c_str());
-        m_cache[t_id] = texture;
-    }
-}
-
 TextureManager::~TextureManager()
 {
     for (const auto& [_, texture] : m_cache)
@@ -39,6 +30,18 @@ auto TextureManager::load_texture(const std::string& texture_id) -> void
     {
         auto texture = ::LoadTexture((ROOT_PATH "/assets/" + texture_id).c_str());
         m_cache[texture_id] = texture;
+    }
+}
+
+auto TextureManager::load_texture(std::span<std::string> texture_ids) -> void
+{
+    for (const auto& texture_id : texture_ids)
+    {
+        if (!m_cache.contains(texture_id))
+        {
+            auto texture = ::LoadTexture((ROOT_PATH "/assets/" + texture_id).c_str());
+            m_cache[texture_id] = texture;
+        }
     }
 }
 

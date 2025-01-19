@@ -40,7 +40,9 @@ public:
     auto in_about_center(const vec2& pos) const -> bool;
 
     inline auto get_start_pos() const -> const vec2& { return m_start_pos; }
-    inline auto get_tiles() const -> const std::array<std::array<Tile, constants::MAP_HEIGHT>, constants::MAP_WIDTH>& { return m_tiles; }
+    inline auto get_tiles() -> std::array<std::array<Tile, constants::MAP_HEIGHT>, constants::MAP_WIDTH>& { return m_tiles; }
+    inline auto get_pellets() -> std::vector<vec2>& { return m_pellets; }
+    inline auto get_hammers() -> std::vector<vec2>& { return m_hammers; }
 
 private:
     auto m_draw_grid() const -> void;

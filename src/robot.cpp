@@ -43,9 +43,9 @@ auto Robot::move(const Movement& movement) -> void
             break;
 
         case Movement::LEFT:
-            if (m_movement == vec2{-1, 0})
+            if (m_movement == vec2{1, 0})
             {
-                m_movement = {1, 0};
+                m_movement = {-1, 0};
             }
             else
             {
@@ -55,9 +55,9 @@ auto Robot::move(const Movement& movement) -> void
             break;
 
         case Movement::RIGHT:
-            if (m_movement == vec2{1, 0})
+            if (m_movement == vec2{-1, 0})
             {
-                m_movement = {-1, 0};
+                m_movement = {1, 0};
             }
             else
             {
@@ -85,60 +85,55 @@ auto Robot::rotate() -> bool
         case Movement::LEFT: {
             vec2 next_movement = {-1, 0};
             auto next_pos = grid_pos + next_movement;
-            if (m_map.get_tiles()[next_pos.x][next_pos.y] == Tile::WALL || m_map.get_tiles()[next_pos.x][next_pos.y] == Tile::SPAWNER)
+            if (m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::WALL && m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::SPAWNER)
             {
-                return false;
+                m_movement = next_movement;
+                center_pos();
+                m_next_move = Movement::NONE;
             }
-            m_movement = next_movement;
-            center_pos();
-            return true;
             break;
         }
 
         case Movement::RIGHT: {
             vec2 next_movement = {1, 0};
             auto next_pos = grid_pos + next_movement;
-            if (m_map.get_tiles()[next_pos.x][next_pos.y] == Tile::WALL || m_map.get_tiles()[next_pos.x][next_pos.y] == Tile::SPAWNER)
+            if (m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::WALL && m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::SPAWNER)
             {
-                return false;
+                m_movement = next_movement;
+                center_pos();
+                m_next_move = Movement::NONE;
             }
-            m_movement = next_movement;
-            center_pos();
-            return true;
             break;
         }
 
         case Movement::UP: {
             vec2 next_movement = {0, -1};
             auto next_pos = grid_pos + next_movement;
-            if (m_map.get_tiles()[next_pos.x][next_pos.y] == Tile::WALL || m_map.get_tiles()[next_pos.x][next_pos.y] == Tile::SPAWNER)
+            if (m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::WALL && m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::SPAWNER)
             {
-                return false;
+                m_movement = next_movement;
+                center_pos();
+                m_next_move = Movement::NONE;
             }
-            m_movement = next_movement;
-            center_pos();
-            return true;
             break;
         }
 
         case Movement::DOWN: {
             vec2 next_movement = {0, 1};
             auto next_pos = grid_pos + next_movement;
-            if (m_map.get_tiles()[next_pos.x][next_pos.y] == Tile::WALL || m_map.get_tiles()[next_pos.x][next_pos.y] == Tile::SPAWNER)
+            if (m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::WALL && m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::SPAWNER)
             {
-                return false;
+                m_movement = next_movement;
+                center_pos();
+                m_next_move = Movement::NONE;
             }
-            m_movement = next_movement;
-            center_pos();
-            return true;
             break;
         }
 
         default:
             break;
     }
-
-    return false;
+    return {};
 }
 
 auto Robot::update_pos(float dt) -> void

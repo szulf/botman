@@ -25,6 +25,8 @@ public:
 
     auto collides(const Rectangle& other) -> bool;
 
+    auto get_next_move() const -> const Movement& { return m_next_move; }
+
 private:
     auto center_pos() -> void;
 
