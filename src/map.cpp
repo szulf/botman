@@ -1,19 +1,20 @@
 #include "map.hpp"
 #include "constants.hpp"
-#include "raylib.h"
 
+#include "raylib.h"
 #include <cmath>
 #include <fstream>
 
 namespace botman
 {
 
-Map::Map(const vec2& pos, const std::filesystem::path& path) : m_pos{pos}
+Map::Map(const vec2& pos, const std::filesystem::path& path, TextureManager& tm) : m_tm{tm}, m_pos{pos}
 {
     load_from_file(path);
+    (void)m_tm;
 }
 
-auto Map::draw() -> void
+auto Map::draw() const -> void
 {
     m_draw_grid();
     m_draw_spawner();
@@ -111,17 +112,23 @@ auto Map::save_to_file(const std::filesystem::path& path) -> void
     file << "#################\n";
 }
 
-auto Map::get_pos_from_grid(const vec2& grid_pos) -> vec2
+auto Map::get_pos_from_grid(const vec2& grid_pos) const -> vec2
 {
     return {(grid_pos.x * constants::GRID_WIDTH) + (constants::GRID_WIDTH / 2.0f) + m_pos.x, (grid_pos.y * constants::GRID_HEIGHT) + (constants::GRID_HEIGHT / 2.0f) + m_pos.y};
 }
 
-auto Map::get_grid_from_pos(const vec2& pos) -> vec2
+auto Map::get_grid_from_pos(const vec2& pos) const -> vec2
 {
-    return {std::floor(pos.x / constants::GRID_WIDTH), std::floor(pos.y / constants::GRID_HEIGHT)};
+    return {std::floor((pos.x - m_pos.x) / constants::GRID_WIDTH), std::floor((pos.y - m_pos.y) / constants::GRID_HEIGHT)};
 }
 
-auto Map::m_draw_grid() -> void
+auto Map::in_about_center(const vec2& pos) const -> bool
+{
+    auto center_pos = get_pos_from_grid(get_grid_from_pos(pos));
+    return (center_pos.x - 4 <= pos.x && center_pos.x + 4 >= pos.x) && (center_pos.y - 4 <= pos.y && center_pos.y + 4 >= pos.y);
+}
+
+auto Map::m_draw_grid() const -> void
 {
     for (u8 i = 0; i < constants::MAP_WIDTH + 1; i++)
     {
@@ -134,7 +141,7 @@ auto Map::m_draw_grid() -> void
     }
 }
 
-auto Map::m_draw_walls() -> void
+auto Map::m_draw_walls() const -> void
 {
     for (const auto& wall : m_walls)
     {
@@ -145,7 +152,7 @@ auto Map::m_draw_walls() -> void
 
 }
 
-auto Map::m_draw_pellets() -> void
+auto Map::m_draw_pellets() const -> void
 {
     for (const auto& pellet : m_pellets)
     {
@@ -155,7 +162,7 @@ auto Map::m_draw_pellets() -> void
     }
 }
 
-auto Map::m_draw_hammers() -> void
+auto Map::m_draw_hammers() const -> void
 {
     for (const auto& hammer : m_hammers)
     {
@@ -165,7 +172,7 @@ auto Map::m_draw_hammers() -> void
     }
 }
 
-auto Map::m_draw_spawner() -> void
+auto Map::m_draw_spawner() const -> void
 {
     const vec2 pos = get_pos_from_grid(m_spawner_pos);
     const Rectangle rect = {pos.x, pos.y, constants::GRID_WIDTH, constants::GRID_HEIGHT};

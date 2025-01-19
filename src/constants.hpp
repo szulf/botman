@@ -34,5 +34,7 @@ namespace botman
 
         constexpr u8 HAMMER_WIDTH{GRID_WIDTH / 2};
         constexpr u8 HAMMER_HEIGHT{GRID_HEIGHT / 2};
+
+        constexpr u8 MOVEMENT_SPEED{120};
     }
 }

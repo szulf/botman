@@ -28,10 +28,11 @@ FetchContent_MakeAvailable(raylib raygui)
 
 add_executable(botman
     src/main.cpp
-    src/constants.hpp
+    src/constants.hpp src/movement.hpp
     src/game.cpp src/game.hpp
     src/map.cpp src/map.hpp
     src/texture_manager.cpp src/texture_manager.hpp
+    src/robot.cpp src/robot.hpp
 )
 
 if (NOT CMAKE_BUILD_TYPE)
