@@ -28,10 +28,8 @@ FetchContent_MakeAvailable(raylib raygui)
 
 add_executable(botman
     src/main.cpp
-    src/constants.hpp src/movement.hpp
-    src/game.cpp src/game.hpp
+    src/constants.hpp
     src/map.cpp src/map.hpp
-    src/texture_manager.cpp src/texture_manager.hpp
     src/robot.cpp src/robot.hpp
 )
 
@@ -40,7 +38,7 @@ if (NOT CMAKE_BUILD_TYPE)
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall -Werror")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -Wall -Werror -Wuninitialized -fverbose-asm")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
 endif()

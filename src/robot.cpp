@@ -1,165 +1,163 @@
 #include "robot.hpp"
-
-#include "constants.hpp"
-#include "movement.hpp"
-#include "raylib.h"
 #include "raymath.h"
-#include <ostream>
-#include <print>
 
-namespace botman
-{
-
-auto Robot::draw() const -> void
-{
-    ::DrawTexturePro(m_tm.get_texture(m_texture_id), {static_cast<float>(constants::GRID_WIDTH * m_frame), 0, constants::GRID_WIDTH, constants::GRID_HEIGHT}, {m_pos.x, m_pos.y, constants::GRID_WIDTH, constants::GRID_HEIGHT}, {constants::GRID_WIDTH / 2.0f, constants::GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+void render_robot(const RobotData& robot_data, const MapData& map_data) {
+    DrawTexturePro(robot_data.texture, {static_cast<float>(map_data.GRID_WIDTH * robot_data.texture_frame), 0, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {robot_data.pos.x, robot_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
 }
 
-auto Robot::move(const Movement& movement) -> void
-{
-    switch (movement) {
-        case Movement::UP:
-            if (m_movement == vec2{0, 1})
-            {
-                m_movement = {0, -1};
-            }
-            else
-            {
-                m_next_move = movement;
-                m_time_between_moves = ::GetTime();
-            }
-            break;
-
-        case Movement::DOWN:
-            if (m_movement == vec2{0, -1})
-            {
-                m_movement = {0, 1};
-            }
-            else
-            {
-                m_next_move = movement;
-                m_time_between_moves = ::GetTime();
-            }
-            break;
-
-        case Movement::LEFT:
-            if (m_movement == vec2{1, 0})
-            {
-                m_movement = {-1, 0};
-            }
-            else
-            {
-                m_next_move = movement;
-                m_time_between_moves = ::GetTime();
-            }
-            break;
-
-        case Movement::RIGHT:
-            if (m_movement == vec2{-1, 0})
-            {
-                m_movement = {1, 0};
-            }
-            else
-            {
-                m_next_move = movement;
-                m_time_between_moves = ::GetTime();
-            }
-            break;
-
-        default:
-            break;
-    }
+bool robot_collides(const Rectangle& rect, const RobotData& robot_data, const MapData& map_data) {
+    return CheckCollisionRecs({robot_data.pos.x - map_data.GRID_WIDTH / 2.0f, robot_data.pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, rect);
 }
 
-auto Robot::rotate() -> bool
-{
-    if (::GetTime() - m_time_between_moves >= 0.35f)
-    {
-        m_next_move = Movement::NONE;
-        return false;
+void robot_move(MovementType move, float dt, RobotData& robot_data, const MapData& map_data) {
+    switch (move) {
+        case MovementType::UP:
+            if (robot_data.movement == v2{0, 1})
+            {
+                robot_data.movement = {0, -1};
+            }
+            else
+            {
+                robot_data.next_move = move;
+                robot_data.time_between_moves = GetTime();
+            }
+            break;
+
+        case MovementType::DOWN:
+            if (robot_data.movement == v2{0, -1})
+            {
+                robot_data.movement = {0, 1};
+            }
+            else
+            {
+                robot_data.next_move = move;
+                robot_data.time_between_moves = ::GetTime();
+            }
+            break;
+
+        case MovementType::LEFT:
+            if (robot_data.movement == v2{1, 0})
+            {
+                robot_data.movement = {-1, 0};
+            }
+            else
+            {
+                robot_data.next_move = move;
+                robot_data.time_between_moves = ::GetTime();
+            }
+            break;
+
+        case MovementType::RIGHT:
+            if (robot_data.movement == v2{-1, 0})
+            {
+                robot_data.movement = {1, 0};
+            }
+            else
+            {
+                robot_data.next_move = move;
+                robot_data.time_between_moves = ::GetTime();
+            }
+            break;
+
+        case MovementType::NONE:
+            break;
     }
 
-    auto grid_pos = m_map.get_grid_from_pos(m_pos);
-    switch (m_next_move)
-    {
-        case Movement::LEFT: {
-            vec2 next_movement = {-1, 0};
-            auto next_pos = grid_pos + next_movement;
-            if (m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::WALL && m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::SPAWNER)
-            {
-                m_movement = next_movement;
-                center_pos();
-                m_next_move = Movement::NONE;
-            }
-            break;
+    auto grid_pos = get_grid_from_pos(robot_data.pos, map_data);
+    if (in_about_center(robot_data.pos, map_data) && robot_data.next_move != MovementType::NONE) {
+
+        if (GetTime() - robot_data.time_between_moves >= 0.35f)
+        {
+            robot_data.next_move = MovementType::NONE;
         }
 
-        case Movement::RIGHT: {
-            vec2 next_movement = {1, 0};
-            auto next_pos = grid_pos + next_movement;
-            if (m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::WALL && m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::SPAWNER)
-            {
-                m_movement = next_movement;
-                center_pos();
-                m_next_move = Movement::NONE;
+        switch (robot_data.next_move) {
+            case MovementType::LEFT: {
+                v2 next_movement = {-1, 0};
+                auto next_pos = grid_pos + next_movement;
+                auto next_tile = map_data.get_tile(next_pos);
+                if (next_tile != TileType::WALL && next_tile != TileType::SPAWNER) {
+                    robot_data.movement = next_movement;
+                    robot_data.pos = get_grid_center(robot_data.pos, map_data);
+                    robot_data.next_move = MovementType::NONE;
+                }
+                break;
             }
-            break;
-        }
 
-        case Movement::UP: {
-            vec2 next_movement = {0, -1};
-            auto next_pos = grid_pos + next_movement;
-            if (m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::WALL && m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::SPAWNER)
-            {
-                m_movement = next_movement;
-                center_pos();
-                m_next_move = Movement::NONE;
+            case MovementType::RIGHT: {
+                v2 next_movement = {1, 0};
+                auto next_pos = grid_pos + next_movement;
+                auto next_tile = map_data.get_tile(next_pos);
+                if (next_tile != TileType::WALL && next_tile != TileType::SPAWNER) {
+                    robot_data.movement = next_movement;
+                    robot_data.pos = get_grid_center(robot_data.pos, map_data);
+                    robot_data.next_move = MovementType::NONE;
+                }
+                break;
             }
-            break;
-        }
 
-        case Movement::DOWN: {
-            vec2 next_movement = {0, 1};
-            auto next_pos = grid_pos + next_movement;
-            if (m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::WALL && m_map.get_tiles()[next_pos.x][next_pos.y] != Tile::SPAWNER)
-            {
-                m_movement = next_movement;
-                center_pos();
-                m_next_move = Movement::NONE;
+            case MovementType::UP: {
+                v2 next_movement = {0, -1};
+                auto next_pos = grid_pos + next_movement;
+                auto next_tile = map_data.get_tile(next_pos);
+                if (next_tile != TileType::WALL && next_tile != TileType::SPAWNER) {
+                    robot_data.movement = next_movement;
+                    robot_data.pos = get_grid_center(robot_data.pos, map_data);
+                    robot_data.next_move = MovementType::NONE;
+                }
+                break;
             }
-            break;
-        }
 
-        default:
-            break;
+            case MovementType::DOWN: {
+                v2 next_movement = {0, 1};
+                auto next_pos = grid_pos + next_movement;
+                auto next_tile = map_data.get_tile(next_pos);
+                if (next_tile != TileType::WALL && next_tile != TileType::SPAWNER) {
+                    robot_data.movement = next_movement;
+                    robot_data.pos = get_grid_center(robot_data.pos, map_data);
+                    robot_data.next_move = MovementType::NONE;
+                }
+                break;
+            }
+
+            case MovementType::NONE:
+                break;
+        }
     }
-    return {};
-}
 
-auto Robot::update_pos(float dt) -> void
-{
-    auto next_grid_pos = m_map.get_grid_from_pos(m_pos) + m_movement;
-    auto next_pos = m_map.get_pos_from_grid(next_grid_pos);
-
-    if (m_map.get_tiles()[next_grid_pos.x][next_grid_pos.y] == Tile::WALL && collides({next_pos.x, next_pos.y, constants::GRID_WIDTH, constants::GRID_HEIGHT}))
+    auto next_grid_pos = grid_pos + robot_data.movement;
+    auto next_pos = get_pos_from_grid(next_grid_pos, map_data);
+    if ((map_data.get_tile(next_grid_pos) == TileType::WALL || map_data.get_tile(next_grid_pos) == TileType::SPAWNER) && robot_collides({next_pos.x - map_data.GRID_WIDTH / 2.0f, next_pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, robot_data, map_data))
     {
-        m_movement = {0, 0};
-        center_pos();
+        robot_data.movement = {0, 0};
+        robot_data.pos = get_grid_center(robot_data.pos, map_data);
     }
     else
     {
-        m_pos -= m_movement * dt * constants::MOVEMENT_SPEED;
+        robot_data.pos -= robot_data.movement * dt * MOVEMENT_SPEED;
     }
 }
 
-auto Robot::collides(const Rectangle& other) -> bool
-{
-    return ::CheckCollisionRecs({m_pos.x, m_pos.y, constants::GRID_WIDTH, constants::GRID_HEIGHT}, other);
+v2 get_grid_center(const v2& pos, const MapData& map_data) {
+    return get_pos_from_grid(get_grid_from_pos(pos, map_data), map_data);
 }
 
-auto Robot::center_pos() -> void
-{
-    m_pos = m_map.get_pos_from_grid(m_map.get_grid_from_pos(m_pos));
+bool in_about_center(const v2& pos, const MapData& map_data) {
+    auto center_pos = get_grid_center(pos, map_data);
+    return (center_pos.x - 4 <= pos.x && center_pos.x + 4 >= pos.x) && (center_pos.y - 4 <= pos.y && center_pos.y + 4 >= pos.y);
 }
 
+void robot_collect(const RobotData& robot_data, MapData& map_data) {
+    auto grid_pos = get_grid_from_pos(robot_data.pos, map_data);
+
+    if (map_data.get_tile(grid_pos) == TileType::PELLET && robot_collides({robot_data.pos.x - (map_data.GRID_WIDTH / 8.0f), robot_data.pos.y - (map_data.GRID_HEIGHT / 8.0f), map_data.GRID_WIDTH / 4.0f, map_data.GRID_HEIGHT / 4.0f}, robot_data, map_data)) {
+        map_data.set_tile(grid_pos, TileType::EMPTY);
+        map_data.score += 10;
+    }
+
+    if (map_data.get_tile(grid_pos) == TileType::HAMMER && robot_collides({robot_data.pos.x - (map_data.GRID_WIDTH / 4.0f), robot_data.pos.y - (map_data.GRID_HEIGHT / 4.0f), map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, robot_data, map_data)) {
+        map_data.set_tile(grid_pos, TileType::EMPTY);
+        // TODO
+        // set smashing mode to true
+    }
 }

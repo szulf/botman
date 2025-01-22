@@ -2,67 +2,45 @@
 
 #include "constants.hpp"
 
-#include "texture_manager.hpp"
-#include <filesystem>
 #include <vector>
 
-namespace botman
-{
-
-enum class Tile
-{
+enum class TileType {
     EMPTY,
     WALL,
     PELLET,
-    START_POS,
-    SPAWNER,
     HAMMER,
+    SPAWNER,
+    START_POS,
 };
 
-class Map
-{
-public:
-    Map(const vec2& pos, const std::filesystem::path& path, TextureManager& tm);
-    Map(const vec2& pos, TextureManager& tm) : m_tm{tm}, m_pos{pos} {}
+struct MapData {
+    static constexpr u32 WIDTH{17};
+    static constexpr u32 HEIGHT{22};
 
-    auto draw() const -> void;
+    static constexpr u32 GRID_WIDTH{32};
+    static constexpr u32 GRID_HEIGHT{32};
 
-    auto load_from_file(const std::filesystem::path& path) -> void;
-    auto save_to_file(const std::filesystem::path& path) -> void;
+    v2 pos{};
 
-    // grid - local to map grid position,
-    // pos - global space on the screen
-    auto get_pos_from_grid(const vec2& grid_pos) const -> vec2;
-    // grid - local to map grid position,
-    // pos - global space on the screen
-    auto get_grid_from_pos(const vec2& pos) const -> vec2;
+    std::vector<TileType> tiles;
+    v2 start_pos{};
+    v2 spawner_pos{};
 
-    auto in_about_center(const vec2& pos) const -> bool;
+    u32 score{};
 
-    inline auto get_start_pos() const -> const vec2& { return m_start_pos; }
-    inline auto get_tiles() -> std::array<std::array<Tile, constants::MAP_HEIGHT>, constants::MAP_WIDTH>& { return m_tiles; }
-    inline auto get_pellets() -> std::vector<vec2>& { return m_pellets; }
-    inline auto get_hammers() -> std::vector<vec2>& { return m_hammers; }
+    MapData(const v2& map_pos) : pos{map_pos}, tiles{WIDTH * HEIGHT, TileType::EMPTY} {}
 
-private:
-    auto m_draw_grid() const -> void;
-    auto m_draw_walls() const -> void;
-    auto m_draw_pellets() const -> void;
-    auto m_draw_hammers() const -> void;
-    auto m_draw_spawner() const -> void;
+    inline TileType get_tile(v2 pos) const {
+        return tiles[pos.x + WIDTH * pos.y];
+    }
 
-private:
-    TextureManager& m_tm;
-
-    vec2 m_pos;
-
-    std::array<std::array<Tile, constants::MAP_HEIGHT>, constants::MAP_WIDTH> m_tiles{};
-    std::vector<vec2> m_walls{};
-    std::vector<vec2> m_pellets{};
-    std::vector<vec2> m_hammers{};
-    vec2 m_start_pos{};
-    vec2 m_spawner_pos{};
-
+    inline void set_tile(v2 pos, TileType val) {
+        tiles[pos.x + WIDTH * pos.y] = val;
+    }
 };
 
-}
+MapData load_map(const v2& map_pos);
+v2 get_grid_from_pos(const v2& pos, const MapData& map_data);
+v2 get_pos_from_grid(const v2& grid_pos, const MapData& map_data);
+void render_map(const MapData& map_data);
+void print_map(const MapData& map_data);
