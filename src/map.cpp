@@ -3,7 +3,6 @@
 #include <fstream>
 #include <string>
 #include <cmath>
-#include <print>
 
 MapData load_map(const v2& map_pos) {
     MapData map_data{map_pos};
@@ -52,37 +51,6 @@ MapData load_map(const v2& map_pos) {
     }
 
     return map_data;
-}
-
-void print_map(const MapData& map_data) {
-    for (u32 i = 0; const auto& tile : map_data.tiles) {
-        switch (tile) {
-            case TileType::EMPTY:
-                std::print(" ");
-                break;
-            case TileType::WALL:
-                std::print("#");
-                break;
-            case TileType::PELLET:
-                std::print(".");
-                break;
-            case TileType::HAMMER:
-                std::print("H");
-                break;
-            case TileType::SPAWNER:
-                std::print("B");
-                break;
-            case TileType::START_POS:
-                std::print("S");
-                break;
-        }
-
-        i++;
-
-        if (i % map_data.WIDTH == 0) {
-            std::println();
-        }
-    }
 }
 
 v2 get_grid_from_pos(const v2& pos, const MapData& map_data) {

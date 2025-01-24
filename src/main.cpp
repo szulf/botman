@@ -1,10 +1,18 @@
+#include "constants.hpp"
 #include "map.hpp"
 #include "robot.hpp"
 
 #include "raylib.h"
+#include "raymath.h"
+#include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <functional>
+#include <limits>
 #include <print>
+#include <stack>
 #include <string>
+#include <unordered_set>
 
 const char* print_movement(MovementType move) {
     switch (move) {
@@ -79,14 +87,6 @@ inline void render(const RobotData& robot_data, const std::vector<BugData>& bugs
     EndDrawing();
 }
 
-// TODO
-// bugs
-//
-// TODO later
-// edit mode
-//
-// copy todo from old project
-
 inline BugData init_bug(const v2& pos) {
     return BugData{
         .pos = pos,
@@ -94,6 +94,135 @@ inline BugData init_bug(const v2& pos) {
     };
 }
 
+// TODO
+// could add a random value to the cost, to split up the bugs
+struct Node {
+    v2 pos;
+    v2 parent;
+
+    float f{0};
+    float g{0};
+    float h{0};
+
+    bool operator==(const Node& other) const {
+        return pos == other.pos;
+    }
+};
+
+struct NodeHash {
+    size_t operator()(const Node& n) const {
+        size_t combined = std::hash<float>()(n.pos.x);
+        combined ^= std::hash<float>()(n.pos.y) + 0x9e3779b9 + (combined << 6) + (combined >> 2);
+        combined ^= std::hash<float>()(n.g) + 0x9e3779b9 + (combined << 6) + (combined >> 2);
+
+        return combined;
+    }
+};
+
+std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_pos, const MapData& map_data) {
+    if (start_grid_pos == end_grid_pos) {
+        return {};
+    }
+
+    std::unordered_set<Node, NodeHash> closed_set{};
+    std::unordered_set<Node, NodeHash> open_set{};
+    open_set.insert({start_grid_pos});
+
+    while (!open_set.empty()) {
+        Node q{};
+        u32 lowest_cost{std::numeric_limits<u32>::max()};
+        for (const auto& n : open_set) {
+            if (n.f < lowest_cost) {
+                lowest_cost = n.f;
+                q = n;
+            }
+        }
+        open_set.erase(open_set.find(q));
+
+        std::array<Node, 4> successors{
+            Node{.pos = {.x = q.pos.x + 1, .y = q.pos.y}, .parent = q.pos},
+            Node{.pos = {.x = q.pos.x - 1, .y = q.pos.y}, .parent = q.pos},
+            Node{.pos = {.x = q.pos.x, .y = q.pos.y + 1}, .parent = q.pos},
+            Node{.pos = {.x = q.pos.x, .y = q.pos.y - 1}, .parent = q.pos},
+        };
+
+        for (auto& successor : successors) {
+            if (successor.pos == end_grid_pos) {
+                printf("fuckkkkk\n");
+                closed_set.insert(q);
+                Node curr = successor;
+                std::vector<v2> path;
+
+                while (curr.pos != start_grid_pos) {
+                    path.push_back(curr.pos);
+
+                    // TODO
+                    // idk why closed_set.find() doesnt work here
+                    // it it supposed to be about O(1) which is better than the current implementation
+                    // I cant figure it out tho, try to change this later
+
+                    for (const auto& n : closed_set) {
+                        if (n == Node{.pos = curr.parent}) {
+                            curr = n;
+                            break;
+                        }
+                    }
+                }
+
+                path.push_back(start_grid_pos);
+                std::ranges::reverse(path);
+
+                return path;
+            }
+
+            if (map_data.get_tile(successor.pos) == TileType::WALL || map_data.get_tile(successor.pos) == TileType::SPAWNER) {
+                continue;
+            }
+
+            successor.g = q.g + 1;
+            successor.h = std::abs(successor.pos.x - end_grid_pos.x) + std::abs(successor.pos.y - end_grid_pos.y);
+            successor.f = successor.g + successor.h;
+
+            auto it = open_set.find(successor);
+            if (it != open_set.end()) {
+                if (it->f < successor.f) {
+                    continue;
+                } else {
+                    open_set.erase(it);
+                }
+            }
+
+            it = closed_set.find(successor);
+            if (it != closed_set.end()) {
+                if (it->f < successor.f) {
+                    continue;
+                }
+            } else {
+                open_set.insert(successor);
+            }
+        }
+
+        closed_set.insert(q);
+    };
+
+    return {};
+}
+
+// TODO
+void bug_move(float dt, BugData& bug_data, const MapData& map_data) {
+}
+
+// TODO
+// bugs
+//
+// TODO later
+// edit mode
+//
+// FIX later later
+// when the game is slow enough(test build/valgrind)
+// the first movement doesnt start and the player just stands there
+//
+// copy todo from old project
 int main() {
     InitWindow(1200, 800, "botman");
 
@@ -103,7 +232,6 @@ int main() {
         .next_move = MovementType::LEFT,
         .texture = LoadTexture(ROOT_PATH "/assets/robot.png"),
     };
-
     std::vector<BugData> bugs{5, init_bug(get_pos_from_grid(map.spawner_pos, map))};
 
     float fps{};
@@ -124,7 +252,7 @@ int main() {
         render(robot, bugs, map);
     }
 
-    std::println("fps: {}", fps);
+    printf("fps: %f\n", fps);
 
     UnloadTexture(robot.texture);
     for (const auto& bug : bugs) {
