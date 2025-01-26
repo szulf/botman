@@ -46,46 +46,19 @@ const char* print_tile(TileType tile) {
     }
 }
 
-inline void process_input(float dt, RobotData& robot_data, const MapData& map_data) {
-    if (IsKeyPressed(KEY_UP)) {
-        robot_move(MovementType::UP, dt, robot_data, map_data);
-    } else if (IsKeyPressed(KEY_DOWN)) {
-        robot_move(MovementType::DOWN, dt, robot_data, map_data);
-    } else if (IsKeyPressed(KEY_LEFT)) {
-        robot_move(MovementType::LEFT, dt, robot_data, map_data);
-    } else if (IsKeyPressed(KEY_RIGHT)) {
-        robot_move(MovementType::RIGHT, dt, robot_data, map_data);
-    } else {
-        robot_move(MovementType::NONE, dt, robot_data, map_data);
-    }
-}
-
 struct BugData {
     v2 pos{};
+    v2 movement{};
 
     Texture2D texture{};
     u8 texture_frame{};
+
+    // TODO
+    // think of something better than this
+    std::vector<v2> path{};
+    v2 last_pos{};
+    v2 last_movement{};
 };
-
-inline void render(const RobotData& robot_data, const std::vector<BugData>& bugs_data, const MapData& map_data) {
-    BeginDrawing();
-    ClearBackground(WHITE);
-
-    render_map(map_data);
-
-    render_robot(robot_data, map_data);
-
-    DrawText(std::to_string(map_data.score).c_str(), 50, 100, 50, BLACK);
-
-    DrawFPS(10, 10);
-
-    for (u8 i = 0; const auto& bug_data : bugs_data) {
-        DrawTexturePro(bug_data.texture, {static_cast<float>(map_data.GRID_WIDTH * bug_data.texture_frame), 0, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {bug_data.pos.x + (map_data.GRID_WIDTH * i), bug_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
-        i++;
-    }
-
-    EndDrawing();
-}
 
 inline BugData init_bug(const v2& pos) {
     return BugData{
@@ -169,7 +142,6 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
                     }
                 }
 
-                path.push_back(start_grid_pos);
                 std::ranges::reverse(path);
 
                 return path;
@@ -224,8 +196,27 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
     return {};
 }
 
-// TODO
-void bug_move(float dt, BugData& bug_data, const MapData& map_data) {
+// FIX
+// same as with the starting player movement
+// on release builds it works, but on test build it doesnt
+// probably after adding the spawn delay on bugs it should fix itself
+void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const MapData& map_data) {
+    auto grid_pos = get_grid_from_pos(bug_data.pos, map_data);
+
+    if (in_about_center(bug_data.pos, map_data) && bug_data.last_pos != grid_pos) {
+        bug_data.path = find_shortest_path(grid_pos, get_grid_from_pos(robot_data.pos, map_data), map_data);
+        if (bug_data.path.size() == 0) {
+            return;
+        }
+        bug_data.movement = bug_data.path[0] - grid_pos;
+        bug_data.last_pos = grid_pos;
+        if (bug_data.movement != bug_data.last_movement) {
+            bug_data.pos = get_grid_center(bug_data.pos, map_data);
+            bug_data.last_movement = bug_data.movement;
+        }
+    }
+
+    bug_data.pos -= bug_data.movement * dt * MOVEMENT_SPEED * 0.85f;
 }
 
 // TODO
@@ -250,38 +241,89 @@ int main() {
     };
     std::vector<BugData> bugs{5, init_bug(get_pos_from_grid(map.spawner_pos, map))};
 
-    float fps{};
-    float last_time{static_cast<float>(GetTime())};
+    float mean_fps{};
+    // float last_time{static_cast<float>(GetTime())};
+
+    auto path = find_shortest_path(map.spawner_pos, get_grid_from_pos(robot.pos, map), map);
 
     float dt{};
     float last_frame{};
     while (!WindowShouldClose()) {
-        fps = (fps + GetFPS()) / 2.0f;
+        mean_fps = (mean_fps + GetFPS()) / 2.0f;
 
         float current_frame = GetTime();
         dt = last_frame - current_frame;
         last_frame = current_frame;
 
-        // DO NOT RUN THE ALGORITHM EVERY FRAME
-        // NOT ONLY IS IT NOT NECESSARY
-        // IT ALSO TANKS THE PERFORMANCE
-        // TAKES ANYWHERE FROM 0.03MS TO 0.5MS TO RUN THE ALGORITHM FOR 1 OF THE BUGS
-        if (GetTime() - last_time > 0.2f) {
-            for (const auto& bug : bugs) {
-                auto grid_pos = get_grid_from_pos(bug.pos, map);
-                find_shortest_path(grid_pos, map.start_pos, map);
+        // ----------------
+        // PROCESSING INPUT
+        // ----------------
+        {
+            if (IsKeyPressed(KEY_UP)) {
+                robot_move(MovementType::UP, dt, robot, map);
+            } else if (IsKeyPressed(KEY_DOWN)) {
+                robot_move(MovementType::DOWN, dt, robot, map);
+            } else if (IsKeyPressed(KEY_LEFT)) {
+                robot_move(MovementType::LEFT, dt, robot, map);
+            } else if (IsKeyPressed(KEY_RIGHT)) {
+                robot_move(MovementType::RIGHT, dt, robot, map);
+            } else {
+                robot_move(MovementType::NONE, dt, robot, map);
             }
-            last_time = GetTime();
         }
 
-        process_input(dt, robot, map);
+        // -------------------
+        // SOME GAMEPLAY STUFF
+        // -------------------
+        {
+            robot_collect(robot, map);
 
-        robot_collect(robot, map);
+            for (auto& bug : bugs) {
+                bug_move(dt, bug, robot, map);
+            }
 
-        render(robot, bugs, map);
+            // DO NOT RUN THE ALGORITHM EVERY FRAME
+            // NOT ONLY IS IT NOT NECESSARY
+            // IT ALSO TANKS THE PERFORMANCE
+            // TAKES ANYWHERE FROM 0.03MS TO 0.5MS TO RUN THE ALGORITHM FOR 1 OF THE BUGS
+            // if (GetTime() - last_time > 0.2f) {
+            //     for (const auto& bug : bugs) {
+            //         auto grid_pos = get_grid_from_pos(bug.pos, map);
+            //         find_shortest_path(grid_pos, map.start_pos, map);
+            //     }
+            //     last_time = GetTime();
+            // }
+        }
+
+        // ---------
+        // RENDERING
+        // ---------
+        {
+            BeginDrawing();
+            ClearBackground(WHITE);
+
+            render_map(map);
+
+            // for (const auto& grid_pos : path) {
+            //     auto pos = get_pos_from_grid(grid_pos, map);
+            //     DrawRectangleRec({pos.x - map.GRID_WIDTH / 2.0f, pos.y - map.GRID_HEIGHT / 2.0f, map.GRID_WIDTH, map.GRID_HEIGHT}, GREEN);
+            // }
+
+            render_robot(robot, map);
+
+            DrawText(std::to_string(map.score).c_str(), 50, 100, 50, BLACK);
+
+            DrawFPS(10, 10);
+
+            for (const auto& bug_data : bugs) {
+                DrawTexturePro(bug_data.texture, {static_cast<float>(map.GRID_WIDTH * bug_data.texture_frame), 0, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {bug_data.pos.x, bug_data.pos.y, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+            }
+
+            EndDrawing();
+        }
     }
 
-    printf("fps: %f\n", fps);
+    printf("fps: %f\n", mean_fps);
 
     UnloadTexture(robot.texture);
     for (const auto& bug : bugs) {
