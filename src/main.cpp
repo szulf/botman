@@ -5,12 +5,12 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <functional>
 #include <limits>
 #include <print>
-#include <stack>
 #include <string>
 #include <unordered_set>
 
@@ -120,12 +120,18 @@ struct NodeHash {
 };
 
 std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_pos, const MapData& map_data) {
+    // TODO
+    // idk why closed_set.find() doesnt work
+    // it it supposed to be about O(1) which is better than the current implementation
+    // I cant figure it out tho, try to change this later
+
     if (start_grid_pos == end_grid_pos) {
         return {};
     }
 
-    std::unordered_set<Node, NodeHash> closed_set{};
-    std::unordered_set<Node, NodeHash> open_set{};
+    const auto NodeCmp = [](const Node& n1, const Node& n2) { return n1.pos == n2.pos; };
+    std::unordered_set<Node, NodeHash, decltype(NodeCmp)> closed_set;
+    std::unordered_set<Node, NodeHash, decltype(NodeCmp)> open_set{};
     open_set.insert({start_grid_pos});
 
     while (!open_set.empty()) {
@@ -148,18 +154,12 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
 
         for (auto& successor : successors) {
             if (successor.pos == end_grid_pos) {
-                printf("fuckkkkk\n");
                 closed_set.insert(q);
                 Node curr = successor;
                 std::vector<v2> path;
 
                 while (curr.pos != start_grid_pos) {
                     path.push_back(curr.pos);
-
-                    // TODO
-                    // idk why closed_set.find() doesnt work here
-                    // it it supposed to be about O(1) which is better than the current implementation
-                    // I cant figure it out tho, try to change this later
 
                     for (const auto& n : closed_set) {
                         if (n == Node{.pos = curr.parent}) {
@@ -183,18 +183,34 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
             successor.h = std::abs(successor.pos.x - end_grid_pos.x) + std::abs(successor.pos.y - end_grid_pos.y);
             successor.f = successor.g + successor.h;
 
-            auto it = open_set.find(successor);
-            if (it != open_set.end()) {
-                if (it->f < successor.f) {
+            Node it_os{};
+            bool found_os{};
+            for (const auto& n : open_set) {
+                if (n.pos == successor.pos) {
+                    it_os = n;
+                    found_os = true;
+                    break;
+                }
+            }
+            if (found_os) {
+                if (it_os.f < successor.f) {
                     continue;
                 } else {
-                    open_set.erase(it);
+                    open_set.erase(it_os);
                 }
             }
 
-            it = closed_set.find(successor);
-            if (it != closed_set.end()) {
-                if (it->f < successor.f) {
+            Node it_cs{};
+            bool found_cs{};
+            for (const auto& n : closed_set) {
+                if (n.pos == successor.pos) {
+                    it_cs = n;
+                    found_cs = true;
+                    break;
+                }
+            }
+            if (found_cs) {
+                if (it_cs.f < successor.f) {
                     continue;
                 }
             } else {
@@ -235,6 +251,7 @@ int main() {
     std::vector<BugData> bugs{5, init_bug(get_pos_from_grid(map.spawner_pos, map))};
 
     float fps{};
+    float last_time{static_cast<float>(GetTime())};
 
     float dt{};
     float last_frame{};
@@ -244,6 +261,18 @@ int main() {
         float current_frame = GetTime();
         dt = last_frame - current_frame;
         last_frame = current_frame;
+
+        // DO NOT RUN THE ALGORITHM EVERY FRAME
+        // NOT ONLY IS IT NOT NECESSARY
+        // IT ALSO TANKS THE PERFORMANCE
+        // TAKES ANYWHERE FROM 0.03MS TO 0.5MS TO RUN THE ALGORITHM FOR 1 OF THE BUGS
+        if (GetTime() - last_time > 0.2f) {
+            for (const auto& bug : bugs) {
+                auto grid_pos = get_grid_from_pos(bug.pos, map);
+                find_shortest_path(grid_pos, map.start_pos, map);
+            }
+            last_time = GetTime();
+        }
 
         process_input(dt, robot, map);
 
