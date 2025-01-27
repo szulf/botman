@@ -1,5 +1,6 @@
 #include "robot.hpp"
 #include "raymath.h"
+#include <cstdio>
 
 void render_robot(const RobotData& robot_data, const MapData& map_data) {
     DrawTexturePro(robot_data.texture, {static_cast<float>(map_data.GRID_WIDTH * robot_data.texture_frame), 0, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {robot_data.pos.x, robot_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
@@ -65,11 +66,12 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
 
     auto grid_pos = get_grid_from_pos(robot_data.pos, map_data);
     if (in_about_center(robot_data.pos, map_data) && robot_data.next_move != MovementType::NONE) {
-
-        if (GetTime() - robot_data.time_between_moves >= 0.35f)
+        static bool first = true;
+        if (GetTime() - robot_data.time_between_moves >= 0.35f && !first)
         {
             robot_data.next_move = MovementType::NONE;
         }
+        first = false;
 
         switch (robot_data.next_move) {
             case MovementType::LEFT: {
@@ -160,4 +162,19 @@ void robot_collect(const RobotData& robot_data, MapData& map_data) {
         // TODO
         // set smashing mode to true
     }
+}
+
+const char* print_movement(MovementType move) {
+    switch (move) {
+        case MovementType::NONE:
+            return "none";
+        case MovementType::LEFT:
+            return "left";
+        case MovementType::RIGHT:
+            return "right";
+        case MovementType::UP:
+            return "up";
+        case MovementType::DOWN:
+            return "down";
+    };
 }

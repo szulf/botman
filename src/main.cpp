@@ -14,20 +14,6 @@
 #include <string>
 #include <unordered_set>
 
-const char* print_movement(MovementType move) {
-    switch (move) {
-        case MovementType::NONE:
-            return "none";
-        case MovementType::LEFT:
-            return "left";
-        case MovementType::RIGHT:
-            return "right";
-        case MovementType::UP:
-            return "up";
-        case MovementType::DOWN:
-            return "down";
-    };
-}
 
 const char* print_tile(TileType tile) {
     switch (tile) {
@@ -47,17 +33,17 @@ const char* print_tile(TileType tile) {
 }
 
 struct BugData {
-    v2 pos{};
-    v2 movement{};
+    v2 pos{0, 0};
+    v2 movement{0, 0};
 
     Texture2D texture{};
-    u8 texture_frame{};
+    u8 texture_frame{0};
 
     // TODO
     // think of something better than this
     std::vector<v2> path{};
-    v2 last_pos{};
-    v2 last_movement{};
+    v2 last_pos{0, 0};
+    v2 last_movement{0, 0};
 };
 
 inline BugData init_bug(const v2& pos) {
@@ -67,8 +53,6 @@ inline BugData init_bug(const v2& pos) {
     };
 }
 
-// TODO
-// could add a random value to the cost, to split up the bugs
 struct Node {
     v2 pos;
     v2 parent;
@@ -152,7 +136,7 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
             }
 
             successor.g = q.g + 1;
-            successor.h = std::abs(successor.pos.x - end_grid_pos.x) + std::abs(successor.pos.y - end_grid_pos.y);
+            successor.h = std::abs(successor.pos.x - end_grid_pos.x) + std::abs(successor.pos.y - end_grid_pos.y) + rand() % 20;
             successor.f = successor.g + successor.h;
 
             Node it_os{};
@@ -196,10 +180,6 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
     return {};
 }
 
-// FIX
-// same as with the starting player movement
-// on release builds it works, but on test build it doesnt
-// probably after adding the spawn delay on bugs it should fix itself
 void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const MapData& map_data) {
     auto grid_pos = get_grid_from_pos(bug_data.pos, map_data);
 
@@ -225,12 +205,14 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 // TODO later
 // edit mode
 //
-// FIX later later
-// when the game is slow enough(test build/valgrind)
-// the first movement doesnt start and the player just stands there
+// FIX
+// when spamming the arrow key in the direction the player is going in
+// it just centers him so makes him go faster
 //
 // copy todo from old project
 int main() {
+    srand(time(0));
+
     InitWindow(1200, 800, "botman");
 
     MapData map = load_map({200, 50});
@@ -244,16 +226,19 @@ int main() {
     float mean_fps{};
     // float last_time{static_cast<float>(GetTime())};
 
-    auto path = find_shortest_path(map.spawner_pos, get_grid_from_pos(robot.pos, map), map);
-
     float dt{};
     float last_frame{};
+    static bool first = true;
     while (!WindowShouldClose()) {
         mean_fps = (mean_fps + GetFPS()) / 2.0f;
 
         float current_frame = GetTime();
         dt = last_frame - current_frame;
         last_frame = current_frame;
+        if (first) {
+            dt = 0.0f;
+            first = false;
+        }
 
         // ----------------
         // PROCESSING INPUT
@@ -281,18 +266,6 @@ int main() {
             for (auto& bug : bugs) {
                 bug_move(dt, bug, robot, map);
             }
-
-            // DO NOT RUN THE ALGORITHM EVERY FRAME
-            // NOT ONLY IS IT NOT NECESSARY
-            // IT ALSO TANKS THE PERFORMANCE
-            // TAKES ANYWHERE FROM 0.03MS TO 0.5MS TO RUN THE ALGORITHM FOR 1 OF THE BUGS
-            // if (GetTime() - last_time > 0.2f) {
-            //     for (const auto& bug : bugs) {
-            //         auto grid_pos = get_grid_from_pos(bug.pos, map);
-            //         find_shortest_path(grid_pos, map.start_pos, map);
-            //     }
-            //     last_time = GetTime();
-            // }
         }
 
         // ---------

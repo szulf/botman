@@ -12,14 +12,14 @@ enum class MovementType {
 };
 
 struct RobotData {
-    v2 pos{};
-    v2 movement{};
+    v2 pos{0, 0};
+    v2 movement{0, 0};
 
-    MovementType next_move{};
-    float time_between_moves{};
+    MovementType next_move{MovementType::NONE};
+    float time_between_moves{0};
 
     Texture2D texture{};
-    u8 texture_frame{};
+    u8 texture_frame{0};
 };
 
 void render_robot(const RobotData& robot_data, const MapData& map_data);
@@ -28,3 +28,4 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
 v2 get_grid_center(const v2& pos, const MapData& map_data);
 bool in_about_center(const v2& pos, const MapData& map_data);
 void robot_collect(const RobotData& robot_data, MapData& map_data);
+const char* print_movement(MovementType move);
