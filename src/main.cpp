@@ -5,7 +5,6 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <algorithm>
-#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <functional>
@@ -204,10 +203,6 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 //
 // TODO later
 // edit mode
-//
-// FIX
-// when spamming the arrow key in the direction the player is going in
-// it just centers him so makes him go faster
 //
 // copy todo from old project
 int main() {

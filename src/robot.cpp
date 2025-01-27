@@ -75,6 +75,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
 
         switch (robot_data.next_move) {
             case MovementType::LEFT: {
+                if (robot_data.movement == v2{-1, 0}) {
+                    break;
+                }
                 v2 next_movement = {-1, 0};
                 auto next_pos = grid_pos + next_movement;
                 auto next_tile = map_data.get_tile(next_pos);
@@ -87,6 +90,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             }
 
             case MovementType::RIGHT: {
+                if (robot_data.movement == v2{1, 0}) {
+                    break;
+                }
                 v2 next_movement = {1, 0};
                 auto next_pos = grid_pos + next_movement;
                 auto next_tile = map_data.get_tile(next_pos);
@@ -99,6 +105,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             }
 
             case MovementType::UP: {
+                if (robot_data.movement == v2{0, -1}) {
+                    break;
+                }
                 v2 next_movement = {0, -1};
                 auto next_pos = grid_pos + next_movement;
                 auto next_tile = map_data.get_tile(next_pos);
@@ -111,6 +120,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             }
 
             case MovementType::DOWN: {
+                if (robot_data.movement == v2{0, 1}) {
+                    break;
+                }
                 v2 next_movement = {0, 1};
                 auto next_pos = grid_pos + next_movement;
                 auto next_tile = map_data.get_tile(next_pos);
