@@ -32,17 +32,17 @@ const char* print_tile(TileType tile) {
 }
 
 struct BugData {
-    v2 pos{0, 0};
-    v2 movement{0, 0};
+    v2 pos{};
+    v2 movement{};
 
     Texture2D texture{};
-    u8 texture_frame{0};
+    u8 texture_frame{};
 
     // TODO
     // think of something better than this
     std::vector<v2> path{};
-    v2 last_pos{0, 0};
-    v2 last_movement{0, 0};
+    v2 last_pos{};
+    v2 last_movement{};
 };
 
 inline BugData init_bug(const v2& pos) {
@@ -56,9 +56,9 @@ struct Node {
     v2 pos;
     v2 parent;
 
-    float f{0};
-    float g{0};
-    float h{0};
+    float f{};
+    float g{};
+    float h{};
 
     bool operator==(const Node& other) const {
         return pos == other.pos;
@@ -179,12 +179,19 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
     return {};
 }
 
+// TODO
+// make this and robot_collides function one
+bool bug_collides(const Rectangle& rect, const BugData& bug_data, const MapData& map_data) {
+    return CheckCollisionRecs({bug_data.pos.x - map_data.GRID_WIDTH / 2.0f, bug_data.pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, rect);
+}
+
 void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const MapData& map_data) {
     auto grid_pos = get_grid_from_pos(bug_data.pos, map_data);
 
     if (in_about_center(bug_data.pos, map_data) && bug_data.last_pos != grid_pos) {
         bug_data.path = find_shortest_path(grid_pos, get_grid_from_pos(robot_data.pos, map_data), map_data);
         if (bug_data.path.size() == 0) {
+            bug_data.pos = get_grid_center(bug_data.pos, map_data);
             return;
         }
         bug_data.movement = bug_data.path[0] - grid_pos;
@@ -193,6 +200,13 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
             bug_data.pos = get_grid_center(bug_data.pos, map_data);
             bug_data.last_movement = bug_data.movement;
         }
+    }
+
+    v2 next_grid_pos = get_grid_from_pos(bug_data.pos, map_data) + bug_data.movement;
+    v2 next_pos = get_pos_from_grid(next_grid_pos, map_data);
+    if ((map_data.get_tile(next_grid_pos) == TileType::WALL || map_data.get_tile(next_grid_pos) == TileType::SPAWNER) && bug_collides({next_pos.x - map_data.GRID_WIDTH / 2.0f, next_pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, bug_data, map_data)) {
+        bug_data.pos = get_grid_center(bug_data.pos, map_data);
+        return;
     }
 
     bug_data.pos -= bug_data.movement * dt * MOVEMENT_SPEED * 0.85f;
@@ -217,6 +231,8 @@ int main() {
         .texture = LoadTexture(ROOT_PATH "/assets/robot.png"),
     };
     std::vector<BugData> bugs{5, init_bug(get_pos_from_grid(map.spawner_pos, map))};
+
+    SetTargetFPS(10);
 
     float mean_fps{};
     // float last_time{static_cast<float>(GetTime())};
@@ -271,11 +287,6 @@ int main() {
             ClearBackground(WHITE);
 
             render_map(map);
-
-            // for (const auto& grid_pos : path) {
-            //     auto pos = get_pos_from_grid(grid_pos, map);
-            //     DrawRectangleRec({pos.x - map.GRID_WIDTH / 2.0f, pos.y - map.GRID_HEIGHT / 2.0f, map.GRID_WIDTH, map.GRID_HEIGHT}, GREEN);
-            // }
 
             render_robot(robot, map);
 

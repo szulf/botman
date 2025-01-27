@@ -12,14 +12,14 @@ enum class MovementType {
 };
 
 struct RobotData {
-    v2 pos{0, 0};
-    v2 movement{0, 0};
+    v2 pos{};
+    v2 movement{};
 
-    MovementType next_move{MovementType::NONE};
-    float time_between_moves{0};
+    MovementType next_move{};
+    float time_between_moves{};
 
     Texture2D texture{};
-    u8 texture_frame{0};
+    u8 texture_frame{};
 };
 
 void render_robot(const RobotData& robot_data, const MapData& map_data);
