@@ -1,4 +1,5 @@
 #include "robot.hpp"
+#include "raylib.h"
 #include "raymath.h"
 #include <cstdio>
 
@@ -161,7 +162,7 @@ bool in_about_center(const v2& pos, const MapData& map_data) {
     return (center_pos.x - 4 <= pos.x && center_pos.x + 4 >= pos.x) && (center_pos.y - 4 <= pos.y && center_pos.y + 4 >= pos.y);
 }
 
-void robot_collect(const RobotData& robot_data, MapData& map_data) {
+void robot_collect(RobotData& robot_data, MapData& map_data) {
     auto grid_pos = get_grid_from_pos(robot_data.pos, map_data);
 
     if (map_data.get_tile(grid_pos) == TileType::PELLET && robot_collides({robot_data.pos.x - (map_data.GRID_WIDTH / 8.0f), robot_data.pos.y - (map_data.GRID_HEIGHT / 8.0f), map_data.GRID_WIDTH / 4.0f, map_data.GRID_HEIGHT / 4.0f}, robot_data, map_data)) {
@@ -169,10 +170,15 @@ void robot_collect(const RobotData& robot_data, MapData& map_data) {
         map_data.score += 10;
     }
 
+    static float smashing_start{};
     if (map_data.get_tile(grid_pos) == TileType::HAMMER && robot_collides({robot_data.pos.x - (map_data.GRID_WIDTH / 4.0f), robot_data.pos.y - (map_data.GRID_HEIGHT / 4.0f), map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, robot_data, map_data)) {
         map_data.set_tile(grid_pos, TileType::EMPTY);
-        // TODO
-        // set smashing mode to true
+        robot_data.smashing_mode= true;
+        smashing_start = GetTime();
+    }
+
+    if (robot_data.smashing_mode && GetTime() - smashing_start >= 5.0f) {
+        robot_data.smashing_mode = false;
     }
 }
 

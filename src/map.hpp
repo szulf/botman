@@ -4,7 +4,7 @@
 
 #include <vector>
 
-enum class TileType {
+enum class TileType : u8 {
     EMPTY,
     WALL,
     PELLET,

@@ -48,7 +48,7 @@ struct BugData {
 inline BugData init_bug(const v2& pos) {
     return BugData{
         .pos = pos,
-        .texture = LoadTexture(ROOT_PATH "/assets/bug.png"),
+       .texture = LoadTexture(ROOT_PATH "/assets/bug.png"),
     };
 }
 
@@ -179,6 +179,31 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
     return {};
 }
 
+// CHECK
+// not sure if this will work, because bugs might just path find through the robot which is not ideal
+
+enum class QuadrantType : u8 {
+    TOP_LEFT,
+    TOP_RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_RIGHT,
+};
+
+v2 find_furthest_grid_pos(const v2& grid_pos, const MapData& map_data) {
+    QuadrantType quadrant = static_cast<QuadrantType>(round(grid_pos.x / map_data.WIDTH) + round(grid_pos.y / map_data.HEIGHT) * 2);
+
+    switch (quadrant) {
+        case QuadrantType::TOP_LEFT:
+            return {static_cast<float>(map_data.WIDTH - 2), static_cast<float>(map_data.HEIGHT - 2)};
+        case QuadrantType::TOP_RIGHT:
+            return {1, static_cast<float>(map_data.HEIGHT - 1)};
+        case QuadrantType::BOTTOM_LEFT:
+            return {static_cast<float>(map_data.WIDTH - 2), 1};
+        case QuadrantType::BOTTOM_RIGHT:
+            return {1, 1};
+    }
+}
+
 // TODO
 // make this and robot_collides function one
 bool bug_collides(const Rectangle& rect, const BugData& bug_data, const MapData& map_data) {
@@ -189,7 +214,11 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
     auto grid_pos = get_grid_from_pos(bug_data.pos, map_data);
 
     if (in_about_center(bug_data.pos, map_data) && bug_data.last_pos != grid_pos) {
-        bug_data.path = find_shortest_path(grid_pos, get_grid_from_pos(robot_data.pos, map_data), map_data);
+        if (robot_data.smashing_mode) {
+            bug_data.path = find_shortest_path(grid_pos, find_furthest_grid_pos(get_grid_from_pos(robot_data.pos, map_data), map_data), map_data);
+        } else {
+            bug_data.path = find_shortest_path(grid_pos, get_grid_from_pos(robot_data.pos, map_data), map_data);
+        }
         if (bug_data.path.size() == 0) {
             bug_data.pos = get_grid_center(bug_data.pos, map_data);
             return;
@@ -213,12 +242,27 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 }
 
 // TODO
+// proper gameplay mechanics
+// - winning after collecting all pellets on the map
+// - losing a heart after colliding in a bug(when not in smashing mode)
+// - losing the game after losing all hearts
+//
+// TODO
 // bugs
+// - spawining in with delay
+// - dying and respawning after colliding with the robot(when its in smashing mode)
 //
-// TODO later
+// TODO
+// portal to the passage in the middle of the map
+//
+// TODO 
 // edit mode
+// - gui for it
+// - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt"
 //
-// copy todo from old project
+// TODO
+// entrance screen
+// - play, enter edit mode, change setting(max fps, etc.)
 int main() {
     srand(time(0));
 
@@ -231,8 +275,6 @@ int main() {
         .texture = LoadTexture(ROOT_PATH "/assets/robot.png"),
     };
     std::vector<BugData> bugs{5, init_bug(get_pos_from_grid(map.spawner_pos, map))};
-
-    SetTargetFPS(10);
 
     float mean_fps{};
     // float last_time{static_cast<float>(GetTime())};
