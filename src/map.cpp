@@ -33,6 +33,7 @@ MapData load_map(const v2& map_pos) {
 
             case 'P':
                 map_data.tiles[i] = TileType::PELLET;
+                map_data.pellet_count++;
                 break;
 
             case 'G':
@@ -42,6 +43,10 @@ MapData load_map(const v2& map_pos) {
 
             case 'H':
                 map_data.tiles[i] = TileType::HAMMER;
+                break;
+
+            case ' ':
+            case '.':
                 break;
 
             default:

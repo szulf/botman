@@ -168,6 +168,10 @@ void robot_collect(RobotData& robot_data, MapData& map_data) {
     if (map_data.get_tile(grid_pos) == TileType::PELLET && robot_collides({robot_data.pos.x - (map_data.GRID_WIDTH / 8.0f), robot_data.pos.y - (map_data.GRID_HEIGHT / 8.0f), map_data.GRID_WIDTH / 4.0f, map_data.GRID_HEIGHT / 4.0f}, robot_data, map_data)) {
         map_data.set_tile(grid_pos, TileType::EMPTY);
         map_data.score += 10;
+        map_data.pellet_count--;
+        if (map_data.pellet_count == 0) {
+            map_data.won = true;
+        }
     }
 
     static float smashing_start{};

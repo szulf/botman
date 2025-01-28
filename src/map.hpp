@@ -27,6 +27,9 @@ struct MapData {
     v2 spawner_pos{};
 
     u32 score{};
+    u16 pellet_count{};
+
+    bool won{};
 
     MapData(const v2& map_pos) : pos{map_pos}, tiles{WIDTH * HEIGHT, TileType::EMPTY} {}
 

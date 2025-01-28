@@ -243,7 +243,6 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 
 // TODO
 // proper gameplay mechanics
-// - winning after collecting all pellets on the map
 // - losing a heart after colliding in a bug(when not in smashing mode)
 // - losing the game after losing all hearts
 //
@@ -258,7 +257,7 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 // TODO 
 // edit mode
 // - gui for it
-// - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt"
+// - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
 //
 // TODO
 // entrance screen
@@ -277,7 +276,6 @@ int main() {
     std::vector<BugData> bugs{5, init_bug(get_pos_from_grid(map.spawner_pos, map))};
 
     float mean_fps{};
-    // float last_time{static_cast<float>(GetTime())};
 
     float dt{};
     float last_frame{};
@@ -285,60 +283,69 @@ int main() {
     while (!WindowShouldClose()) {
         mean_fps = (mean_fps + GetFPS()) / 2.0f;
 
-        float current_frame = GetTime();
-        dt = last_frame - current_frame;
-        last_frame = current_frame;
-        if (first) {
-            dt = 0.0f;
-            first = false;
-        }
-
-        // ----------------
-        // PROCESSING INPUT
-        // ----------------
-        {
-            if (IsKeyPressed(KEY_UP)) {
-                robot_move(MovementType::UP, dt, robot, map);
-            } else if (IsKeyPressed(KEY_DOWN)) {
-                robot_move(MovementType::DOWN, dt, robot, map);
-            } else if (IsKeyPressed(KEY_LEFT)) {
-                robot_move(MovementType::LEFT, dt, robot, map);
-            } else if (IsKeyPressed(KEY_RIGHT)) {
-                robot_move(MovementType::RIGHT, dt, robot, map);
-            } else {
-                robot_move(MovementType::NONE, dt, robot, map);
+        if (!map.won) {
+            float current_frame = GetTime();
+            dt = last_frame - current_frame;
+            last_frame = current_frame;
+            if (first) {
+                dt = 0.0f;
+                first = false;
             }
-        }
 
-        // -------------------
-        // SOME GAMEPLAY STUFF
-        // -------------------
-        {
-            robot_collect(robot, map);
-
-            for (auto& bug : bugs) {
-                bug_move(dt, bug, robot, map);
+            // -----
+            // INPUT
+            // -----
+            {
+                if (IsKeyPressed(KEY_UP)) {
+                    robot_move(MovementType::UP, dt, robot, map);
+                } else if (IsKeyPressed(KEY_DOWN)) {
+                    robot_move(MovementType::DOWN, dt, robot, map);
+                } else if (IsKeyPressed(KEY_LEFT)) {
+                    robot_move(MovementType::LEFT, dt, robot, map);
+                } else if (IsKeyPressed(KEY_RIGHT)) {
+                    robot_move(MovementType::RIGHT, dt, robot, map);
+                } else {
+                    robot_move(MovementType::NONE, dt, robot, map);
+                }
             }
-        }
 
-        // ---------
-        // RENDERING
-        // ---------
-        {
+            // --------
+            // GAMEPLAY
+            // --------
+            {
+                robot_collect(robot, map);
+
+                for (auto& bug : bugs) {
+                    bug_move(dt, bug, robot, map);
+                }
+            }
+
+            // ---------
+            // RENDERING
+            // ---------
+            {
+                BeginDrawing();
+                ClearBackground(WHITE);
+
+                render_map(map);
+
+                render_robot(robot, map);
+
+                DrawText(std::to_string(map.score).c_str(), 50, 100, 50, BLACK);
+
+                DrawFPS(10, 10);
+
+                for (const auto& bug_data : bugs) {
+                    DrawTexturePro(bug_data.texture, {static_cast<float>(map.GRID_WIDTH * bug_data.texture_frame), 0, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {bug_data.pos.x, bug_data.pos.y, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+                }
+
+                EndDrawing();
+            }
+        } else {
             BeginDrawing();
             ClearBackground(WHITE);
 
-            render_map(map);
-
-            render_robot(robot, map);
-
-            DrawText(std::to_string(map.score).c_str(), 50, 100, 50, BLACK);
-
-            DrawFPS(10, 10);
-
-            for (const auto& bug_data : bugs) {
-                DrawTexturePro(bug_data.texture, {static_cast<float>(map.GRID_WIDTH * bug_data.texture_frame), 0, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {bug_data.pos.x, bug_data.pos.y, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
-            }
+            DrawText("YOU WON!", map.pos.x, map.pos.y, 50, BLACK);
 
             EndDrawing();
         }
