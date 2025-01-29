@@ -7,12 +7,11 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <ctime>
 #include <functional>
 #include <limits>
-#include <print>
 #include <string>
 #include <unordered_set>
-
 
 const char* print_tile(TileType tile) {
     switch (tile) {
@@ -38,6 +37,8 @@ struct BugData {
     Texture2D texture{};
     u8 texture_frame{};
 
+    bool dead{};
+
     // TODO
     // think of something better than this
     std::vector<v2> path{};
@@ -48,7 +49,7 @@ struct BugData {
 inline BugData init_bug(const v2& pos) {
     return BugData{
         .pos = pos,
-       .texture = LoadTexture(ROOT_PATH "/assets/bug.png"),
+        .texture = LoadTexture(ROOT_PATH "/assets/bug.png"),
     };
 }
 
@@ -204,17 +205,17 @@ v2 find_furthest_grid_pos(const v2& grid_pos, const MapData& map_data) {
     }
 }
 
-// TODO
-// make this and robot_collides function one
-bool bug_collides(const Rectangle& rect, const BugData& bug_data, const MapData& map_data) {
-    return CheckCollisionRecs({bug_data.pos.x - map_data.GRID_WIDTH / 2.0f, bug_data.pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, rect);
+Rectangle bug_get_rect(const BugData& bug_data, const MapData& map_data) {
+    return {bug_data.pos.x - map_data.GRID_WIDTH / 2.0f, bug_data.pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
 }
 
 void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const MapData& map_data) {
     auto grid_pos = get_grid_from_pos(bug_data.pos, map_data);
 
     if (in_about_center(bug_data.pos, map_data) && bug_data.last_pos != grid_pos) {
-        if (robot_data.smashing_mode) {
+        if (bug_data.dead) {
+            bug_data.path = find_shortest_path(grid_pos, map_data.spawner_pos, map_data);
+        } else if (robot_data.smashing_mode) {
             bug_data.path = find_shortest_path(grid_pos, find_furthest_grid_pos(get_grid_from_pos(robot_data.pos, map_data), map_data), map_data);
         } else {
             bug_data.path = find_shortest_path(grid_pos, get_grid_from_pos(robot_data.pos, map_data), map_data);
@@ -233,12 +234,24 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 
     v2 next_grid_pos = get_grid_from_pos(bug_data.pos, map_data) + bug_data.movement;
     v2 next_pos = get_pos_from_grid(next_grid_pos, map_data);
-    if ((map_data.get_tile(next_grid_pos) == TileType::WALL || map_data.get_tile(next_grid_pos) == TileType::SPAWNER) && bug_collides({next_pos.x - map_data.GRID_WIDTH / 2.0f, next_pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, bug_data, map_data)) {
+    if ((map_data.get_tile(next_grid_pos) == TileType::WALL || (map_data.get_tile(next_grid_pos) == TileType::SPAWNER && next_grid_pos != bug_data.path.back())) && CheckCollisionRecs({next_pos.x - map_data.GRID_WIDTH / 2.0f, next_pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, bug_get_rect(bug_data, map_data))) {
         bug_data.pos = get_grid_center(bug_data.pos, map_data);
         return;
     }
 
     bug_data.pos -= bug_data.movement * dt * MOVEMENT_SPEED * 0.85f;
+}
+
+void bug_collide(BugData& bug_data, const RobotData& robot_data, MapData& map_data) {
+    if (CheckCollisionRecs(bug_get_rect(bug_data, map_data), robot_get_rect(robot_data, map_data))) {
+        if (robot_data.smashing_mode) {
+            bug_data.dead = true;
+        } else {
+            // TODO
+            // change this to taking hearts away, instead of losing the game immediately
+            map_data.state = GameStateType::LOST;
+        }
+    }
 }
 
 // TODO
@@ -248,8 +261,9 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 //
 // TODO
 // bugs
+// -* dying and respawning after colliding with the robot(when its in smashing mode)
+//  - should stay still for a second and then go back to spawner
 // - spawining in with delay
-// - dying and respawning after colliding with the robot(when its in smashing mode)
 //
 // TODO
 // portal to the passage in the middle of the map
@@ -262,6 +276,9 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 // TODO
 // entrance screen
 // - play, enter edit mode, change setting(max fps, etc.)
+//
+// TODO
+// change map_data to game_data ????
 int main() {
     srand(time(0));
 
@@ -283,71 +300,94 @@ int main() {
     while (!WindowShouldClose()) {
         mean_fps = (mean_fps + GetFPS()) / 2.0f;
 
-        if (!map.won) {
-            float current_frame = GetTime();
-            dt = last_frame - current_frame;
-            last_frame = current_frame;
-            if (first) {
-                dt = 0.0f;
-                first = false;
-            }
-
-            // -----
-            // INPUT
-            // -----
-            {
-                if (IsKeyPressed(KEY_UP)) {
-                    robot_move(MovementType::UP, dt, robot, map);
-                } else if (IsKeyPressed(KEY_DOWN)) {
-                    robot_move(MovementType::DOWN, dt, robot, map);
-                } else if (IsKeyPressed(KEY_LEFT)) {
-                    robot_move(MovementType::LEFT, dt, robot, map);
-                } else if (IsKeyPressed(KEY_RIGHT)) {
-                    robot_move(MovementType::RIGHT, dt, robot, map);
-                } else {
-                    robot_move(MovementType::NONE, dt, robot, map);
+        switch (map.state) {
+            case GameStateType::LOST:
+            case GameStateType::RUNNING: {
+                float current_frame = GetTime();
+                dt = last_frame - current_frame;
+                last_frame = current_frame;
+                if (first) {
+                    dt = 0.0f;
+                    first = false;
                 }
-            }
 
-            // --------
-            // GAMEPLAY
-            // --------
-            {
-                robot_collect(robot, map);
-
-                for (auto& bug : bugs) {
-                    bug_move(dt, bug, robot, map);
+                // -----
+                // INPUT
+                // -----
+                {
+                    if (IsKeyPressed(KEY_UP)) {
+                        robot_move(MovementType::UP, dt, robot, map);
+                    } else if (IsKeyPressed(KEY_DOWN)) {
+                        robot_move(MovementType::DOWN, dt, robot, map);
+                    } else if (IsKeyPressed(KEY_LEFT)) {
+                        robot_move(MovementType::LEFT, dt, robot, map);
+                    } else if (IsKeyPressed(KEY_RIGHT)) {
+                        robot_move(MovementType::RIGHT, dt, robot, map);
+                    } else {
+                        robot_move(MovementType::NONE, dt, robot, map);
+                    }
                 }
+
+                // --------
+                // GAMEPLAY
+                // --------
+                {
+                    robot_collect(robot, map);
+
+                    for (auto& bug : bugs) {
+                        bug_move(dt, bug, robot, map);
+
+                        bug_collide(bug, robot, map);
+                    }
+                }
+
+                // ---------
+                // RENDERING
+                // ---------
+                {
+                    BeginDrawing();
+                    ClearBackground(WHITE);
+
+                    render_map(map);
+
+                    render_robot(robot, map);
+
+                    DrawText(std::to_string(map.score).c_str(), 50, 100, 50, BLACK);
+
+                    if (robot.smashing_mode) {
+                        DrawText("s", 50, 150, 50, BLACK);
+                    }
+
+                    DrawFPS(10, 10);
+
+                    for (const auto& bug_data : bugs) {
+                        DrawTexturePro(bug_data.texture, {static_cast<float>(map.GRID_WIDTH * bug_data.texture_frame), 0, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {bug_data.pos.x, bug_data.pos.y, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+                    }
+
+                    EndDrawing();
+                }
+                break;
             }
 
-            // ---------
-            // RENDERING
-            // ---------
-            {
+            case GameStateType::WON: {
                 BeginDrawing();
                 ClearBackground(WHITE);
 
-                render_map(map);
-
-                render_robot(robot, map);
-
-                DrawText(std::to_string(map.score).c_str(), 50, 100, 50, BLACK);
-
-                DrawFPS(10, 10);
-
-                for (const auto& bug_data : bugs) {
-                    DrawTexturePro(bug_data.texture, {static_cast<float>(map.GRID_WIDTH * bug_data.texture_frame), 0, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {bug_data.pos.x, bug_data.pos.y, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
-                }
+                DrawText("YOU WON!", map.pos.x, map.pos.y, 50, BLACK);
 
                 EndDrawing();
+                break;
             }
-        } else {
-            BeginDrawing();
-            ClearBackground(WHITE);
 
-            DrawText("YOU WON!", map.pos.x, map.pos.y, 50, BLACK);
-
-            EndDrawing();
+            // case GameStateType::LOST: {
+            //     BeginDrawing();
+            //     ClearBackground(WHITE);
+            //
+            //     DrawText("YOU LOST!", map.pos.x, map.pos.y, 50, BLACK);
+            //
+            //     EndDrawing();
+            //     break;
+            // }
         }
     }
 
