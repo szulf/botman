@@ -1,4 +1,3 @@
-#include "constants.hpp"
 #include "map.hpp"
 #include "robot.hpp"
 
@@ -8,10 +7,9 @@
 #include <cmath>
 #include <cstdio>
 #include <ctime>
-#include <functional>
+#include <array>
 #include <limits>
 #include <string>
-#include <unordered_set>
 
 const char* print_tile(TileType tile) {
     switch (tile) {
@@ -30,6 +28,23 @@ const char* print_tile(TileType tile) {
     }
 }
 
+enum class BugStateType : u8 {
+    ALIVE,
+    DEAD,
+    RESPAWNING,
+};
+
+const char* print_bug_state(BugStateType bug_state) {
+    switch (bug_state) {
+        case BugStateType::ALIVE:
+            return "alive";
+        case BugStateType::DEAD:
+            return "dead";
+        case BugStateType::RESPAWNING:
+            return "respawning";
+    }
+}
+
 struct BugData {
     v2 pos{};
     v2 movement{};
@@ -37,19 +52,19 @@ struct BugData {
     Texture2D texture{};
     u8 texture_frame{};
 
-    bool dead{};
+    BugStateType state{BugStateType::DEAD};
+    float dead_time{};
 
-    // TODO
-    // think of something better than this
     std::vector<v2> path{};
     v2 last_pos{};
     v2 last_movement{};
 };
 
-inline BugData init_bug(const v2& pos) {
+inline BugData init_bug(const v2& pos, u8 idx) {
     return BugData{
         .pos = pos,
         .texture = LoadTexture(ROOT_PATH "/assets/bug.png"),
+        .dead_time = static_cast<float>(GetTime() + idx),
     };
 }
 
@@ -66,30 +81,14 @@ struct Node {
     }
 };
 
-struct NodeHash {
-    size_t operator()(const Node& n) const {
-        size_t combined = std::hash<float>()(n.pos.x);
-        combined ^= std::hash<float>()(n.pos.y) + 0x9e3779b9 + (combined << 6) + (combined >> 2);
-        combined ^= std::hash<float>()(n.g) + 0x9e3779b9 + (combined << 6) + (combined >> 2);
-
-        return combined;
-    }
-};
-
-std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_pos, const MapData& map_data) {
-    // TODO
-    // idk why closed_set.find() doesnt work
-    // it it supposed to be about O(1) which is better than the current implementation
-    // I cant figure it out tho, try to change this later
-
+std::vector<v2> find_path(const v2& start_grid_pos, const v2& end_grid_pos, const MapData& map_data) {
     if (start_grid_pos == end_grid_pos) {
         return {};
     }
 
-    const auto NodeCmp = [](const Node& n1, const Node& n2) { return n1.pos == n2.pos; };
-    std::unordered_set<Node, NodeHash, decltype(NodeCmp)> closed_set;
-    std::unordered_set<Node, NodeHash, decltype(NodeCmp)> open_set{};
-    open_set.insert({start_grid_pos});
+    std::vector<Node> closed_set;
+    std::vector<Node> open_set{};
+    open_set.push_back({start_grid_pos});
 
     while (!open_set.empty()) {
         Node q{};
@@ -100,7 +99,7 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
                 q = n;
             }
         }
-        open_set.erase(open_set.find(q));
+        open_set.erase(std::ranges::find(open_set, Node{q}));
 
         std::array<Node, 4> successors{
             Node{.pos = {.x = q.pos.x + 1, .y = q.pos.y}, .parent = q.pos},
@@ -111,7 +110,7 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
 
         for (auto& successor : successors) {
             if (successor.pos == end_grid_pos) {
-                closed_set.insert(q);
+                closed_set.push_back(q);
                 Node curr = successor;
                 std::vector<v2> path;
 
@@ -152,7 +151,7 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
                 if (it_os.f < successor.f) {
                     continue;
                 } else {
-                    open_set.erase(it_os);
+                    open_set.erase(std::ranges::find(open_set, it_os));
                 }
             }
 
@@ -170,18 +169,15 @@ std::vector<v2> find_shortest_path(const v2& start_grid_pos, const v2& end_grid_
                     continue;
                 }
             } else {
-                open_set.insert(successor);
+                open_set.push_back(successor);
             }
         }
 
-        closed_set.insert(q);
+        closed_set.push_back(q);
     };
 
     return {};
 }
-
-// CHECK
-// not sure if this will work, because bugs might just path find through the robot which is not ideal
 
 enum class QuadrantType : u8 {
     TOP_LEFT,
@@ -210,15 +206,19 @@ Rectangle bug_get_rect(const BugData& bug_data, const MapData& map_data) {
 }
 
 void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const MapData& map_data) {
+    if (bug_data.state == BugStateType::DEAD && GetTime() - bug_data.dead_time < 1) {
+        return;
+    }
+
     auto grid_pos = get_grid_from_pos(bug_data.pos, map_data);
 
     if (in_about_center(bug_data.pos, map_data) && bug_data.last_pos != grid_pos) {
-        if (bug_data.dead) {
-            bug_data.path = find_shortest_path(grid_pos, map_data.spawner_pos, map_data);
+        if (bug_data.state == BugStateType::DEAD) {
+            bug_data.path = find_path(grid_pos, map_data.spawner_pos, map_data);
         } else if (robot_data.smashing_mode) {
-            bug_data.path = find_shortest_path(grid_pos, find_furthest_grid_pos(get_grid_from_pos(robot_data.pos, map_data), map_data), map_data);
+            bug_data.path = find_path(grid_pos, find_furthest_grid_pos(get_grid_from_pos(robot_data.pos, map_data), map_data), map_data);
         } else {
-            bug_data.path = find_shortest_path(grid_pos, get_grid_from_pos(robot_data.pos, map_data), map_data);
+            bug_data.path = find_path(grid_pos, get_grid_from_pos(robot_data.pos, map_data), map_data);
         }
         if (bug_data.path.size() == 0) {
             bug_data.pos = get_grid_center(bug_data.pos, map_data);
@@ -245,7 +245,8 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 void bug_collide(BugData& bug_data, const RobotData& robot_data, MapData& map_data) {
     if (CheckCollisionRecs(bug_get_rect(bug_data, map_data), robot_get_rect(robot_data, map_data))) {
         if (robot_data.smashing_mode) {
-            bug_data.dead = true;
+            bug_data.state = BugStateType::DEAD;
+            bug_data.dead_time = GetTime();
         } else {
             // TODO
             // change this to taking hearts away, instead of losing the game immediately
@@ -261,9 +262,10 @@ void bug_collide(BugData& bug_data, const RobotData& robot_data, MapData& map_da
 //
 // TODO
 // bugs
-// -* dying and respawning after colliding with the robot(when its in smashing mode)
-//  - should stay still for a second and then go back to spawner
-// - spawining in with delay
+// - dying and respawning after colliding with the robot(when its in smashing mode)
+//   - flashing or playing some animation after death
+//   - transparent while returning
+// -* spawining in with delay
 //
 // TODO
 // portal to the passage in the middle of the map
@@ -278,7 +280,15 @@ void bug_collide(BugData& bug_data, const RobotData& robot_data, MapData& map_da
 // - play, enter edit mode, change setting(max fps, etc.)
 //
 // TODO
+// better art ahhhhh
+//
+// TODO
 // change map_data to game_data ????
+// or just make a new struct game_data and move some variables from map_data to there
+//
+// TODO
+// lower ram usage ????
+// i might be wrong but i think this thing takes 400mb of ram to run which is a little insane tbh
 int main() {
     srand(time(0));
 
@@ -290,8 +300,15 @@ int main() {
         .next_move = MovementType::LEFT,
         .texture = LoadTexture(ROOT_PATH "/assets/robot.png"),
     };
-    std::vector<BugData> bugs{5, init_bug(get_pos_from_grid(map.spawner_pos, map))};
+    BugData bugs[1] = {
+        init_bug(get_pos_from_grid(map.spawner_pos, map), 1),
+        // init_bug(get_pos_from_grid(map.spawner_pos, map), 1),
+        // init_bug(get_pos_from_grid(map.spawner_pos, map), 2),
+        // init_bug(get_pos_from_grid(map.spawner_pos, map), 3),
+        // init_bug(get_pos_from_grid(map.spawner_pos, map), 4),
+    };
 
+    SetTargetFPS(60);
     float mean_fps{};
 
     float dt{};
