@@ -26,6 +26,8 @@ const char* print_tile(TileType tile) {
         case TileType::START_POS:
             return "start_pos";
     }
+
+    return "";
 }
 
 enum class BugStateType : u8 {
@@ -43,6 +45,8 @@ const char* print_bug_state(BugStateType bug_state) {
         case BugStateType::RESPAWNING:
             return "respawning";
     }
+
+    return "";
 }
 
 struct BugData {
@@ -52,7 +56,7 @@ struct BugData {
     Texture2D texture{};
     u8 texture_frame{};
 
-    BugStateType state{BugStateType::DEAD};
+    BugStateType state{BugStateType::RESPAWNING};
     float dead_time{};
 
     std::vector<v2> path{};
@@ -199,6 +203,8 @@ v2 find_furthest_grid_pos(const v2& grid_pos, const MapData& map_data) {
         case QuadrantType::BOTTOM_RIGHT:
             return {1, 1};
     }
+
+    return {0, 0};
 }
 
 Rectangle bug_get_rect(const BugData& bug_data, const MapData& map_data) {
@@ -209,6 +215,24 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
     if (bug_data.state == BugStateType::DEAD && GetTime() - bug_data.dead_time < 1) {
         return;
     }
+
+    if (bug_data.state == BugStateType::DEAD && in_about_center(bug_data.pos, map_data) && get_grid_from_pos(bug_data.pos, map_data) == map_data.spawner_pos) {
+        bug_data.state = BugStateType::RESPAWNING;
+        bug_data.dead_time = GetTime();
+        bug_data.pos = get_grid_center(bug_data.pos, map_data);
+        return;
+    }
+
+    if (bug_data.state == BugStateType::RESPAWNING && GetTime() - bug_data.dead_time > 1) {
+        printf("herehrhehrehrehrherhasdhfkjshgljkfdhsfljkghsdfjklghsdlkjfghsdljkfhgsldkfjhg\n");
+        bug_data.state = BugStateType::ALIVE;
+        return;
+    }
+
+    if (bug_data.state == BugStateType::RESPAWNING) {
+        return;
+    }
+
 
     auto grid_pos = get_grid_from_pos(bug_data.pos, map_data);
 

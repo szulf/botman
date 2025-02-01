@@ -197,4 +197,6 @@ const char* print_movement(MovementType move) {
         case MovementType::DOWN:
             return "down";
     };
+
+    return "";
 }
