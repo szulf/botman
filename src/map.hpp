@@ -37,8 +37,6 @@ struct MapData {
 
     GameStateType state{};
 
-    MapData(const v2& map_pos) : pos{map_pos}, tiles{WIDTH * HEIGHT, TileType::EMPTY} {}
-
     inline TileType get_tile(v2 pos) const {
         return tiles[pos.x + WIDTH * pos.y];
     }

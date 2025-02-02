@@ -12,6 +12,8 @@ enum class MovementType : u8 {
 };
 
 struct RobotData {
+    u8 lifes{3};
+
     v2 pos{};
     v2 movement{};
 

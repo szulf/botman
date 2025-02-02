@@ -10,6 +10,7 @@
 #include <array>
 #include <limits>
 #include <string>
+#include <span>
 
 const char* print_tile(TileType tile) {
     switch (tile) {
@@ -56,7 +57,7 @@ struct BugData {
     Texture2D texture{};
     u8 texture_frame{};
 
-    BugStateType state{BugStateType::RESPAWNING};
+    BugStateType state{};
     float dead_time{};
 
     std::vector<v2> path{};
@@ -68,6 +69,7 @@ inline BugData init_bug(const v2& pos, u8 idx) {
     return BugData{
         .pos = pos,
         .texture = LoadTexture(ROOT_PATH "/assets/bug.png"),
+        .state = BugStateType::RESPAWNING,
         .dead_time = static_cast<float>(GetTime() + idx),
     };
 }
@@ -224,7 +226,6 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
     }
 
     if (bug_data.state == BugStateType::RESPAWNING && GetTime() - bug_data.dead_time > 1) {
-        printf("herehrhehrehrehrherhasdhfkjshgljkfdhsfljkghsdfjklghsdlkjfghsdljkfhgsldkfjhg\n");
         bug_data.state = BugStateType::ALIVE;
         return;
     }
@@ -266,30 +267,54 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
     bug_data.pos -= bug_data.movement * dt * MOVEMENT_SPEED * 0.85f;
 }
 
-void bug_collide(BugData& bug_data, const RobotData& robot_data, MapData& map_data) {
+inline void reset_game(std::span<BugData> bug_datas, RobotData& robot_data, MapData& map_data) {
+    map_data = load_map({200, 50});
+
+    for (u8 i = 1; auto& bug : bug_datas) {
+        bug.pos = get_pos_from_grid(map_data.spawner_pos, map_data);
+        bug.state = BugStateType::RESPAWNING;
+        bug.dead_time = GetTime() + i;
+        i++;
+    }
+
+    robot_data.pos = get_pos_from_grid(map_data.start_pos, map_data);
+    robot_data.next_move = MovementType::LEFT;
+    robot_data.time_between_moves = 0;
+    robot_data.movement = {-1, 0};
+}
+
+void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data, std::span<BugData> bug_datas) {
+    if (bug_data.state != BugStateType::ALIVE) {
+        return;
+    }
+
     if (CheckCollisionRecs(bug_get_rect(bug_data, map_data), robot_get_rect(robot_data, map_data))) {
         if (robot_data.smashing_mode) {
             bug_data.state = BugStateType::DEAD;
             bug_data.dead_time = GetTime();
         } else {
-            // TODO
-            // change this to taking hearts away, instead of losing the game immediately
-            map_data.state = GameStateType::LOST;
+            robot_data.lifes -= 1;
+            if (robot_data.lifes > 0) {
+                reset_game(bug_datas, robot_data, map_data);
+            } else {
+                map_data.state = GameStateType::LOST;
+            }
         }
     }
 }
 
 // TODO
 // proper gameplay mechanics
-// - losing a heart after colliding in a bug(when not in smashing mode)
-// - losing the game after losing all hearts
+// -* losing a heart after colliding in a bug(when not in smashing mode)
+//   - restart the game after losing a heart
+//   - some delay after dying
 //
 // TODO
 // bugs
 // - dying and respawning after colliding with the robot(when its in smashing mode)
 //   - flashing or playing some animation after death
-//   - transparent while returning
-// -* spawining in with delay
+//   - a little transparent while returning
+// - adjust the spawning delays
 //
 // TODO
 // portal to the passage in the middle of the map
@@ -324,15 +349,16 @@ int main() {
         .next_move = MovementType::LEFT,
         .texture = LoadTexture(ROOT_PATH "/assets/robot.png"),
     };
-    BugData bugs[1] = {
+    std::array<BugData, 5> bugs = {
+        // IF YOU CHANGE THE NUMBERS IN HERE ALSO CHANGE THE NUMBERS IN THE RESTART CODE
         init_bug(get_pos_from_grid(map.spawner_pos, map), 1),
-        // init_bug(get_pos_from_grid(map.spawner_pos, map), 1),
-        // init_bug(get_pos_from_grid(map.spawner_pos, map), 2),
-        // init_bug(get_pos_from_grid(map.spawner_pos, map), 3),
-        // init_bug(get_pos_from_grid(map.spawner_pos, map), 4),
+        init_bug(get_pos_from_grid(map.spawner_pos, map), 2),
+        init_bug(get_pos_from_grid(map.spawner_pos, map), 3),
+        init_bug(get_pos_from_grid(map.spawner_pos, map), 4),
+        init_bug(get_pos_from_grid(map.spawner_pos, map), 5),
     };
 
-    SetTargetFPS(60);
+    // SetTargetFPS(10);
     float mean_fps{};
 
     float dt{};
@@ -342,7 +368,6 @@ int main() {
         mean_fps = (mean_fps + GetFPS()) / 2.0f;
 
         switch (map.state) {
-            case GameStateType::LOST:
             case GameStateType::RUNNING: {
                 float current_frame = GetTime();
                 dt = last_frame - current_frame;
@@ -367,6 +392,10 @@ int main() {
                     } else {
                         robot_move(MovementType::NONE, dt, robot, map);
                     }
+
+                    if (IsKeyPressed(KEY_SPACE)) {
+                        reset_game(bugs, robot, map);
+                    }
                 }
 
                 // --------
@@ -378,7 +407,7 @@ int main() {
                     for (auto& bug : bugs) {
                         bug_move(dt, bug, robot, map);
 
-                        bug_collide(bug, robot, map);
+                        bug_collide(bug, robot, map, bugs);
                     }
                 }
 
@@ -420,15 +449,15 @@ int main() {
                 break;
             }
 
-            // case GameStateType::LOST: {
-            //     BeginDrawing();
-            //     ClearBackground(WHITE);
-            //
-            //     DrawText("YOU LOST!", map.pos.x, map.pos.y, 50, BLACK);
-            //
-            //     EndDrawing();
-            //     break;
-            // }
+            case GameStateType::LOST: {
+                BeginDrawing();
+                ClearBackground(WHITE);
+
+                DrawText("YOU LOST!", map.pos.x, map.pos.y, 50, BLACK);
+
+                EndDrawing();
+                break;
+            }
         }
     }
 

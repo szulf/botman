@@ -5,7 +5,10 @@
 #include <cmath>
 
 MapData load_map(const v2& map_pos) {
-    MapData map_data{map_pos};
+    MapData map_data{
+        .pos = map_pos,
+        .tiles = {MapData::WIDTH * MapData::HEIGHT, TileType::EMPTY},
+    };
 
     for (u8 i = 0; i < 17; i++) {
         map_data.set_tile({static_cast<float>(i), 0}, TileType::WALL);
