@@ -24,6 +24,9 @@ struct RobotData {
     u8 texture_frame{};
 
     bool smashing_mode{};
+
+    bool is_dead{};
+    float dead_delay{};
 };
 
 void render_robot(const RobotData& robot_data, const MapData& map_data);

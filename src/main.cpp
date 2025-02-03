@@ -4,11 +4,8 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <algorithm>
-#include <cmath>
-#include <cstdio>
 #include <ctime>
 #include <array>
-#include <limits>
 #include <string>
 #include <span>
 
@@ -56,9 +53,13 @@ struct BugData {
 
     Texture2D texture{};
     u8 texture_frame{};
+    Color tint{255, 255, 255, 255};
 
     BugStateType state{};
     float dead_time{};
+
+    // not proud of this
+    float flash_delay{};
 
     std::vector<v2> path{};
     v2 last_pos{};
@@ -72,6 +73,14 @@ inline BugData init_bug(const v2& pos, u8 idx) {
         .state = BugStateType::RESPAWNING,
         .dead_time = static_cast<float>(GetTime() + idx),
     };
+}
+
+Rectangle bug_get_rect(const BugData& bug_data, const MapData& map_data) {
+    return {bug_data.pos.x - map_data.GRID_WIDTH / 2.0f, bug_data.pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
+}
+
+void render_bug(const BugData& bug_data, const MapData& map_data) {
+    DrawTexturePro(bug_data.texture, {static_cast<float>(map_data.GRID_WIDTH * bug_data.texture_frame), 0, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {bug_data.pos.x, bug_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, bug_data.tint);
 }
 
 struct Node {
@@ -209,19 +218,24 @@ v2 find_furthest_grid_pos(const v2& grid_pos, const MapData& map_data) {
     return {0, 0};
 }
 
-Rectangle bug_get_rect(const BugData& bug_data, const MapData& map_data) {
-    return {bug_data.pos.x - map_data.GRID_WIDTH / 2.0f, bug_data.pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
-}
-
 void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const MapData& map_data) {
     if (bug_data.state == BugStateType::DEAD && GetTime() - bug_data.dead_time < 1) {
+        if (GetTime() - bug_data.flash_delay > 0.2) {
+            bug_data.tint.a = bug_data.tint.a == 255 ? 80 : 255;
+            bug_data.flash_delay = GetTime();
+        }
         return;
+    }
+
+    if (bug_data.state == BugStateType::DEAD) {
+        bug_data.tint.a = 80;
     }
 
     if (bug_data.state == BugStateType::DEAD && in_about_center(bug_data.pos, map_data) && get_grid_from_pos(bug_data.pos, map_data) == map_data.spawner_pos) {
         bug_data.state = BugStateType::RESPAWNING;
         bug_data.dead_time = GetTime();
         bug_data.pos = get_grid_center(bug_data.pos, map_data);
+        bug_data.tint.a = 255;
         return;
     }
 
@@ -271,6 +285,7 @@ inline void reset_game(std::span<BugData> bug_datas, RobotData& robot_data, MapD
     map_data = load_map({200, 50});
 
     for (u8 i = 1; auto& bug : bug_datas) {
+        bug.tint.a = 255;
         bug.pos = get_pos_from_grid(map_data.spawner_pos, map_data);
         bug.state = BugStateType::RESPAWNING;
         bug.dead_time = GetTime() + i;
@@ -283,7 +298,7 @@ inline void reset_game(std::span<BugData> bug_datas, RobotData& robot_data, MapD
     robot_data.movement = {-1, 0};
 }
 
-void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data, std::span<BugData> bug_datas) {
+void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
     if (bug_data.state != BugStateType::ALIVE) {
         return;
     }
@@ -294,26 +309,14 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data, st
             bug_data.dead_time = GetTime();
         } else {
             robot_data.lifes -= 1;
-            if (robot_data.lifes > 0) {
-                reset_game(bug_datas, robot_data, map_data);
-            } else {
-                map_data.state = GameStateType::LOST;
-            }
+            robot_data.is_dead = true;
+            robot_data.dead_delay = GetTime();
         }
     }
 }
 
 // TODO
-// proper gameplay mechanics
-// -* losing a heart after colliding in a bug(when not in smashing mode)
-//   - restart the game after losing a heart
-//   - some delay after dying
-//
-// TODO
 // bugs
-// - dying and respawning after colliding with the robot(when its in smashing mode)
-//   - flashing or playing some animation after death
-//   - a little transparent while returning
 // - adjust the spawning delays
 //
 // TODO
@@ -330,6 +333,9 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data, st
 //
 // TODO
 // better art ahhhhh
+//
+// TODO
+// make the hitbox of the robot a little smaller ?????
 //
 // TODO
 // change map_data to game_data ????
@@ -372,6 +378,21 @@ int main() {
                 float current_frame = GetTime();
                 dt = last_frame - current_frame;
                 last_frame = current_frame;
+
+                if (robot.is_dead) {
+                    if (GetTime() - robot.dead_delay < 1) {
+                        continue;
+                    } else {
+                        if (robot.lifes == 0) {
+                            map.state = GameStateType::LOST;
+                        } else {
+                            first = true;
+                            reset_game(bugs, robot, map);
+                        }
+                        robot.is_dead = false;
+                    }
+                }
+
                 if (first) {
                     dt = 0.0f;
                     first = false;
@@ -407,7 +428,7 @@ int main() {
                     for (auto& bug : bugs) {
                         bug_move(dt, bug, robot, map);
 
-                        bug_collide(bug, robot, map, bugs);
+                        bug_collide(bug, robot, map);
                     }
                 }
 
@@ -431,7 +452,7 @@ int main() {
                     DrawFPS(10, 10);
 
                     for (const auto& bug_data : bugs) {
-                        DrawTexturePro(bug_data.texture, {static_cast<float>(map.GRID_WIDTH * bug_data.texture_frame), 0, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {bug_data.pos.x, bug_data.pos.y, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+                        render_bug(bug_data, map);
                     }
 
                     EndDrawing();

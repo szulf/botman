@@ -1,3 +1,5 @@
 build/
 build-release/
 .cache/
+commit_msg.txt
+perf.data
