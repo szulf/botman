@@ -282,8 +282,6 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 }
 
 inline void reset_game(std::span<BugData> bug_datas, RobotData& robot_data, MapData& map_data) {
-    map_data = load_map({200, 50});
-
     for (u8 i = 1; auto& bug : bug_datas) {
         bug.tint.a = 255;
         bug.pos = get_pos_from_grid(map_data.spawner_pos, map_data);
@@ -296,6 +294,10 @@ inline void reset_game(std::span<BugData> bug_datas, RobotData& robot_data, MapD
     robot_data.next_move = MovementType::LEFT;
     robot_data.time_between_moves = 0;
     robot_data.movement = {-1, 0};
+
+    robot_data.flip = -1;
+    robot_data.rotation = RotationType::SIDE;
+    robot_data.texture_accumulator = 0;
 }
 
 void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
@@ -316,13 +318,12 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
 }
 
 // TODO
-// bugs
-// - adjust the spawning delays
-//
-// TODO
 // portal to the passage in the middle of the map
 //
-// TODO 
+// TODO
+// play animations upon death for both bugs and robot
+//
+// TODO
 // edit mode
 // - gui for it
 // - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
@@ -332,7 +333,14 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
 // - play, enter edit mode, change setting(max fps, etc.)
 //
 // TODO
-// better art ahhhhh
+// art
+// - animations
+//   - walking
+//   - on death
+//   - on hammer pickup
+//
+// TODO
+// music
 //
 // TODO
 // make the hitbox of the robot a little smaller ?????

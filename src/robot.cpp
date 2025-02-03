@@ -4,8 +4,10 @@
 #include "raymath.h"
 #include <cstdio>
 
-void render_robot(const RobotData& robot_data, const MapData& map_data) {
-    DrawTexturePro(robot_data.texture, {static_cast<float>(map_data.GRID_WIDTH * robot_data.texture_frame), 0, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {robot_data.pos.x, robot_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+void render_robot(RobotData& robot_data, const MapData& map_data) {
+    robot_data.texture_frame = fmod(robot_data.texture_accumulator * 10.0f, 8.0f);
+
+    DrawTexturePro(robot_data.texture, {static_cast<float>(map_data.GRID_WIDTH * robot_data.texture_frame), static_cast<float>(map_data.GRID_HEIGHT * static_cast<u8>(robot_data.rotation)), static_cast<float>(map_data.GRID_WIDTH / 2.0f * robot_data.flip), static_cast<float>(map_data.GRID_HEIGHT / 2.0f)}, {robot_data.pos.x, robot_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
 }
 
 void robot_move(MovementType move, float dt, RobotData& robot_data, const MapData& map_data) {
@@ -14,6 +16,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             if (robot_data.movement == v2{0, 1})
             {
                 robot_data.movement = {0, -1};
+
+                robot_data.rotation = RotationType::UP;
+                robot_data.flip = 1;
             }
             else
             {
@@ -26,6 +31,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             if (robot_data.movement == v2{0, -1})
             {
                 robot_data.movement = {0, 1};
+
+                robot_data.rotation = RotationType::DOWN;
+                robot_data.flip = 1;
             }
             else
             {
@@ -38,6 +46,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             if (robot_data.movement == v2{1, 0})
             {
                 robot_data.movement = {-1, 0};
+
+                robot_data.rotation = RotationType::SIDE;
+                robot_data.flip = -1;
             }
             else
             {
@@ -50,6 +61,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             if (robot_data.movement == v2{-1, 0})
             {
                 robot_data.movement = {1, 0};
+
+                robot_data.rotation = RotationType::SIDE;
+                robot_data.flip = 1;
             }
             else
             {
@@ -83,6 +97,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
                     robot_data.movement = next_movement;
                     robot_data.pos = get_grid_center(robot_data.pos, map_data);
                     robot_data.next_move = MovementType::NONE;
+
+                    robot_data.rotation = RotationType::SIDE;
+                    robot_data.flip = -1;
                 }
                 break;
             }
@@ -98,6 +115,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
                     robot_data.movement = next_movement;
                     robot_data.pos = get_grid_center(robot_data.pos, map_data);
                     robot_data.next_move = MovementType::NONE;
+
+                    robot_data.rotation = RotationType::SIDE;
+                    robot_data.flip = 1;
                 }
                 break;
             }
@@ -113,6 +133,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
                     robot_data.movement = next_movement;
                     robot_data.pos = get_grid_center(robot_data.pos, map_data);
                     robot_data.next_move = MovementType::NONE;
+
+                    robot_data.rotation = RotationType::UP;
+                    robot_data.flip = 1;
                 }
                 break;
             }
@@ -128,6 +151,9 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
                     robot_data.movement = next_movement;
                     robot_data.pos = get_grid_center(robot_data.pos, map_data);
                     robot_data.next_move = MovementType::NONE;
+
+                    robot_data.rotation = RotationType::DOWN;
+                    robot_data.flip = 1;
                 }
                 break;
             }
@@ -142,8 +168,10 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
     if ((map_data.get_tile(next_grid_pos) == TileType::WALL || map_data.get_tile(next_grid_pos) == TileType::SPAWNER) && CheckCollisionRecs({next_pos.x - map_data.GRID_WIDTH / 2.0f, next_pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, robot_get_rect(robot_data, map_data))) {
         robot_data.movement = {0, 0};
         robot_data.pos = get_grid_center(robot_data.pos, map_data);
+        robot_data.texture_accumulator = 0.0f;
     } else {
         robot_data.pos -= robot_data.movement * dt * MOVEMENT_SPEED;
+        robot_data.texture_accumulator += dt;
     }
 }
 
