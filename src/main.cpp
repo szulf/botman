@@ -23,6 +23,8 @@ const char* print_tile(TileType tile) {
             return "spawner";
         case TileType::START_POS:
             return "start_pos";
+        case TileType::PORTAL:
+            return "portal";
     }
 
     return "";
@@ -145,7 +147,7 @@ std::vector<v2> find_path(const v2& start_grid_pos, const v2& end_grid_pos, cons
                 return path;
             }
 
-            if (map_data.get_tile(successor.pos) == TileType::WALL || map_data.get_tile(successor.pos) == TileType::SPAWNER) {
+            if (get_tile(successor.pos, map_data) == TileType::WALL || get_tile(successor.pos, map_data) == TileType::SPAWNER) {
                 continue;
             }
 
@@ -273,7 +275,7 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 
     v2 next_grid_pos = get_grid_from_pos(bug_data.pos, map_data) + bug_data.movement;
     v2 next_pos = get_pos_from_grid(next_grid_pos, map_data);
-    if ((map_data.get_tile(next_grid_pos) == TileType::WALL || (map_data.get_tile(next_grid_pos) == TileType::SPAWNER && next_grid_pos != bug_data.path.back())) && CheckCollisionRecs({next_pos.x - map_data.GRID_WIDTH / 2.0f, next_pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, bug_get_rect(bug_data, map_data))) {
+    if ((get_tile(next_grid_pos, map_data) == TileType::WALL || (get_tile(next_grid_pos, map_data) == TileType::SPAWNER && next_grid_pos != bug_data.path.back())) && CheckCollisionRecs({next_pos.x - map_data.GRID_WIDTH / 2.0f, next_pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, bug_get_rect(bug_data, map_data))) {
         bug_data.pos = get_grid_center(bug_data.pos, map_data);
         return;
     }
@@ -317,9 +319,6 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
     }
 }
 
-// TODO
-// portal to the passage in the middle of the map
-//
 // TODO
 // play animations upon death for both bugs and robot
 //

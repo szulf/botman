@@ -11,6 +11,10 @@ enum class TileType : u8 {
     HAMMER,
     SPAWNER,
     START_POS,
+
+    // for now only allowing two portals that link to each other
+    // maybe change that in the future
+    PORTAL,
 };
 
 enum class GameStateType : u8 {
@@ -31,26 +35,28 @@ struct MapData {
     std::vector<TileType> tiles;
     v2 start_pos{};
     v2 spawner_pos{};
+    v2 portal_pos[2]{};
 
     u32 score{};
     u16 pellet_count{};
 
     GameStateType state{};
-
-    inline TileType get_tile(v2 pos) const {
-        return tiles[pos.x + WIDTH * pos.y];
-    }
-
-    inline TileType get_tile(u32 x, u32 y) const {
-        return tiles[x + WIDTH * y];
-    }
-
-    inline void set_tile(v2 pos, TileType val) {
-        tiles[pos.x + WIDTH * pos.y] = val;
-    }
 };
+
+inline TileType get_tile(v2 pos, const MapData& map_data) {
+    return map_data.tiles[pos.x + map_data.WIDTH * pos.y];
+}
+
+inline TileType get_tile(u32 x, u32 y, const MapData& map_data) {
+    return map_data.tiles[x + map_data.WIDTH * y];
+}
+
+inline void set_tile(v2 pos, TileType tile, MapData& map_data) {
+    map_data.tiles[pos.x + map_data.WIDTH * pos.y] = tile;
+}
 
 MapData load_map(const v2& map_pos);
 v2 get_grid_from_pos(const v2& pos, const MapData& map_data);
 v2 get_pos_from_grid(const v2& grid_pos, const MapData& map_data);
 void render_map(const MapData& map_data);
+v2 get_second_portal_pos(const v2& portal_pos, const MapData& map_data);

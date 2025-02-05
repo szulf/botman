@@ -31,12 +31,15 @@ struct RobotData {
     u8 texture_frame{};
     RotationType rotation{};
     // if flipped then this is -1, if not then this is 1
+    // i dont like this, but whatever
     i8 flip{};
 
     bool smashing_mode{};
 
     bool is_dead{};
     float dead_delay{};
+
+    bool teleported{};
 };
 
 void render_robot(RobotData& robot_data, const MapData& map_data);
