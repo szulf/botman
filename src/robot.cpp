@@ -223,7 +223,12 @@ void robot_collect(RobotData& robot_data, MapData& map_data) {
 }
 
 Rectangle robot_get_rect(const RobotData& robot_data, const MapData& map_data) {
-    return {robot_data.pos.x - map_data.GRID_WIDTH / 2.0f, robot_data.pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
+    return {
+        .x = robot_data.pos.x - map_data.GRID_WIDTH / 2.0f + (map_data.GRID_WIDTH * 0.125f),
+        .y = (robot_data.pos.y - map_data.GRID_HEIGHT / 2.0f) + (map_data.GRID_HEIGHT * 0.125f),
+        .width = static_cast<float>(map_data.GRID_WIDTH - (map_data.GRID_WIDTH * 0.25f)),
+        .height = static_cast<float>(map_data.GRID_HEIGHT - (map_data.GRID_HEIGHT * 0.125f))
+    };
 }
 
 const char* print_movement(MovementType move) {
