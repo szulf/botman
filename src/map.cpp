@@ -77,7 +77,7 @@ v2 get_pos_from_grid(const v2& grid_pos, const MapData& map_data) {
     return {(grid_pos.x * map_data.GRID_WIDTH) + (map_data.GRID_WIDTH / 2.0f) + map_data.pos.x, (grid_pos.y * map_data.GRID_HEIGHT) + (map_data.GRID_HEIGHT / 2.0f) + map_data.pos.y};
 }
 
-void render_map(const MapData& map_data) {
+void render_map(const MapData& map_data, const Texture2D& hammer_texture) {
     for (u32 i = 0; i < map_data.WIDTH; i++) {
         for (u32 j = 0; j < map_data.HEIGHT; j++) {
             TileType tile = get_tile({static_cast<float>(i), static_cast<float>(j)}, map_data);
@@ -98,8 +98,8 @@ void render_map(const MapData& map_data) {
 
                 case TileType::HAMMER: {
                     const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)}, map_data);
-                    const Rectangle rect = {pos.x, pos.y, map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f};
-                    DrawRectanglePro(rect, {map_data.GRID_WIDTH / 2.0f / 2.0f, map_data.GRID_HEIGHT / 2.0f / 2.0f}, 0.0f, RED);
+                    const Rectangle rect = {pos.x, pos.y, (float) map_data.GRID_WIDTH, (float) map_data.GRID_HEIGHT};
+                    DrawTexturePro(hammer_texture, {0, 0, (float) hammer_texture.width, (float) hammer_texture.height}, rect, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
                     break;
                 }
 
@@ -111,8 +111,6 @@ void render_map(const MapData& map_data) {
                 }
 
                 case TileType::PORTAL: {
-                    // TODO
-                    // change how portals are displayed
                     const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)}, map_data);
                     const Rectangle rect = {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
                     DrawRectanglePro(rect, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, PURPLE);

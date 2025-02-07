@@ -5,9 +5,9 @@
 #include <cstdio>
 
 void render_robot(RobotData& robot_data, const MapData& map_data) {
-    robot_data.texture_frame = fmod(robot_data.texture_accumulator * 10.0f, 8.0f);
+    robot_data.texture_frame = fmod(-robot_data.texture_accumulator * 5.0f, 4.0f);
 
-    DrawTexturePro(robot_data.texture, {static_cast<float>(map_data.GRID_WIDTH * robot_data.texture_frame), static_cast<float>(map_data.GRID_HEIGHT * static_cast<u8>(robot_data.rotation)), static_cast<float>(map_data.GRID_WIDTH / 2.0f * robot_data.flip), static_cast<float>(map_data.GRID_HEIGHT / 2.0f)}, {robot_data.pos.x, robot_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+    DrawTexturePro(robot_data.texture, {static_cast<float>((map_data.GRID_WIDTH / 2.0f) * robot_data.texture_frame), static_cast<float>(map_data.GRID_HEIGHT * static_cast<u8>(robot_data.rotation)), static_cast<float>(map_data.GRID_WIDTH / 2.0f * robot_data.flip), static_cast<float>(map_data.GRID_HEIGHT / 2.0f)}, {robot_data.pos.x, robot_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
 }
 
 void robot_move(MovementType move, float dt, RobotData& robot_data, const MapData& map_data) {
@@ -18,7 +18,6 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
                 robot_data.movement = {0, -1};
 
                 robot_data.rotation = RotationType::UP;
-                robot_data.flip = 1;
             }
             else
             {
@@ -33,12 +32,11 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
                 robot_data.movement = {0, 1};
 
                 robot_data.rotation = RotationType::DOWN;
-                robot_data.flip = 1;
             }
             else
             {
                 robot_data.next_move = move;
-                robot_data.time_between_moves = ::GetTime();
+                robot_data.time_between_moves = GetTime();
             }
             break;
 
@@ -53,7 +51,7 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             else
             {
                 robot_data.next_move = move;
-                robot_data.time_between_moves = ::GetTime();
+                robot_data.time_between_moves = GetTime();
             }
             break;
 
@@ -68,7 +66,7 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             else
             {
                 robot_data.next_move = move;
-                robot_data.time_between_moves = ::GetTime();
+                robot_data.time_between_moves = GetTime();
             }
             break;
 
@@ -135,7 +133,6 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
                     robot_data.next_move = MovementType::NONE;
 
                     robot_data.rotation = RotationType::UP;
-                    robot_data.flip = 1;
                 }
                 break;
             }
@@ -153,7 +150,6 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
                     robot_data.next_move = MovementType::NONE;
 
                     robot_data.rotation = RotationType::DOWN;
-                    robot_data.flip = 1;
                 }
                 break;
             }
@@ -186,7 +182,10 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
         }
 
         robot_data.pos -= robot_data.movement * dt * MOVEMENT_SPEED;
-        robot_data.texture_accumulator += dt;
+
+        if (robot_data.movement != v2{0, 0}) {
+            robot_data.texture_accumulator += dt;
+        }
     }
 }
 

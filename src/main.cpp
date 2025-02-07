@@ -311,6 +311,7 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
         if (robot_data.smashing_mode) {
             bug_data.state = BugStateType::DEAD;
             bug_data.dead_time = GetTime();
+            map_data.score += 100;
         } else {
             robot_data.lifes -= 1;
             robot_data.is_dead = true;
@@ -323,6 +324,9 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
 // play animations upon death for both bugs and robot
 //
 // TODO
+// bugs should be able to pathfind and walk through portals
+//
+// TODO
 // edit mode
 // - gui for it
 // - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
@@ -333,10 +337,11 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
 //
 // TODO
 // art
-// - animations
-//   - walking
-//   - on death
-//   - on hammer pickup
+// - for
+//   - robot(animated)
+//   - bugs(animated)
+//   - lifes
+//   - 
 //
 // TODO
 // music
@@ -351,6 +356,7 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
 // TODO
 // lower ram usage ????
 // i might be wrong but i think this thing takes 400mb of ram to run which is a little insane tbh
+// 400mb in debug, 50mb in release
 int main() {
     srand(time(0));
 
@@ -360,7 +366,7 @@ int main() {
     RobotData robot = {
         .pos = get_pos_from_grid(map.start_pos, map),
         .next_move = MovementType::LEFT,
-        .texture = LoadTexture(ROOT_PATH "/assets/robot.png"),
+        .texture = LoadTexture(ROOT_PATH "/assets/robot_test.png"),
     };
     std::array<BugData, 5> bugs = {
         // IF YOU CHANGE THE NUMBERS IN HERE ALSO CHANGE THE NUMBERS IN THE RESTART CODE
@@ -370,6 +376,7 @@ int main() {
         init_bug(get_pos_from_grid(map.spawner_pos, map), 4),
         init_bug(get_pos_from_grid(map.spawner_pos, map), 5),
     };
+    Texture2D hammer_texture = LoadTexture(ROOT_PATH "/assets/hammer.png");
 
     // SetTargetFPS(10);
     float mean_fps{};
@@ -446,7 +453,7 @@ int main() {
                     BeginDrawing();
                     ClearBackground(WHITE);
 
-                    render_map(map);
+                    render_map(map, hammer_texture);
 
                     render_robot(robot, map);
 
@@ -491,6 +498,7 @@ int main() {
 
     printf("fps: %f\n", mean_fps);
 
+    UnloadTexture(hammer_texture);
     UnloadTexture(robot.texture);
     for (const auto& bug : bugs) {
         UnloadTexture(bug.texture);
