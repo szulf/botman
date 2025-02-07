@@ -55,10 +55,11 @@ struct BugData {
 
     Texture2D texture{};
     u8 texture_frame{};
-    Color tint{255, 255, 255, 255};
+    Color tint{WHITE};
 
     BugStateType state{};
     float dead_time{};
+    bool death_display{};
 
     // not proud of this
     float flash_delay{};
@@ -82,6 +83,10 @@ Rectangle bug_get_rect(const BugData& bug_data, const MapData& map_data) {
 }
 
 void render_bug(const BugData& bug_data, const MapData& map_data) {
+    if (bug_data.death_display) {
+        DrawText("100", bug_data.pos.x - 20, bug_data.pos.y - 25, 20, GREEN);
+    }
+
     DrawTexturePro(bug_data.texture, {static_cast<float>(map_data.GRID_WIDTH * bug_data.texture_frame), 0, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {bug_data.pos.x, bug_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, bug_data.tint);
 }
 
@@ -222,6 +227,7 @@ v2 find_furthest_grid_pos(const v2& grid_pos, const MapData& map_data) {
 
 void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const MapData& map_data) {
     if (bug_data.state == BugStateType::DEAD && GetTime() - bug_data.dead_time < 1) {
+        bug_data.death_display = true;
         if (GetTime() - bug_data.flash_delay > 0.2) {
             bug_data.tint.a = bug_data.tint.a == 255 ? 80 : 255;
             bug_data.flash_delay = GetTime();
@@ -230,6 +236,7 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
     }
 
     if (bug_data.state == BugStateType::DEAD) {
+        bug_data.death_display = false;
         bug_data.tint.a = 80;
     }
 
@@ -341,7 +348,6 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
 //   - robot(animated)
 //   - bugs(animated)
 //   - lifes
-//   - 
 //
 // TODO
 // music
@@ -360,7 +366,9 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
 int main() {
     srand(time(0));
 
-    InitWindow(1200, 800, "botman");
+    const u16 WIDTH = 1200;
+    const u16 HEIGHT = 800;
+    InitWindow(WIDTH, HEIGHT, "botman");
 
     MapData map = load_map({200, 50});
     RobotData robot = {
