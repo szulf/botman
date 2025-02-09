@@ -31,6 +31,8 @@ add_executable(botman
     src/constants.hpp
     src/map.cpp src/map.hpp
     src/robot.cpp src/robot.hpp
+    src/bug.cpp src/bug.hpp
+    src/path.cpp src/path.hpp
 )
 
 if (NOT CMAKE_BUILD_TYPE)
