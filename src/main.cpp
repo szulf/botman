@@ -67,6 +67,7 @@ struct BugData {
     std::vector<v2> path{};
     v2 last_pos{};
     v2 last_movement{};
+    bool teleported;
 };
 
 inline BugData init_bug(const v2& pos, u8 idx) {
@@ -123,12 +124,16 @@ std::vector<v2> find_path(const v2& start_grid_pos, const v2& end_grid_pos, cons
         }
         open_set.erase(std::ranges::find(open_set, Node{q}));
 
-        std::array<Node, 4> successors{
+        std::vector<Node> successors{
             Node{.pos = {.x = q.pos.x + 1, .y = q.pos.y}, .parent = q.pos},
             Node{.pos = {.x = q.pos.x - 1, .y = q.pos.y}, .parent = q.pos},
             Node{.pos = {.x = q.pos.x, .y = q.pos.y + 1}, .parent = q.pos},
             Node{.pos = {.x = q.pos.x, .y = q.pos.y - 1}, .parent = q.pos},
         };
+
+        if (get_tile(q.pos, map_data) == TileType::PORTAL) {
+            successors.push_back(Node{.pos = get_second_portal_pos(q.pos, map_data), .parent = q.pos});
+        }
 
         for (auto& successor : successors) {
             if (successor.pos == end_grid_pos) {
@@ -282,12 +287,32 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
 
     v2 next_grid_pos = get_grid_from_pos(bug_data.pos, map_data) + bug_data.movement;
     v2 next_pos = get_pos_from_grid(next_grid_pos, map_data);
-    if ((get_tile(next_grid_pos, map_data) == TileType::WALL || (get_tile(next_grid_pos, map_data) == TileType::SPAWNER && next_grid_pos != bug_data.path.back())) && CheckCollisionRecs({next_pos.x - map_data.GRID_WIDTH / 2.0f, next_pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, bug_get_rect(bug_data, map_data))) {
+    if (
+            (get_tile(next_grid_pos, map_data) == TileType::WALL || (get_tile(next_grid_pos, map_data) == TileType::SPAWNER && next_grid_pos != bug_data.path.back())) &&
+            CheckCollisionRecs(
+                {
+                    next_pos.x - map_data.GRID_WIDTH / 2.0f,
+                    next_pos.y - map_data.GRID_HEIGHT / 2.0f,
+                    static_cast<float>(map_data.GRID_WIDTH),
+                    static_cast<float>(map_data.GRID_HEIGHT)
+                },
+                bug_get_rect(bug_data, map_data)
+            )
+        ) {
         bug_data.pos = get_grid_center(bug_data.pos, map_data);
         return;
-    }
+    } else {
+        if (get_tile(grid_pos, map_data) == TileType::PORTAL) {
+            if (!bug_data.teleported && in_about_center(bug_data.pos, map_data)) {
+                bug_data.pos = get_pos_from_grid(get_second_portal_pos(grid_pos, map_data), map_data);
+                bug_data.teleported = true;
+            }
+        } else {
+            bug_data.teleported = false;
+        }
 
-    bug_data.pos -= bug_data.movement * dt * MOVEMENT_SPEED * 0.85f;
+        bug_data.pos -= bug_data.movement * dt * MOVEMENT_SPEED * 0.85f;
+    }
 }
 
 inline void reset_game(std::span<BugData> bug_datas, RobotData& robot_data, MapData& map_data) {
@@ -331,9 +356,6 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
 // play animations upon death for both bugs and robot
 //
 // TODO
-// bugs should be able to pathfind and walk through portals
-//
-// TODO
 // edit mode
 // - gui for it
 // - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
@@ -351,9 +373,6 @@ void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data) {
 //
 // TODO
 // music
-//
-// TODO
-// make the hitbox of the robot a little smaller ?????
 //
 // TODO
 // change map_data to game_data ????
@@ -376,13 +395,14 @@ int main() {
         .next_move = MovementType::LEFT,
         .texture = LoadTexture(ROOT_PATH "/assets/robot_test.png"),
     };
-    std::array<BugData, 5> bugs = {
+
+    std::vector<BugData> bugs{
         // IF YOU CHANGE THE NUMBERS IN HERE ALSO CHANGE THE NUMBERS IN THE RESTART CODE
         init_bug(get_pos_from_grid(map.spawner_pos, map), 1),
-        init_bug(get_pos_from_grid(map.spawner_pos, map), 2),
-        init_bug(get_pos_from_grid(map.spawner_pos, map), 3),
-        init_bug(get_pos_from_grid(map.spawner_pos, map), 4),
-        init_bug(get_pos_from_grid(map.spawner_pos, map), 5),
+        // init_bug(get_pos_from_grid(map.spawner_pos, map), 2),
+        // init_bug(get_pos_from_grid(map.spawner_pos, map), 3),
+        // init_bug(get_pos_from_grid(map.spawner_pos, map), 4),
+        // init_bug(get_pos_from_grid(map.spawner_pos, map), 5),
     };
     Texture2D hammer_texture = LoadTexture(ROOT_PATH "/assets/hammer.png");
 
@@ -434,10 +454,6 @@ int main() {
                         robot_move(MovementType::RIGHT, dt, robot, map);
                     } else {
                         robot_move(MovementType::NONE, dt, robot, map);
-                    }
-
-                    if (IsKeyPressed(KEY_SPACE)) {
-                        reset_game(bugs, robot, map);
                     }
                 }
 
