@@ -198,7 +198,7 @@ bool in_about_center(const v2& pos, const MapData& map_data) {
     return (center_pos.x - 4 <= pos.x && center_pos.x + 4 >= pos.x) && (center_pos.y - 4 <= pos.y && center_pos.y + 4 >= pos.y);
 }
 
-void robot_collect(RobotData& robot_data, MapData& map_data) {
+void robot_collect(RobotData& robot_data, MapData& map_data, GameData& game_data) {
     auto grid_pos = get_grid_from_pos(robot_data.pos, map_data);
 
     if (get_tile(grid_pos, map_data) == TileType::PELLET && CheckCollisionRecs({robot_data.pos.x - (map_data.GRID_WIDTH / 8.0f), robot_data.pos.y - (map_data.GRID_HEIGHT / 8.0f), map_data.GRID_WIDTH / 4.0f, map_data.GRID_HEIGHT / 4.0f}, robot_get_rect(robot_data, map_data))) {
@@ -206,14 +206,14 @@ void robot_collect(RobotData& robot_data, MapData& map_data) {
         map_data.score += 10;
         map_data.pellet_count--;
         if (map_data.pellet_count == 0) {
-            map_data.state = GameStateType::WON;
+            game_data.state = GameStateType::WON;
         }
     }
 
     static float smashing_start{};
     if (get_tile(grid_pos, map_data) == TileType::HAMMER && CheckCollisionRecs({robot_data.pos.x - (map_data.GRID_WIDTH / 4.0f), robot_data.pos.y - (map_data.GRID_HEIGHT / 4.0f), map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, robot_get_rect(robot_data, map_data))) {
         set_tile(grid_pos, TileType::EMPTY, map_data);
-        robot_data.smashing_mode= true;
+        robot_data.smashing_mode = true;
         smashing_start = GetTime();
     }
 

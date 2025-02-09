@@ -29,6 +29,7 @@ FetchContent_MakeAvailable(raylib raygui)
 add_executable(botman
     src/main.cpp
     src/constants.hpp
+    src/game.hpp
     src/map.cpp src/map.hpp
     src/robot.cpp src/robot.hpp
     src/bug.cpp src/bug.hpp

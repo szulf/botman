@@ -17,12 +17,6 @@ enum class TileType : u8 {
     PORTAL,
 };
 
-enum class GameStateType : u8 {
-    RUNNING,
-    WON,
-    LOST,
-};
-
 struct MapData {
     static constexpr u32 WIDTH{17};
     static constexpr u32 HEIGHT{22};
@@ -39,8 +33,6 @@ struct MapData {
 
     u32 score{};
     u16 pellet_count{};
-
-    GameStateType state{};
 };
 
 inline TileType get_tile(v2 pos, const MapData& map_data) {

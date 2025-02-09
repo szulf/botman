@@ -1,6 +1,7 @@
 #pragma once
 
 #include "constants.hpp"
+#include "game.hpp"
 #include "map.hpp"
 
 enum class MovementType : u8 {
@@ -46,6 +47,6 @@ void render_robot(RobotData& robot_data, const MapData& map_data);
 void robot_move(MovementType move, float dt, RobotData& robot_data, const MapData& map_data);
 v2 get_grid_center(const v2& pos, const MapData& map_data);
 bool in_about_center(const v2& pos, const MapData& map_data);
-void robot_collect(RobotData& robot_data, MapData& map_data);
+void robot_collect(RobotData& robot_data, MapData& map_data, GameData& game);
 Rectangle robot_get_rect(const RobotData& robot_data, const MapData& map_data);
 const char* print_movement(MovementType move);

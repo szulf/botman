@@ -4,6 +4,8 @@
 
 #include "raylib.h"
 #include "raymath.h"
+#define RAYGUI_IMPLEMENTATION
+#include "raygui.h"
 #include <ctime>
 #include <string>
 #include <span>
@@ -32,13 +34,14 @@ inline void reset_game(std::span<BugData> bug_datas, RobotData& robot_data, MapD
 // play animations upon death for both bugs and robot
 //
 // TODO
-// entrance screen
+// *entrance screen
 // - play, enter edit mode, change setting(max fps, etc.)
 //
 // TODO
 // edit mode
 // - gui for it
 // - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
+// - maybe a map selector when entering game mode, that would look at all .txt files inside of map/ directory
 //
 // TODO
 // art
@@ -51,10 +54,6 @@ inline void reset_game(std::span<BugData> bug_datas, RobotData& robot_data, MapD
 // music
 //
 // TODO
-// change map_data to game_data ????
-// or just make a new struct game_data and move some variables from map_data to there
-//
-// TODO
 // lower ram usage ????
 // i might be wrong but i think this thing takes 400mb of ram to run which is a little insane tbh
 // 400mb in debug, 50mb in release
@@ -65,6 +64,7 @@ int main() {
     const u16 HEIGHT = 800;
     InitWindow(WIDTH, HEIGHT, "botman");
 
+    GameData game{};
     MapData map = load_map({200, 50});
     RobotData robot = {
         .pos = get_pos_from_grid(map.start_pos, map),
@@ -90,7 +90,7 @@ int main() {
     while (!WindowShouldClose()) {
         mean_fps = (mean_fps + GetFPS()) / 2.0f;
 
-        switch (map.state) {
+        switch (game.state) {
             case GameStateType::RUNNING: {
                 float current_frame = GetTime();
                 dt = last_frame - current_frame;
@@ -101,7 +101,7 @@ int main() {
                         continue;
                     } else {
                         if (robot.lifes == 0) {
-                            map.state = GameStateType::LOST;
+                            game.state = GameStateType::LOST;
                         } else {
                             first = true;
                             reset_game(bugs, robot, map);
@@ -136,7 +136,7 @@ int main() {
                 // GAMEPLAY
                 // --------
                 {
-                    robot_collect(robot, map);
+                    robot_collect(robot, map, game);
 
                     for (auto& bug : bugs) {
                         bug_move(dt, bug, robot, map);
@@ -190,6 +190,64 @@ int main() {
                 DrawText("YOU LOST!", map.pos.x, map.pos.y, 50, BLACK);
 
                 EndDrawing();
+                break;
+            }
+
+            case GameStateType::START_SCREEN: {
+                BeginDrawing();
+                ClearBackground(WHITE);
+
+                DrawText("HELLO!", map.pos.x, map.pos.y, 50, BLACK);
+                bool game_btn = GuiButton({100, 100, 50, 50}, "game");
+                bool edit_btn = GuiButton({200, 100, 50, 50}, "edit mode");
+                bool settings_btn = GuiButton({300, 100, 50, 50}, "settings");
+
+                EndDrawing();
+
+                if (game_btn) {
+                    game.state = GameStateType::RUNNING;
+                }
+
+                if (edit_btn) {
+                    game.state = GameStateType::EDIT_MODE;
+                }
+
+                if (settings_btn) {
+                    game.state = GameStateType::SETTINGS;
+                }
+
+                break;
+            }
+
+            case GameStateType::EDIT_MODE: {
+                BeginDrawing();
+                ClearBackground(WHITE);
+
+                DrawText("not yet D:", map.pos.x, map.pos.y, 50, BLACK);
+                bool back_btn = GuiButton({200, 100, 50, 50}, "go back");
+
+                EndDrawing();
+
+                if (back_btn) {
+                    game.state = GameStateType::START_SCREEN;
+                }
+
+                break;
+            }
+
+            case GameStateType::SETTINGS: {
+                BeginDrawing();
+                ClearBackground(WHITE);
+
+                DrawText("not yet D:", map.pos.x, map.pos.y, 50, BLACK);
+                bool back_btn = GuiButton({200, 100, 50, 50}, "go back");
+
+                EndDrawing();
+
+                if (back_btn) {
+                    game.state = GameStateType::START_SCREEN;
+                }
+
                 break;
             }
         }
