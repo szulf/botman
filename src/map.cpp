@@ -132,3 +132,23 @@ v2 get_second_portal_pos(const v2& portal_pos, const MapData& map_data) {
     }
 }
 
+const char* print_tile(TileType tile) {
+    switch (tile) {
+        case TileType::EMPTY:
+            return "empty";
+        case TileType::WALL:
+            return "wall";
+        case TileType::PELLET:
+            return "pellet";
+        case TileType::HAMMER:
+            return "hammer";
+        case TileType::SPAWNER:
+            return "spawner";
+        case TileType::START_POS:
+            return "start_pos";
+        case TileType::PORTAL:
+            return "portal";
+    }
+
+    return "";
+}

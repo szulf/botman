@@ -2,6 +2,7 @@
 #include "path.hpp"
 
 #include "raymath.h"
+#include <cstdio>
 
 const char* print_bug_state(BugStateType bug_state) {
     switch (bug_state) {
@@ -16,7 +17,9 @@ const char* print_bug_state(BugStateType bug_state) {
     return "";
 }
 
-BugData init_bug(const v2& pos, u8 idx) {
+BugData init_bug(const v2& pos) {
+    static u8 idx = 0;
+    idx++;
     return BugData{
         .pos = pos,
         .texture = LoadTexture(ROOT_PATH "/assets/bug.png"),
@@ -69,7 +72,6 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
         return;
     }
 
-
     auto grid_pos = get_grid_from_pos(bug_data.pos, map_data);
 
     if (in_about_center(bug_data.pos, map_data) && bug_data.last_pos != grid_pos) {
@@ -113,6 +115,7 @@ void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const Ma
             if (!bug_data.teleported && in_about_center(bug_data.pos, map_data)) {
                 bug_data.pos = get_pos_from_grid(get_second_portal_pos(grid_pos, map_data), map_data);
                 bug_data.teleported = true;
+                return;
             }
         } else {
             bug_data.teleported = false;

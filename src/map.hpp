@@ -60,3 +60,4 @@ v2 get_grid_from_pos(const v2& pos, const MapData& map_data);
 v2 get_pos_from_grid(const v2& grid_pos, const MapData& map_data);
 void render_map(const MapData& map_data, const Texture2D& hammer_texture);
 v2 get_second_portal_pos(const v2& portal_pos, const MapData& map_data);
+const char* print_tile(TileType tile);

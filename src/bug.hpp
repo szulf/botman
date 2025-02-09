@@ -34,7 +34,7 @@ struct BugData {
 };
 
 const char* print_bug_state(BugStateType bug_state);
-BugData init_bug(const v2& pos, u8 idx);
+BugData init_bug(const v2& pos);
 Rectangle bug_get_rect(const BugData& bug_data, const MapData& map_data);
 void render_bug(const BugData& bug_data, const MapData& map_data);
 void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const MapData& map_data);

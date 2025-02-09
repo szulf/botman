@@ -4,34 +4,9 @@
 
 #include "raylib.h"
 #include "raymath.h"
-#include <algorithm>
 #include <ctime>
-#include <array>
 #include <string>
 #include <span>
-
-const char* print_tile(TileType tile) {
-    switch (tile) {
-        case TileType::EMPTY:
-            return "empty";
-        case TileType::WALL:
-            return "wall";
-        case TileType::PELLET:
-            return "pellet";
-        case TileType::HAMMER:
-            return "hammer";
-        case TileType::SPAWNER:
-            return "spawner";
-        case TileType::START_POS:
-            return "start_pos";
-        case TileType::PORTAL:
-            return "portal";
-    }
-
-    return "";
-}
-
-
 
 inline void reset_game(std::span<BugData> bug_datas, RobotData& robot_data, MapData& map_data) {
     for (u8 i = 1; auto& bug : bug_datas) {
@@ -57,13 +32,13 @@ inline void reset_game(std::span<BugData> bug_datas, RobotData& robot_data, MapD
 // play animations upon death for both bugs and robot
 //
 // TODO
+// entrance screen
+// - play, enter edit mode, change setting(max fps, etc.)
+//
+// TODO
 // edit mode
 // - gui for it
 // - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
-//
-// TODO
-// entrance screen
-// - play, enter edit mode, change setting(max fps, etc.)
 //
 // TODO
 // art
@@ -98,12 +73,11 @@ int main() {
     };
 
     std::vector<BugData> bugs{
-        // IF YOU CHANGE THE NUMBERS IN HERE ALSO CHANGE THE NUMBERS IN THE RESTART CODE
-        init_bug(get_pos_from_grid(map.spawner_pos, map), 1),
-        // init_bug(get_pos_from_grid(map.spawner_pos, map), 2),
-        // init_bug(get_pos_from_grid(map.spawner_pos, map), 3),
-        // init_bug(get_pos_from_grid(map.spawner_pos, map), 4),
-        // init_bug(get_pos_from_grid(map.spawner_pos, map), 5),
+        init_bug(get_pos_from_grid(map.spawner_pos, map)),
+        init_bug(get_pos_from_grid(map.spawner_pos, map)),
+        init_bug(get_pos_from_grid(map.spawner_pos, map)),
+        init_bug(get_pos_from_grid(map.spawner_pos, map)),
+        init_bug(get_pos_from_grid(map.spawner_pos, map)),
     };
     Texture2D hammer_texture = LoadTexture(ROOT_PATH "/assets/hammer.png");
 
