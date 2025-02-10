@@ -29,19 +29,23 @@ inline void reset_game(std::span<BugData> bug_datas, RobotData& robot_data, MapD
     robot_data.texture_accumulator = 0;
 }
 
+inline bool in_map_range(const v2& grid_pos, const MapData& map_data) {
+    return grid_pos.x > 0 && grid_pos.x < map_data.WIDTH - 1 && grid_pos.y > 0 && grid_pos.y < map_data.HEIGHT - 1;
+}
 
 // TODO
 // play animations upon death for both bugs and robot
 //
 // TODO
-// *entrance screen
+// entrance screen
 // - play, enter edit mode, change setting(max fps, etc.)
 //
 // TODO
-// edit mode
+// *edit mode
 // - gui for it
 // - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
 // - maybe a map selector when entering game mode, that would look at all .txt files inside of map/ directory
+// - map files should also store how many bugs are there, how many lifes does the robot have
 //
 // TODO
 // art
@@ -63,6 +67,7 @@ int main() {
     const u16 WIDTH = 1200;
     const u16 HEIGHT = 800;
     InitWindow(WIDTH, HEIGHT, "botman");
+    SetExitKey(KEY_NULL);
 
     GameData game{};
     MapData map = load_map({200, 50});
@@ -79,6 +84,8 @@ int main() {
         init_bug(get_pos_from_grid(map.spawner_pos, map)),
         init_bug(get_pos_from_grid(map.spawner_pos, map)),
     };
+
+    // this should not be here
     Texture2D hammer_texture = LoadTexture(ROOT_PATH "/assets/hammer.png");
 
     // SetTargetFPS(10);
@@ -219,19 +226,51 @@ int main() {
                 break;
             }
 
+            // TODO
+            // give an option to display a grid
+            // so you know what square you are clicking at
             case GameStateType::EDIT_MODE: {
+                static TileType chosen_tile = TileType::WALL;
+                static bool exit_btn = false;
+                static bool save_btn = false;
+                static bool show_save_menu = false;
+
+                if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+                    auto pos = get_grid_from_pos(GetMousePosition(), map);
+                    if (in_map_range(pos, map)) {
+                        set_tile(pos, chosen_tile, map);
+                    }
+                }
+
+                if (exit_btn) {
+                    game.state = GameStateType::START_SCREEN;
+                    map = load_map({200, 50});
+                }
+
+                if (save_btn) {
+                    show_save_menu = true;
+                }
+
                 BeginDrawing();
                 ClearBackground(WHITE);
 
-                DrawText("not yet D:", map.pos.x, map.pos.y, 50, BLACK);
-                bool back_btn = GuiButton({200, 100, 50, 50}, "go back");
+                render_map(map, hammer_texture);
 
-                EndDrawing();
+                exit_btn = GuiButton({100, 100, 50, 50}, "go back");
+                save_btn = GuiButton({100, 200, 50, 50}, "save");
 
-                if (back_btn) {
-                    game.state = GameStateType::START_SCREEN;
+                if (show_save_menu) {
+                    // TODO
+                    // change this name
+                    char buf[128];
+                    if (GuiTextBox({100, 250, 100, 50}, buf, 128, true)) {
+                        show_save_menu = false;
+                        save_map(buf, map);
+                        printf("%s\n", buf);
+                    }
                 }
 
+                EndDrawing();
                 break;
             }
 

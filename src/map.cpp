@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <cmath>
+#include <string.h>
 
 MapData load_map(const v2& map_pos) {
     MapData map_data{
@@ -67,6 +68,47 @@ MapData load_map(const v2& map_pos) {
     }
 
     return map_data;
+}
+
+void save_map(const char* map_name, const MapData& map_data) {
+    char* buf = (char*) malloc(strlen(map_name) + strlen(ROOT_PATH "/maps/") + 1);
+    strcpy(buf, ROOT_PATH "/maps/");
+    strcat(buf, map_name);
+
+    FILE* map_file = fopen(buf, "w");
+
+    for (u16 i = 1; const auto& tile : map_data.tiles) {
+        switch (tile) {
+            case TileType::EMPTY:
+                fprintf(map_file, ".");
+                break;
+            case TileType::WALL:
+                fprintf(map_file, "#");
+                break;
+            case TileType::PELLET:
+                fprintf(map_file, "P");
+                break;
+            case TileType::HAMMER:
+                fprintf(map_file, "H");
+                break;
+            case TileType::SPAWNER:
+                fprintf(map_file, "G");
+                break;
+            case TileType::START_POS:
+                fprintf(map_file, "S");
+                break;
+            case TileType::PORTAL:
+                fprintf(map_file, "1");
+                break;
+        }
+        if (i % map_data.WIDTH == 0) {
+            fprintf(map_file, "\n");
+        }
+        i++;
+    }
+
+    fclose(map_file);
+    free((void*) buf);
 }
 
 v2 get_grid_from_pos(const v2& pos, const MapData& map_data) {

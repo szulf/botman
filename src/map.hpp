@@ -48,6 +48,7 @@ inline void set_tile(v2 pos, TileType tile, MapData& map_data) {
 }
 
 MapData load_map(const v2& map_pos);
+void save_map(const char* map_name, const MapData& map_data);
 v2 get_grid_from_pos(const v2& pos, const MapData& map_data);
 v2 get_pos_from_grid(const v2& grid_pos, const MapData& map_data);
 void render_map(const MapData& map_data, const Texture2D& hammer_texture);
