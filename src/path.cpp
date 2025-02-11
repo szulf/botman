@@ -28,7 +28,7 @@ std::vector<v2> find_path(const v2& start_grid_pos, const v2& end_grid_pos, cons
             Node{.pos = {.x = q.pos.x, .y = q.pos.y - 1}, .parent = q.pos},
         };
 
-        if (get_tile(q.pos, map_data) == TileType::PORTAL) {
+        if (get_tile(q.pos, map_data) == TILE_PORTAL) {
             successors.push_back(Node{.pos = get_second_portal_pos(q.pos, map_data), .parent = q.pos});
         }
 
@@ -54,7 +54,7 @@ std::vector<v2> find_path(const v2& start_grid_pos, const v2& end_grid_pos, cons
                 return path;
             }
 
-            if (get_tile(successor.pos, map_data) == TileType::WALL || get_tile(successor.pos, map_data) == TileType::SPAWNER) {
+            if (get_tile(successor.pos, map_data) == TILE_WALL || get_tile(successor.pos, map_data) == TILE_SPAWNER) {
                 continue;
             }
 
@@ -107,13 +107,13 @@ v2 find_furthest_grid_pos(const v2& grid_pos, const MapData& map_data) {
     QuadrantType quadrant = static_cast<QuadrantType>(round(grid_pos.x / map_data.WIDTH) + round(grid_pos.y / map_data.HEIGHT) * 2);
 
     switch (quadrant) {
-        case QuadrantType::TOP_LEFT:
+        case QUAD_TOP_LEFT:
             return {static_cast<float>(map_data.WIDTH - 2), static_cast<float>(map_data.HEIGHT - 2)};
-        case QuadrantType::TOP_RIGHT:
+        case QUAD_TOP_RIGHT:
             return {1, static_cast<float>(map_data.HEIGHT - 1)};
-        case QuadrantType::BOTTOM_LEFT:
+        case QUAD_BOTTOM_LEFT:
             return {static_cast<float>(map_data.WIDTH - 2), 1};
-        case QuadrantType::BOTTOM_RIGHT:
+        case QUAD_BOTTOM_RIGHT:
             return {1, 1};
     }
 

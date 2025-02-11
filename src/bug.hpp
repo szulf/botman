@@ -6,10 +6,10 @@
 
 #include <vector>
 
-enum class BugStateType : u8 {
-    ALIVE,
-    DEAD,
-    RESPAWNING,
+enum BugStateType : u8 {
+    BUG_ALIVE,
+    BUG_DEAD,
+    BUG_RESPAWNING,
 };
 
 struct BugData {

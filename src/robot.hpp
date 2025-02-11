@@ -4,18 +4,12 @@
 #include "game.hpp"
 #include "map.hpp"
 
-enum class MovementType : u8 {
-    NONE,
-    LEFT,
-    RIGHT,
-    UP,
-    DOWN,
-};
-
-enum class RotationType : u8 {
-    SIDE,
-    UP,
-    DOWN,
+enum MovementType : u8 {
+    MOVE_NONE,
+    MOVE_LEFT,
+    MOVE_RIGHT,
+    MOVE_UP,
+    MOVE_DOWN,
 };
 
 struct RobotData {
@@ -30,7 +24,6 @@ struct RobotData {
     Texture2D texture{};
     float texture_accumulator{};
     u8 texture_frame{};
-    RotationType rotation{};
     // if flipped then this is -1, if not then this is 1
     // i dont like this, but whatever
     i8 flip{};

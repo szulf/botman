@@ -7,17 +7,15 @@
 void render_robot(RobotData& robot_data, const MapData& map_data) {
     robot_data.texture_frame = fmod(-robot_data.texture_accumulator * 5.0f, 4.0f);
 
-    DrawTexturePro(robot_data.texture, {static_cast<float>((map_data.GRID_WIDTH / 2.0f) * robot_data.texture_frame), static_cast<float>(map_data.GRID_HEIGHT * static_cast<u8>(robot_data.rotation)), static_cast<float>(map_data.GRID_WIDTH / 2.0f * robot_data.flip), static_cast<float>(map_data.GRID_HEIGHT / 2.0f)}, {robot_data.pos.x, robot_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+    DrawTexturePro(robot_data.texture, {static_cast<float>((map_data.GRID_WIDTH / 2.0f) * robot_data.texture_frame), static_cast<float>(map_data.GRID_HEIGHT), static_cast<float>(map_data.GRID_WIDTH / 2.0f * robot_data.flip), static_cast<float>(map_data.GRID_HEIGHT / 2.0f)}, {robot_data.pos.x, robot_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
 }
 
 void robot_move(MovementType move, float dt, RobotData& robot_data, const MapData& map_data) {
     switch (move) {
-        case MovementType::UP:
+        case MOVE_UP:
             if (robot_data.movement == v2{0, 1})
             {
                 robot_data.movement = {0, -1};
-
-                robot_data.rotation = RotationType::UP;
             }
             else
             {
@@ -26,12 +24,10 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             }
             break;
 
-        case MovementType::DOWN:
+        case MOVE_DOWN:
             if (robot_data.movement == v2{0, -1})
             {
                 robot_data.movement = {0, 1};
-
-                robot_data.rotation = RotationType::DOWN;
             }
             else
             {
@@ -40,12 +36,10 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             }
             break;
 
-        case MovementType::LEFT:
+        case MOVE_LEFT:
             if (robot_data.movement == v2{1, 0})
             {
                 robot_data.movement = {-1, 0};
-
-                robot_data.rotation = RotationType::SIDE;
                 robot_data.flip = -1;
             }
             else
@@ -55,12 +49,10 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             }
             break;
 
-        case MovementType::RIGHT:
+        case MOVE_RIGHT:
             if (robot_data.movement == v2{-1, 0})
             {
                 robot_data.movement = {1, 0};
-
-                robot_data.rotation = RotationType::SIDE;
                 robot_data.flip = 1;
             }
             else
@@ -70,91 +62,85 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
             }
             break;
 
-        case MovementType::NONE:
+        case MOVE_NONE:
             break;
     }
 
     auto grid_pos = get_grid_from_pos(robot_data.pos, map_data);
-    if (in_about_center(robot_data.pos, map_data) && robot_data.next_move != MovementType::NONE) {
+    if (in_about_center(robot_data.pos, map_data) && robot_data.next_move != MOVE_NONE) {
         static bool first = true;
         if (GetTime() - robot_data.time_between_moves >= 0.35f && !first)
         {
-            robot_data.next_move = MovementType::NONE;
+            robot_data.next_move = MOVE_NONE;
         }
         first = false;
 
         switch (robot_data.next_move) {
-            case MovementType::LEFT: {
+            case MOVE_LEFT: {
                 if (robot_data.movement == v2{-1, 0}) {
                     break;
                 }
                 v2 next_movement = {-1, 0};
                 auto next_pos = grid_pos + next_movement;
                 auto next_tile = get_tile(next_pos, map_data);
-                if (next_tile != TileType::WALL && next_tile != TileType::SPAWNER) {
+                if (next_tile != TILE_WALL && next_tile != TILE_SPAWNER) {
                     robot_data.movement = next_movement;
                     robot_data.pos = get_grid_center(robot_data.pos, map_data);
-                    robot_data.next_move = MovementType::NONE;
+                    robot_data.next_move = MOVE_NONE;
 
-                    robot_data.rotation = RotationType::SIDE;
                     robot_data.flip = -1;
                 }
                 break;
             }
 
-            case MovementType::RIGHT: {
+            case MOVE_RIGHT: {
                 if (robot_data.movement == v2{1, 0}) {
                     break;
                 }
                 v2 next_movement = {1, 0};
                 auto next_pos = grid_pos + next_movement;
                 auto next_tile = get_tile(next_pos, map_data);
-                if (next_tile != TileType::WALL && next_tile != TileType::SPAWNER) {
+                if (next_tile != TILE_WALL && next_tile != TILE_SPAWNER) {
                     robot_data.movement = next_movement;
                     robot_data.pos = get_grid_center(robot_data.pos, map_data);
-                    robot_data.next_move = MovementType::NONE;
+                    robot_data.next_move = MOVE_NONE;
 
-                    robot_data.rotation = RotationType::SIDE;
                     robot_data.flip = 1;
                 }
                 break;
             }
 
-            case MovementType::UP: {
+            case MOVE_UP: {
                 if (robot_data.movement == v2{0, -1}) {
                     break;
                 }
                 v2 next_movement = {0, -1};
                 auto next_pos = grid_pos + next_movement;
                 auto next_tile = get_tile(next_pos, map_data);
-                if (next_tile != TileType::WALL && next_tile != TileType::SPAWNER) {
+                if (next_tile != TILE_WALL && next_tile != TILE_SPAWNER) {
                     robot_data.movement = next_movement;
                     robot_data.pos = get_grid_center(robot_data.pos, map_data);
-                    robot_data.next_move = MovementType::NONE;
-
-                    robot_data.rotation = RotationType::UP;
+                    robot_data.next_move = MOVE_NONE;
                 }
                 break;
             }
 
-            case MovementType::DOWN: {
+            case MOVE_DOWN: {
                 if (robot_data.movement == v2{0, 1}) {
                     break;
                 }
                 v2 next_movement = {0, 1};
                 auto next_pos = grid_pos + next_movement;
                 auto next_tile = get_tile(next_pos, map_data);
-                if (next_tile != TileType::WALL && next_tile != TileType::SPAWNER) {
+                if (next_tile != TILE_WALL && next_tile != TILE_SPAWNER) {
                     robot_data.movement = next_movement;
                     robot_data.pos = get_grid_center(robot_data.pos, map_data);
-                    robot_data.next_move = MovementType::NONE;
-
-                    robot_data.rotation = RotationType::DOWN;
+                    robot_data.next_move = MOVE_NONE;
                 }
                 break;
             }
 
-            case MovementType::NONE:
+            case MOVE_NONE:
                 break;
         }
     }
@@ -162,7 +148,7 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
     auto next_grid_pos = grid_pos + robot_data.movement;
     auto next_pos = get_pos_from_grid(next_grid_pos, map_data);
     if (
-            (get_tile(next_grid_pos, map_data) == TileType::WALL || get_tile(next_grid_pos, map_data) == TileType::SPAWNER) &&
+            (get_tile(next_grid_pos, map_data) == TILE_WALL || get_tile(next_grid_pos, map_data) == TILE_SPAWNER) &&
             CheckCollisionRecs(
                 {next_pos.x - map_data.GRID_WIDTH / 2.0f, next_pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)},
                 robot_get_rect(robot_data, map_data)
@@ -172,7 +158,7 @@ void robot_move(MovementType move, float dt, RobotData& robot_data, const MapDat
         robot_data.pos = get_grid_center(robot_data.pos, map_data);
         robot_data.texture_accumulator = 0.0f;
     } else {
-        if (get_tile(get_grid_from_pos(robot_data.pos, map_data), map_data) == TileType::PORTAL) {
+        if (get_tile(get_grid_from_pos(robot_data.pos, map_data), map_data) == TILE_PORTAL) {
             if (!robot_data.teleported && in_about_center(robot_data.pos, map_data)) {
                 robot_data.pos = get_pos_from_grid(get_second_portal_pos(grid_pos, map_data), map_data);
                 robot_data.teleported = true;
@@ -201,18 +187,18 @@ bool in_about_center(const v2& pos, const MapData& map_data) {
 void robot_collect(RobotData& robot_data, MapData& map_data, GameData& game_data) {
     auto grid_pos = get_grid_from_pos(robot_data.pos, map_data);
 
-    if (get_tile(grid_pos, map_data) == TileType::PELLET && CheckCollisionRecs({robot_data.pos.x - (map_data.GRID_WIDTH / 8.0f), robot_data.pos.y - (map_data.GRID_HEIGHT / 8.0f), map_data.GRID_WIDTH / 4.0f, map_data.GRID_HEIGHT / 4.0f}, robot_get_rect(robot_data, map_data))) {
-        set_tile(grid_pos, TileType::EMPTY, map_data);
+    if (get_tile(grid_pos, map_data) == TILE_PELLET && CheckCollisionRecs({robot_data.pos.x - (map_data.GRID_WIDTH / 8.0f), robot_data.pos.y - (map_data.GRID_HEIGHT / 8.0f), map_data.GRID_WIDTH / 4.0f, map_data.GRID_HEIGHT / 4.0f}, robot_get_rect(robot_data, map_data))) {
+        set_tile(grid_pos, TILE_EMPTY, map_data);
         map_data.score += 10;
         map_data.pellet_count--;
         if (map_data.pellet_count == 0) {
-            game_data.state = GameStateType::WON;
+            game_data.state = GAME_WON;
         }
     }
 
     static float smashing_start{};
-    if (get_tile(grid_pos, map_data) == TileType::HAMMER && CheckCollisionRecs({robot_data.pos.x - (map_data.GRID_WIDTH / 4.0f), robot_data.pos.y - (map_data.GRID_HEIGHT / 4.0f), map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, robot_get_rect(robot_data, map_data))) {
-        set_tile(grid_pos, TileType::EMPTY, map_data);
+    if (get_tile(grid_pos, map_data) == TILE_HAMMER && CheckCollisionRecs({robot_data.pos.x - (map_data.GRID_WIDTH / 4.0f), robot_data.pos.y - (map_data.GRID_HEIGHT / 4.0f), map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, robot_get_rect(robot_data, map_data))) {
+        set_tile(grid_pos, TILE_EMPTY, map_data);
         robot_data.smashing_mode = true;
         smashing_start = GetTime();
     }
@@ -233,15 +219,15 @@ Rectangle robot_get_rect(const RobotData& robot_data, const MapData& map_data) {
 
 const char* print_movement(MovementType move) {
     switch (move) {
-        case MovementType::NONE:
+        case MOVE_NONE:
             return "none";
-        case MovementType::LEFT:
+        case MOVE_LEFT:
             return "left";
-        case MovementType::RIGHT:
+        case MOVE_RIGHT:
             return "right";
-        case MovementType::UP:
+        case MOVE_UP:
             return "up";
-        case MovementType::DOWN:
+        case MOVE_DOWN:
             return "down";
     };
 

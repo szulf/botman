@@ -19,11 +19,11 @@ struct Node {
     }
 };
 
-enum class QuadrantType : u8 {
-    TOP_LEFT,
-    TOP_RIGHT,
-    BOTTOM_LEFT,
-    BOTTOM_RIGHT,
+enum QuadrantType : u8 {
+    QUAD_TOP_LEFT,
+    QUAD_TOP_RIGHT,
+    QUAD_BOTTOM_LEFT,
+    QUAD_BOTTOM_RIGHT,
 };
 
 v2 find_furthest_grid_pos(const v2& grid_pos, const MapData& map_data);

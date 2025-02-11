@@ -4,17 +4,17 @@
 
 #include <vector>
 
-enum class TileType : u8 {
-    EMPTY,
-    WALL,
-    PELLET,
-    HAMMER,
-    SPAWNER,
-    START_POS,
+enum TileType : u8 {
+    TILE_EMPTY,
+    TILE_WALL,
+    TILE_PELLET,
+    TILE_HAMMER,
+    TILE_SPAWNER,
+    TILE_START_POS,
 
     // for now only allowing two portals that link to each other
     // maybe change that in the future
-    PORTAL,
+    TILE_PORTAL,
 };
 
 struct MapData {
@@ -51,6 +51,6 @@ MapData load_map(const v2& map_pos);
 void save_map(const char* map_name, const MapData& map_data);
 v2 get_grid_from_pos(const v2& pos, const MapData& map_data);
 v2 get_pos_from_grid(const v2& grid_pos, const MapData& map_data);
-void render_map(const MapData& map_data, const Texture2D& hammer_texture);
+void render_map(const MapData& map_data, const Texture2D& hammer_texture, const Texture2D& potal_texture, const Texture2D& pellet_texture);
 v2 get_second_portal_pos(const v2& portal_pos, const MapData& map_data);
 const char* print_tile(TileType tile);
