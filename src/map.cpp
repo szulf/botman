@@ -7,10 +7,9 @@
 #include <string.h>
 
 MapData load_map(const v2& map_pos) {
-    MapData map_data{
-        .pos = map_pos,
-        .tiles = {MapData::WIDTH * MapData::HEIGHT, TILE_EMPTY},
-    };
+    MapData map_data{};
+    map_data.pos = map_pos;
+    map_data.tiles = {MapData::WIDTH * MapData::HEIGHT, TILE_EMPTY};
 
     for (u8 i = 0; i < 17; i++) {
         set_tile({static_cast<float>(i), 0}, TILE_WALL, map_data);
@@ -25,35 +24,36 @@ MapData load_map(const v2& map_pos) {
     std::string file_str{(std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>())};
 
     u8 portal_count = 0;
-    for (u32 i = 0; const auto& c : file_str) {
+    u32 char_i = 0;
+    for (const auto& c : file_str) {
         switch (c) {
             case '#':
             case 'X':
-                map_data.tiles[i] = TILE_WALL;
+                map_data.tiles[char_i] = TILE_WALL;
                 break;
 
             case 'S':
-                map_data.tiles[i] = TILE_START_POS;
-                map_data.start_pos = {static_cast<float>(i % map_data.WIDTH), static_cast<float>((i - (i % map_data.WIDTH)) / map_data.WIDTH)};
+                map_data.tiles[char_i] = TILE_START_POS;
+                map_data.start_pos = {static_cast<float>(char_i % map_data.WIDTH), static_cast<float>((char_i - (char_i % map_data.WIDTH)) / map_data.WIDTH)};
                 break;
 
             case 'P':
-                map_data.tiles[i] = TILE_PELLET;
+                map_data.tiles[char_i] = TILE_PELLET;
                 map_data.pellet_count++;
                 break;
 
             case 'G':
-                map_data.tiles[i] = TILE_SPAWNER;
-                map_data.spawner_pos = {static_cast<float>(i % map_data.WIDTH), static_cast<float>((i - (i % map_data.WIDTH)) / map_data.WIDTH)};
+                map_data.tiles[char_i] = TILE_SPAWNER;
+                map_data.spawner_pos = {static_cast<float>(char_i % map_data.WIDTH), static_cast<float>((char_i - (char_i % map_data.WIDTH)) / map_data.WIDTH)};
                 break;
 
             case 'H':
-                map_data.tiles[i] = TILE_HAMMER;
+                map_data.tiles[char_i] = TILE_HAMMER;
                 break;
 
             case '1':
-                map_data.tiles[i] = TILE_PORTAL;
-                map_data.portal_pos[portal_count] = {static_cast<float>(i % map_data.WIDTH), static_cast<float>((i - (i % map_data.WIDTH)) / map_data.WIDTH)};
+                map_data.tiles[char_i] = TILE_PORTAL;
+                map_data.portal_pos[portal_count] = {static_cast<float>(char_i % map_data.WIDTH), static_cast<float>((char_i - (char_i % map_data.WIDTH)) / map_data.WIDTH)};
                 portal_count++;
                 break;
 
@@ -64,7 +64,7 @@ MapData load_map(const v2& map_pos) {
             default:
                 continue;
         }
-        i++;
+        char_i++;
     }
 
     return map_data;
@@ -78,7 +78,8 @@ void save_map(const char* map_name, const MapData& map_data) {
 
     FILE* map_file = fopen(buf, "w");
 
-    for (u16 i = 1; const auto& tile : map_data.tiles) {
+    u16 tile_i = 1;
+    for (const auto& tile : map_data.tiles) {
         switch (tile) {
             case TILE_EMPTY:
                 fprintf(map_file, ".");
@@ -102,10 +103,10 @@ void save_map(const char* map_name, const MapData& map_data) {
                 fprintf(map_file, "1");
                 break;
         }
-        if (i % map_data.WIDTH == 0) {
+        if (tile_i % map_data.WIDTH == 0) {
             fprintf(map_file, "\n");
         }
-        i++;
+        tile_i++;
     }
 
     fclose(map_file);

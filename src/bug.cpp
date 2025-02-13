@@ -20,12 +20,14 @@ const char* print_bug_state(BugStateType bug_state) {
 BugData init_bug(const v2& pos) {
     static u8 idx = 0;
     idx++;
-    return BugData{
-        .pos = pos,
-        .texture = LoadTexture(ROOT_PATH "/assets/bug_test.png"),
-        .state = BUG_RESPAWNING,
-        .dead_time = static_cast<float>(GetTime() + idx),
-    };
+
+    BugData bug_data{};
+    bug_data.pos = pos;
+    bug_data.texture = LoadTexture(ROOT_PATH "/assets/bug_test.png");
+    bug_data.state = BUG_RESPAWNING;
+    bug_data.dead_time = static_cast<float>(GetTime() + idx);
+
+    return bug_data;
 }
 
 Rectangle bug_get_rect(const BugData& bug_data, const MapData& map_data) {

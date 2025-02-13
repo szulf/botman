@@ -1,8 +1,10 @@
 #pragma once
 
 #include "constants.hpp"
-#include "game.hpp"
+// #include "game.hpp"
 #include "map.hpp"
+
+struct GameData;
 
 enum MovementType : u8 {
     MOVE_NONE,
@@ -10,6 +12,11 @@ enum MovementType : u8 {
     MOVE_RIGHT,
     MOVE_UP,
     MOVE_DOWN,
+};
+
+enum FlipType : i8 {
+    FLIP_LEFT = -1,
+    FLIP_RIGHT = 1,
 };
 
 struct RobotData {
@@ -24,9 +31,7 @@ struct RobotData {
     Texture2D texture{};
     float texture_accumulator{};
     u8 texture_frame{};
-    // if flipped then this is -1, if not then this is 1
-    // i dont like this, but whatever
-    i8 flip{};
+    FlipType flip{FLIP_LEFT};
 
     bool smashing_mode{};
 

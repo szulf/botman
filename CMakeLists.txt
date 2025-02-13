@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -29,7 +29,7 @@ FetchContent_MakeAvailable(raylib raygui)
 add_executable(botman
     src/main.cpp
     src/constants.hpp
-    src/game.hpp
+    src/game.cpp src/game.hpp
     src/map.cpp src/map.hpp
     src/robot.cpp src/robot.hpp
     src/bug.cpp src/bug.hpp
@@ -42,6 +42,7 @@ endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0 -Wall -fsanitize=address -fsanitize=leak -Wno-enum-compare")
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3 -O0 -Wall -Wno-enum-compare")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG")
 endif()

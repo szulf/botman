@@ -7,7 +7,7 @@
 ####P#PP#PP#P####
 ####P##P#P##P####
 ####P#PP#PP#P####
-#1PPPPPPPPPPP1P.#
+#1PPPPPPPPPPPPP1#
 ####P#PPGPP#P####
 ####P#PPPPP#P####
 ####P#P###P#P####

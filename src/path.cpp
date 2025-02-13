@@ -6,9 +6,10 @@ std::vector<v2> find_path(const v2& start_grid_pos, const v2& end_grid_pos, cons
         return {};
     }
 
-    std::vector<Node> closed_set;
+    std::vector<Node> closed_set{};
     std::vector<Node> open_set{};
-    open_set.push_back({start_grid_pos});
+
+    open_set.emplace_back(Node{.pos = start_grid_pos});
 
     while (!open_set.empty()) {
         Node q{};

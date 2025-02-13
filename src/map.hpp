@@ -12,6 +12,7 @@ enum TileType : u8 {
     TILE_SPAWNER,
     TILE_START_POS,
 
+    // TODO
     // for now only allowing two portals that link to each other
     // maybe change that in the future
     TILE_PORTAL,
@@ -45,6 +46,10 @@ inline TileType get_tile(u32 x, u32 y, const MapData& map_data) {
 
 inline void set_tile(v2 pos, TileType tile, MapData& map_data) {
     map_data.tiles[pos.x + map_data.WIDTH * pos.y] = tile;
+}
+
+inline bool in_map_range(const v2& grid_pos, const MapData& map_data) {
+    return grid_pos.x > 0 && grid_pos.x < map_data.WIDTH - 1 && grid_pos.y > 0 && grid_pos.y < map_data.HEIGHT - 1;
 }
 
 MapData load_map(const v2& map_pos);
