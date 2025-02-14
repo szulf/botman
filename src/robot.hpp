@@ -1,10 +1,11 @@
 #pragma once
 
 #include "constants.hpp"
-// #include "game.hpp"
 #include "map.hpp"
 
+// Gotta love circular dependencies
 struct GameData;
+struct TexturesType;
 
 enum MovementType : u8 {
     MOVE_NONE,
@@ -28,7 +29,6 @@ struct RobotData {
     MovementType next_move{};
     float time_between_moves{};
 
-    Texture2D texture{};
     float texture_accumulator{};
     u8 texture_frame{};
     FlipType flip{FLIP_LEFT};
@@ -41,7 +41,7 @@ struct RobotData {
     bool teleported{};
 };
 
-void render_robot(RobotData& robot_data, const MapData& map_data);
+void render_robot(RobotData& robot_data, const MapData& map_data, const TexturesType& textures);
 void robot_move(MovementType move, float dt, RobotData& robot_data, const MapData& map_data);
 v2 get_grid_center(const v2& pos, const MapData& map_data);
 bool in_about_center(const v2& pos, const MapData& map_data);

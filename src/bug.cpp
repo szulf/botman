@@ -1,5 +1,6 @@
 #include "bug.hpp"
 #include "path.hpp"
+#include "game.hpp"
 
 #include "raymath.h"
 #include <cstdio>
@@ -23,7 +24,6 @@ BugData init_bug(const v2& pos) {
 
     BugData bug_data{};
     bug_data.pos = pos;
-    bug_data.texture = LoadTexture(ROOT_PATH "/assets/bug_test.png");
     bug_data.state = BUG_RESPAWNING;
     bug_data.dead_time = static_cast<float>(GetTime() + idx);
 
@@ -34,12 +34,12 @@ Rectangle bug_get_rect(const BugData& bug_data, const MapData& map_data) {
     return {bug_data.pos.x - map_data.GRID_WIDTH / 2.0f, bug_data.pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
 }
 
-void render_bug(const BugData& bug_data, const MapData& map_data) {
+void render_bug(const BugData& bug_data, const MapData& map_data, const TexturesType& textures) {
     if (bug_data.death_display) {
         DrawText("100", bug_data.pos.x - 20, bug_data.pos.y - 25, 20, GREEN);
     }
 
-    DrawTexturePro(bug_data.texture, {static_cast<float>(map_data.GRID_WIDTH * bug_data.texture_frame), 0, static_cast<float>(map_data.GRID_WIDTH / 2.0f), static_cast<float>(map_data.GRID_HEIGHT / 2.0f)}, {bug_data.pos.x, bug_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, bug_data.tint);
+    DrawTexturePro(textures.bug_walk, {static_cast<float>(map_data.GRID_WIDTH * bug_data.texture_frame), 0, static_cast<float>(map_data.GRID_WIDTH / 2.0f), static_cast<float>(map_data.GRID_HEIGHT / 2.0f)}, {bug_data.pos.x, bug_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, bug_data.tint);
 }
 
 void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const MapData& map_data) {

@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-inline void reset_game(std::vector<BugData>& bug_datas, RobotData& robot_data, MapData& map_data) {
+inline static void reset_game(std::vector<BugData>& bug_datas, RobotData& robot_data, MapData& map_data) {
     u8 bug_i = 1;
     for (auto& bug : bug_datas) {
         bug.tint.a = 255;
@@ -25,6 +25,24 @@ inline void reset_game(std::vector<BugData>& bug_datas, RobotData& robot_data, M
     robot_data.texture_accumulator = 0;
 }
 
+void init_game(GameData& game) {
+    set_game_state(GAME_START_SCREEN, game);
+
+    game.textures.hammer = LoadTexture(ROOT_PATH "/assets/hammer.png");
+    game.textures.portal = LoadTexture(ROOT_PATH "/assets/portal.png");
+    game.textures.pellet = LoadTexture(ROOT_PATH "/assets/gold_coin.png");
+    game.textures.robot_walk = LoadTexture(ROOT_PATH "/assets/robot.png");
+    game.textures.bug_walk = LoadTexture(ROOT_PATH "/assets/bug_test.png");
+}
+
+void close_game(GameData& game) {
+    UnloadTexture(game.textures.hammer);
+    UnloadTexture(game.textures.portal);
+    UnloadTexture(game.textures.pellet);
+    UnloadTexture(game.textures.robot_walk);
+    UnloadTexture(game.textures.bug_walk);
+}
+
 void set_game_state(GameStateType state, GameData& game) {
     switch (state) {
         case GAME_RUNNING: {
@@ -32,10 +50,7 @@ void set_game_state(GameStateType state, GameData& game) {
 
             game.running.robot.pos = get_pos_from_grid(game.running.map.start_pos, game.running.map);
             game.running.robot.next_move = MOVE_LEFT;
-            game.running.robot.texture = LoadTexture(ROOT_PATH "/assets/robot.png"),
 
-            // FIX
-            // Why am i loading the bug texture 5 times???????????!??!?!?!!?!??!?!?!?!?!?!?
             game.running.bugs = {
                 init_bug(get_pos_from_grid(game.running.map.spawner_pos, game.running.map)),
                 init_bug(get_pos_from_grid(game.running.map.spawner_pos, game.running.map)),
@@ -50,6 +65,9 @@ void set_game_state(GameStateType state, GameData& game) {
         case GAME_EDIT_MODE:
             game.edit_mode.map = load_map({200, 50});
             break;
+
+        case GAME_EXIT:
+            game.close_window = true;
 
         default:
             break;
@@ -72,7 +90,7 @@ void start_screen(GameData& game) {
     }
 
     if (game.start_screen.quit_btn) {
-        game.close_window = true;
+        set_game_state(GAME_EXIT, game);
     }
 
     if (game.start_screen.map_selector_btn) {
@@ -94,6 +112,9 @@ void start_screen(GameData& game) {
     EndDrawing();
 }
 
+// TODO
+// give an option to display a grid
+// so you know what square you are clicking at
 void edit_mode(MapData& map, GameData& game) {
     // -----
     // INPUT
@@ -292,10 +313,10 @@ void running(std::vector<BugData>& bugs, RobotData& robot, MapData& map, GameDat
 
         render_map(map, game.textures.hammer, game.textures.portal, game.textures.pellet);
 
-        render_robot(robot, map);
+        render_robot(robot, map, game.textures);
 
         for (const auto& bug_data : bugs) {
-            render_bug(bug_data, map);
+            render_bug(bug_data, map, game.textures);
         }
 
         DrawText(std::to_string(map.score).c_str(), 50, 100, 50, BLACK);

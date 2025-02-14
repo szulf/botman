@@ -17,7 +17,7 @@
 // - play, enter edit mode, change setting(max fps, etc.)
 //
 // TODO
-// *edit mode
+// edit mode
 // - gui for it
 // - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
 // - maybe a map selector when entering game mode, that would look at all .txt files inside of map/ directory
@@ -25,19 +25,18 @@
 //
 // TODO
 // map selector
-// - either when going into game mode, or a separate button in the main menu
+// - separate button in the main menu
 //
 // TODO
 // art
 // - for
-//   - *bugs
+//   - bugs
 //   - lifes
 //   - walls
 //   - spawner
 //   - robot with hammer
-// - animation for
+//   - deaths
 //   - portals
-//   - robot death
 //
 // TODO
 // music
@@ -49,8 +48,8 @@
 //
 // TODO maybe
 // would be cool to have an arena allocator and only allocate memory when entering different game states
-// no idea how that would work with something like LoadTexture tho
-// just an idea tho, probably wont do that
+// no idea how that would work with something like LoadTexture
+// just an idea, probably wont do that
 int main() {
     srand(time(0));
 
@@ -60,12 +59,7 @@ int main() {
     SetExitKey(KEY_NULL);
 
     GameData game{};
-    set_game_state(GAME_START_SCREEN, game);
-
-    // this should not be here
-    game.textures.hammer = LoadTexture(ROOT_PATH "/assets/hammer.png");
-    game.textures.portal = LoadTexture(ROOT_PATH "/assets/portal.png");
-    game.textures.pellet = LoadTexture(ROOT_PATH "/assets/gold_coin.png");
+    init_game(game);
 
     while (!WindowShouldClose() && !game.close_window) {
         game.mean_fps = (game.mean_fps + GetFPS()) / 2.0f;
@@ -98,18 +92,16 @@ int main() {
             case GAME_LOST:
                 lost();
                 break;
+
+            // just here to satisfy a warning
+            case GAME_EXIT:
+                break;
         }
     }
 
     printf("fps: %f\n", game.mean_fps);
 
-    UnloadTexture(game.textures.hammer);
-    UnloadTexture(game.textures.portal);
-    UnloadTexture(game.textures.pellet);
-    UnloadTexture(game.running.robot.texture);
-    for (const auto& bug : game.running.bugs) {
-        UnloadTexture(bug.texture);
-    }
+    close_game(game);
     CloseWindow();
     return 0;
 }

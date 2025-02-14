@@ -6,6 +6,9 @@
 
 #include <vector>
 
+// Gotta love circular dependencies
+struct TexturesType;
+
 enum BugStateType : u8 {
     BUG_ALIVE,
     BUG_DEAD,
@@ -36,6 +39,6 @@ struct BugData {
 const char* print_bug_state(BugStateType bug_state);
 BugData init_bug(const v2& pos);
 Rectangle bug_get_rect(const BugData& bug_data, const MapData& map_data);
-void render_bug(const BugData& bug_data, const MapData& map_data);
+void render_bug(const BugData& bug_data, const MapData& map_data, const TexturesType& textures);
 void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const MapData& map_data);
 void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data);

@@ -17,6 +17,17 @@ enum GameStateType : u8 {
     GAME_RUNNING,
     GAME_WON,
     GAME_LOST,
+    GAME_EXIT,
+};
+
+struct TexturesType {
+    Texture2D hammer{};
+    Texture2D portal{};
+    Texture2D pellet{};
+
+    Texture2D robot_walk{};
+
+    Texture2D bug_walk{};
 };
 
 struct GameData {
@@ -29,13 +40,9 @@ struct GameData {
     float dt{};
     float last_frame{};
 
-    struct textures_type {
-        Texture2D hammer{};
-        Texture2D portal{};
-        Texture2D pellet{};
-    } textures;
+    TexturesType textures;
 
-    struct start_screen_type {
+    struct StartScreenType {
         bool game_btn{};
         bool edit_btn{};
         bool settings_btn{};
@@ -43,7 +50,7 @@ struct GameData {
         bool map_selector_btn{};
     } start_screen;
 
-    struct edit_mode_type {
+    struct EditModeType {
         MapData map{};
 
         TileType chosen_tile{};
@@ -53,17 +60,17 @@ struct GameData {
         bool show_save_menu{};
     } edit_mode;
 
-    struct settings_type {
+    struct SettingsType {
         bool back_btn{};
     } settings;
 
-    struct map_selector_type {
+    struct MapSelectorType {
         bool maps_reload{};
 
         bool exit_btn{};
     } map_selector;
 
-    struct running_type {
+    struct RunningType {
         MapData map{};
         RobotData robot{};
         std::vector<BugData> bugs{};
@@ -71,6 +78,8 @@ struct GameData {
 
 };
 
+void init_game(GameData& game);
+void close_game(GameData& game);
 void set_game_state(GameStateType state, GameData& game_data);
 
 // TODO

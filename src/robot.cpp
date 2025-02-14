@@ -5,10 +5,10 @@
 #include "raymath.h"
 #include <cstdio>
 
-void render_robot(RobotData& robot_data, const MapData& map_data) {
+void render_robot(RobotData& robot_data, const MapData& map_data, const TexturesType& textures) {
     robot_data.texture_frame = fmod(-robot_data.texture_accumulator * 5.0f, 4.0f);
 
-    DrawTexturePro(robot_data.texture, {static_cast<float>((map_data.GRID_WIDTH / 2.0f) * robot_data.texture_frame), static_cast<float>(map_data.GRID_HEIGHT), static_cast<float>(map_data.GRID_WIDTH / 2.0f * (i8) robot_data.flip), static_cast<float>(map_data.GRID_HEIGHT / 2.0f)}, {robot_data.pos.x, robot_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+    DrawTexturePro(textures.robot_walk, {static_cast<float>((map_data.GRID_WIDTH / 2.0f) * robot_data.texture_frame), static_cast<float>(map_data.GRID_HEIGHT), static_cast<float>(map_data.GRID_WIDTH / 2.0f * (i8) robot_data.flip), static_cast<float>(map_data.GRID_HEIGHT / 2.0f)}, {robot_data.pos.x, robot_data.pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
 }
 
 void robot_move(MovementType move, float dt, RobotData& robot_data, const MapData& map_data) {
