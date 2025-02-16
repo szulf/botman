@@ -18,16 +18,15 @@ std::string_view print_bug_state(BugState bug_state) {
     return "";
 }
 
-BugData::BugData(const v2& p) {
-    static u8 idx = 0;
-    idx++;
-
-    pos = p;
-    state = BugState::RESPAWNING;
-    dead_time = static_cast<float>(GetTime() + idx);
+void set_bugs_dead_time(std::vector<BugData>& bugs) {
+    float time = GetTime();
+    for (u8 i = 1; auto& bug : bugs) {
+        bug.dead_time = time + i;
+        i++;
+    }
 }
 
-Rectangle BugData::get_collision_rect(const MapData& map_data) const {
+Rectangle BugData::collision_rect(const MapData& map_data) const {
     return {pos.x - map_data.GRID_WIDTH / 2.0f, pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
 }
 
@@ -104,7 +103,7 @@ void BugData::move(float dt, const RobotData& robot_data, const MapData& map_dat
                     static_cast<float>(map_data.GRID_WIDTH),
                     static_cast<float>(map_data.GRID_HEIGHT)
                 },
-                get_collision_rect(map_data)
+                collision_rect(map_data)
             )
         ) {
         pos = map_data.get_grid_center(pos);
@@ -129,13 +128,15 @@ void BugData::collide(RobotData& robot_data, MapData& map_data) {
         return;
     }
 
-    if (CheckCollisionRecs(get_collision_rect(map_data), robot_data.get_collision_rect(map_data))) {
+    if (CheckCollisionRecs(collision_rect(map_data), robot_data.collision_rect(map_data))) {
         if (robot_data.smashing_mode) {
             state = BugState::DEAD;
             dead_time = GetTime();
             map_data.score += 100;
         } else {
-            robot_data.lifes -= 1;
+            if (!robot_data.is_dead) {
+                robot_data.lifes -= 1;
+            }
             robot_data.is_dead = true;
             robot_data.dead_delay = GetTime();
         }

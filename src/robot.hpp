@@ -22,18 +22,22 @@ enum class Flip : i8 {
 
 struct RobotData {
 public:
+    RobotData() = default;
+    RobotData(const v2& pos, u8 lifes) : lifes{lifes}, pos{pos} { }
+
+    Rectangle collision_rect(const MapData& map_data) const;
+
     void render(const MapData& map_data, const TexturesType& textures);
     void move(Movement move, float dt, const MapData& map_data);
     void collect(MapData& map_data, GameData& game);
-    Rectangle get_collision_rect(const MapData& map_data) const;
 
 public:
-    u8 lifes{3};
+    u8 lifes{};
 
     v2 pos{};
-    v2 movement{};
+    v2 movement{-1, 0};
 
-    Movement next_move{};
+    Movement next_move{Movement::LEFT};
     float time_between_moves{};
 
     float texture_accumulator{};

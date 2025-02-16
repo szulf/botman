@@ -18,9 +18,9 @@ enum class BugState : u8 {
 
 struct BugData {
 public:
-    BugData(const v2& pos);
+    BugData(const v2& _pos) : pos{_pos} { }
 
-    Rectangle get_collision_rect(const MapData& map_data) const;
+    Rectangle collision_rect(const MapData& map_data) const;
 
     void render(const MapData& map_data, const TexturesType& textures) const;
     void move(float dt, const RobotData& robot_data, const MapData& map_data);
@@ -34,7 +34,7 @@ public:
     u8 texture_frame{};
     Color tint{WHITE};
 
-    BugState state{};
+    BugState state{BugState::RESPAWNING};
     float dead_time{};
     bool death_display{};
 
@@ -47,6 +47,6 @@ public:
     bool teleported;
 
 };
-
+void set_bugs_dead_time(std::vector<BugData>& bugs);
 std::string_view print_bug_state(BugState bug_state);
 

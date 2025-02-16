@@ -169,7 +169,7 @@ void RobotData::move(Movement move, float dt, const MapData& map_data) {
             (map_data.get_tile(next_grid_pos) == Tile::WALL || map_data.get_tile(next_grid_pos) == Tile::SPAWNER) &&
             CheckCollisionRecs(
                 {next_pos.x - map_data.GRID_WIDTH / 2.0f, next_pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)},
-                get_collision_rect(map_data)
+                collision_rect(map_data)
             )
         ) {
         movement = {0, 0};
@@ -196,7 +196,7 @@ void RobotData::move(Movement move, float dt, const MapData& map_data) {
 void RobotData::collect(MapData& map_data, GameData& game_data) {
     auto grid_pos = map_data.get_grid_from_pos(pos);
 
-    if (map_data.get_tile(grid_pos) == Tile::PELLET && CheckCollisionRecs({pos.x - (map_data.GRID_WIDTH / 8.0f), pos.y - (map_data.GRID_HEIGHT / 8.0f), map_data.GRID_WIDTH / 4.0f, map_data.GRID_HEIGHT / 4.0f}, get_collision_rect(map_data))) {
+    if (map_data.get_tile(grid_pos) == Tile::PELLET && CheckCollisionRecs({pos.x - (map_data.GRID_WIDTH / 8.0f), pos.y - (map_data.GRID_HEIGHT / 8.0f), map_data.GRID_WIDTH / 4.0f, map_data.GRID_HEIGHT / 4.0f}, collision_rect(map_data))) {
         map_data.set_tile(grid_pos, Tile::EMPTY);
         map_data.score += 10;
         map_data.pellet_count--;
@@ -206,7 +206,7 @@ void RobotData::collect(MapData& map_data, GameData& game_data) {
     }
 
     static float smashing_start{};
-    if (map_data.get_tile(grid_pos) == Tile::HAMMER && CheckCollisionRecs({pos.x - (map_data.GRID_WIDTH / 4.0f), pos.y - (map_data.GRID_HEIGHT / 4.0f), map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, get_collision_rect(map_data))) {
+    if (map_data.get_tile(grid_pos) == Tile::HAMMER && CheckCollisionRecs({pos.x - (map_data.GRID_WIDTH / 4.0f), pos.y - (map_data.GRID_HEIGHT / 4.0f), map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, collision_rect(map_data))) {
         map_data.set_tile(grid_pos, Tile::EMPTY);
         smashing_mode = true;
         smashing_start = GetTime();
@@ -217,7 +217,7 @@ void RobotData::collect(MapData& map_data, GameData& game_data) {
     }
 }
 
-Rectangle RobotData::get_collision_rect(const MapData& map_data) const {
+Rectangle RobotData::collision_rect(const MapData& map_data) const {
     return {
         .x = pos.x - map_data.GRID_WIDTH / 2.0f + (map_data.GRID_WIDTH * 0.125f),
         .y = (pos.y - map_data.GRID_HEIGHT / 2.0f) + (map_data.GRID_HEIGHT * 0.125f),

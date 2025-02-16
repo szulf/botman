@@ -2,7 +2,6 @@
 #include "game.hpp"
 
 #include "raylib.h"
-#include "raymath.h"
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 #include <ctime>
@@ -60,31 +59,31 @@ int main() {
 
         switch (game.state) {
             case GameState::START_SCREEN:
-                start_screen(game);
+                game.start_screen.run(game);
                 break;
 
             case GameState::EDIT_MODE:
-                edit_mode(game.edit_mode.map, game);
+                game.edit_mode.run(game);
                 break;
 
             case GameState::SETTINGS:
-                settings(game);
+                game.settings.run(game);
                 break;
 
             case GameState::MAP_SELECTOR:
-                map_selector(game);
+                game.map_selector.run(game);
                 break;
 
             case GameState::RUNNING:
-                running(game.running.bugs, game.running.robot, game.running.map, game);
+                game.running.run(game);
                 break;
 
             case GameState::WON:
-                won();
+                game.won.run(game);
                 break;
 
             case GameState::LOST:
-                lost();
+                game.lost.run(game);
                 break;
 
             // just here to satisfy a warning

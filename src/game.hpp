@@ -35,8 +35,6 @@ public:
     GameData();
     ~GameData();
 
-    // TODO
-    // maybe change an operator= overload on GameState enum
     void set_state(GameState state);
 
 public:
@@ -51,12 +49,15 @@ public:
 
     TexturesType textures;
 
+    // Absolutely hate passing in GameData to run methods, but dont really know how to change that
     struct StartScreenType {
         bool game_btn{};
         bool edit_btn{};
         bool settings_btn{};
         bool quit_btn{};
         bool map_selector_btn{};
+
+        void run(GameData& game);
     } start_screen;
 
     struct EditModeType {
@@ -69,32 +70,45 @@ public:
         bool exit_btn{};
         bool save_btn{};
         bool show_save_menu{};
+
+        void run(GameData& game);
     } edit_mode;
 
     struct SettingsType {
         bool back_btn{};
+
+        void run(GameData& game);
     } settings;
 
     struct MapSelectorType {
         bool maps_reload{};
 
         bool exit_btn{};
+
+        void run(GameData& game);
     } map_selector;
 
     struct RunningType {
         MapData map{};
         RobotData robot{};
         std::vector<BugData> bugs{};
+
+        bool first{true};
+
+        void run(GameData& game);
     } running;
+
+    struct WonType {
+        bool exit_btn{};
+
+        void run(GameData& game);
+    } won;
+
+    struct LostType {
+        bool exit_btn{};
+
+        void run(GameData& game);
+    } lost;
 
 };
 
-// TODO
-// change these names
-void start_screen(GameData& game);
-void edit_mode(MapData& map, GameData& game);
-void settings(GameData& game);
-void map_selector(GameData& game);
-void running(std::vector<BugData>& bugs, RobotData& robot, MapData& map, GameData& game);
-void won();
-void lost();
