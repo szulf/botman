@@ -47,8 +47,6 @@
 int main() {
     srand(time(0));
 
-    const u16 WIDTH = 1200;
-    const u16 HEIGHT = 800;
     InitWindow(WIDTH, HEIGHT, "botman");
     SetExitKey(KEY_NULL);
 

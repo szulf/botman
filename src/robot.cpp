@@ -201,7 +201,7 @@ void RobotData::collect(MapData& map_data, GameData& game_data) {
         map_data.score += 10;
         map_data.pellet_count--;
         if (map_data.pellet_count == 0) {
-            game_data.set_state(GameState::WON);
+            game_data.change_state(GameState::WON);
         }
     }
 

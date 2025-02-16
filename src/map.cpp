@@ -154,7 +154,7 @@ void MapData::render(const TexturesType& textures) const {
                 case Tile::WALL: {
                     const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)});
                     const Rectangle rect = {pos.x, pos.y, static_cast<float>(GRID_WIDTH), static_cast<float>(GRID_HEIGHT)};
-                    DrawRectanglePro(rect, {GRID_WIDTH / 2.0f, GRID_HEIGHT / 2.0f}, 0.0f, BLACK);
+                    DrawTexturePro(textures.wall, {0, 0, static_cast<float>(textures.wall.width), static_cast<float>(textures.wall.height)}, rect, {GRID_WIDTH / 2.0f, GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
                     break;
                 }
 
@@ -173,9 +173,9 @@ void MapData::render(const TexturesType& textures) const {
                 }
 
                 case Tile::SPAWNER: {
-                    const v2 pos = get_pos_from_grid(spawner_pos);
+                    const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)});
                     const Rectangle rect = {pos.x, pos.y, static_cast<float>(GRID_WIDTH), static_cast<float>(GRID_HEIGHT)};
-                    DrawRectanglePro(rect, {GRID_WIDTH / 2.0f, GRID_HEIGHT / 2.0f}, 0.0f, RED);
+                    DrawTexturePro(textures.spawner, {0, 0, static_cast<float>(textures.spawner.width), static_cast<float>(textures.spawner.height)}, rect, {GRID_WIDTH / 2.0f, GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
                     break;
                 }
 

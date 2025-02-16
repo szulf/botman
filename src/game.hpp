@@ -24,10 +24,17 @@ struct TexturesType {
     Texture2D hammer{};
     Texture2D portal{};
     Texture2D pellet{};
+    Texture2D wall{};
+    Texture2D spawner{};
 
     Texture2D robot_walk{};
 
     Texture2D bug_walk{};
+
+    Texture2D start_pos;
+    Texture2D empty;
+
+    const Texture2D& get_texture_from_tile(Tile tile);
 };
 
 struct GameData {
@@ -35,7 +42,7 @@ public:
     GameData();
     ~GameData();
 
-    void set_state(GameState state);
+    void change_state(GameState state);
 
 public:
     GameState state{};
@@ -65,7 +72,7 @@ public:
 
         Tile chosen_tile{};
 
-        char map_name[128];
+        char map_name[128]{};
 
         bool exit_btn{};
         bool save_btn{};
