@@ -1,59 +1,94 @@
 #include "map.hpp"
+#include "game.hpp"
 
 #include "raymath.h"
 #include <fstream>
 #include <string>
 #include <cmath>
-#include <string.h>
 
-MapData load_map(const v2& map_pos) {
-    MapData map_data{};
-    map_data.pos = map_pos;
-    map_data.tiles = {MapData::WIDTH * MapData::HEIGHT, TILE_EMPTY};
+std::string_view print_tile(Tile tile) {
+    switch (tile) {
+        case Tile::EMPTY:
+            return "empty";
+        case Tile::WALL:
+            return "wall";
+        case Tile::PELLET:
+            return "pellet";
+        case Tile::HAMMER:
+            return "hammer";
+        case Tile::SPAWNER:
+            return "spawner";
+        case Tile::START_POS:
+            return "start_pos";
+        case Tile::PORTAL:
+            return "portal";
+    }
+
+    return "";
+}
+
+MapData::MapData(const v2& map_pos) {
+    load(map_pos);
+}
+
+v2 MapData::get_grid_from_pos(const v2& _pos) const {
+    return {std::floor((_pos.x - pos.x) / GRID_WIDTH), std::floor((_pos.y - pos.y) / GRID_HEIGHT)};
+}
+
+v2 MapData::get_pos_from_grid(const v2& grid_pos) const {
+    return {(grid_pos.x * GRID_WIDTH) + (GRID_WIDTH / 2.0f) + pos.x, (grid_pos.y * GRID_HEIGHT) + (GRID_HEIGHT / 2.0f) + pos.y};
+}
+
+v2 MapData::get_grid_center(const v2& pos) const {
+    return get_pos_from_grid(get_grid_from_pos(pos));
+}
+
+void MapData::load(const v2& map_pos) {
+    pos = map_pos;
+    tiles = {WIDTH * HEIGHT, Tile::EMPTY};
 
     for (u8 i = 0; i < 17; i++) {
-        set_tile({static_cast<float>(i), 0}, TILE_WALL, map_data);
-        set_tile({static_cast<float>(i), 21}, TILE_WALL, map_data);
+        set_tile({static_cast<float>(i), 0}, Tile::WALL);
+        set_tile({static_cast<float>(i), 21}, Tile::WALL);
     }
     for (u8 i = 0; i < 21; i++) {
-        set_tile({0, static_cast<float>(i)}, TILE_WALL, map_data);
-        set_tile({16, static_cast<float>(i)}, TILE_WALL, map_data);
+        set_tile({0, static_cast<float>(i)}, Tile::WALL);
+        set_tile({16, static_cast<float>(i)}, Tile::WALL);
     }
 
-    std::ifstream file{ROOT_PATH "/map.txt", std::ios::in | std::ios::binary};
+    std::ifstream file{ROOT_PATH "/map.txt", std::ios::in};
     std::string file_str{(std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>())};
 
     u8 portal_count = 0;
-    u32 char_i = 0;
-    for (const auto& c : file_str) {
+    for (u32 i = 0; const auto& c : file_str) {
         switch (c) {
             case '#':
             case 'X':
-                map_data.tiles[char_i] = TILE_WALL;
+                tiles[i] = Tile::WALL;
                 break;
 
             case 'S':
-                map_data.tiles[char_i] = TILE_START_POS;
-                map_data.start_pos = {static_cast<float>(char_i % map_data.WIDTH), static_cast<float>((char_i - (char_i % map_data.WIDTH)) / map_data.WIDTH)};
+                tiles[i] = Tile::START_POS;
+                start_pos = {static_cast<float>(i % WIDTH), static_cast<float>((i - (i % WIDTH)) / WIDTH)};
                 break;
 
             case 'P':
-                map_data.tiles[char_i] = TILE_PELLET;
-                map_data.pellet_count++;
+                tiles[i] = Tile::PELLET;
+                pellet_count++;
                 break;
 
             case 'G':
-                map_data.tiles[char_i] = TILE_SPAWNER;
-                map_data.spawner_pos = {static_cast<float>(char_i % map_data.WIDTH), static_cast<float>((char_i - (char_i % map_data.WIDTH)) / map_data.WIDTH)};
+                tiles[i] = Tile::SPAWNER;
+                spawner_pos = {static_cast<float>(i % WIDTH), static_cast<float>((i - (i % WIDTH)) / WIDTH)};
                 break;
 
             case 'H':
-                map_data.tiles[char_i] = TILE_HAMMER;
+                tiles[i] = Tile::HAMMER;
                 break;
 
             case '1':
-                map_data.tiles[char_i] = TILE_PORTAL;
-                map_data.portal_pos[portal_count] = {static_cast<float>(char_i % map_data.WIDTH), static_cast<float>((char_i - (char_i % map_data.WIDTH)) / map_data.WIDTH)};
+                tiles[i] = Tile::PORTAL;
+                portal_pos[portal_count] = {static_cast<float>(i % WIDTH), static_cast<float>((i - (i % WIDTH)) / WIDTH)};
                 portal_count++;
                 break;
 
@@ -64,100 +99,90 @@ MapData load_map(const v2& map_pos) {
             default:
                 continue;
         }
-        char_i++;
+        i++;
     }
-
-    return map_data;
 }
 
-void save_map(const char* map_name, const MapData& map_data) {
-    char* buf = (char*) malloc(strlen(map_name) + strlen(ROOT_PATH "/maps/") + 5);
-    strcpy(buf, ROOT_PATH "/maps/");
-    strcat(buf, map_name);
-    strcat(buf, ".txt");
+void MapData::save(const char* map_name) const {
+    std::string map_file_name = ROOT_PATH "/maps/" + std::string(map_name) + ".txt";
+    std::ofstream map_file{map_file_name, std::ios::out};
 
-    FILE* map_file = fopen(buf, "w");
-
-    u16 tile_i = 1;
-    for (const auto& tile : map_data.tiles) {
+    for (u16 i = 1; const auto& tile : tiles) {
         switch (tile) {
-            case TILE_EMPTY:
-                fprintf(map_file, ".");
+            case Tile::EMPTY:
+                map_file << ".";
                 break;
-            case TILE_WALL:
-                fprintf(map_file, "#");
+            case Tile::WALL:
+                map_file << "#";
                 break;
-            case TILE_PELLET:
-                fprintf(map_file, "P");
+            case Tile::PELLET:
+                map_file << "P";
                 break;
-            case TILE_HAMMER:
-                fprintf(map_file, "H");
+            case Tile::HAMMER:
+                map_file << "H";
                 break;
-            case TILE_SPAWNER:
-                fprintf(map_file, "G");
+            case Tile::SPAWNER:
+                map_file << "G";
                 break;
-            case TILE_START_POS:
-                fprintf(map_file, "S");
+            case Tile::START_POS:
+                map_file << "S";
                 break;
-            case TILE_PORTAL:
-                fprintf(map_file, "1");
+            case Tile::PORTAL:
+                map_file << "1";
                 break;
         }
-        if (tile_i % map_data.WIDTH == 0) {
-            fprintf(map_file, "\n");
+        if (i % WIDTH == 0) {
+            map_file << "\n";
         }
-        tile_i++;
+        i++;
     }
-
-    fclose(map_file);
-    free((void*) buf);
 }
 
-v2 get_grid_from_pos(const v2& pos, const MapData& map_data) {
-    return {std::floor((pos.x - map_data.pos.x) / map_data.GRID_WIDTH), std::floor((pos.y - map_data.pos.y) / map_data.GRID_HEIGHT)};
+v2 MapData::get_second_portal_pos(const v2& portal_grid_pos) const {
+    if (portal_pos[0] == portal_grid_pos) {
+        return portal_pos[1];
+    } else {
+        return portal_pos[0];
+    }
 }
 
-v2 get_pos_from_grid(const v2& grid_pos, const MapData& map_data) {
-    return {(grid_pos.x * map_data.GRID_WIDTH) + (map_data.GRID_WIDTH / 2.0f) + map_data.pos.x, (grid_pos.y * map_data.GRID_HEIGHT) + (map_data.GRID_HEIGHT / 2.0f) + map_data.pos.y};
-}
-
-void render_map(const MapData& map_data, const Texture2D& hammer_texture, const Texture2D& portal_texture, const Texture2D& pellet_texture) {
-    for (u32 i = 0; i < map_data.WIDTH; i++) {
-        for (u32 j = 0; j < map_data.HEIGHT; j++) {
-            TileType tile = get_tile({static_cast<float>(i), static_cast<float>(j)}, map_data);
+void MapData::render(const TexturesType& textures) const {
+    for (u32 i = 0; i < WIDTH; i++) {
+        for (u32 j = 0; j < HEIGHT; j++) {
+            Tile tile = get_tile({static_cast<float>(i), static_cast<float>(j)});
             switch (tile) {
-                case TILE_WALL: {
-                    const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)}, map_data);
-                    const Rectangle rect = {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
-                    DrawRectanglePro(rect, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, BLACK);
+                case Tile::WALL: {
+                    const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)});
+                    const Rectangle rect = {pos.x, pos.y, static_cast<float>(GRID_WIDTH), static_cast<float>(GRID_HEIGHT)};
+                    DrawRectanglePro(rect, {GRID_WIDTH / 2.0f, GRID_HEIGHT / 2.0f}, 0.0f, BLACK);
                     break;
                 }
 
-                case TILE_PELLET: {
-                    const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)}, map_data);
-                    const Rectangle rect = {pos.x, pos.y, (float) map_data.GRID_WIDTH, (float) map_data.GRID_HEIGHT};
-                    DrawTexturePro(pellet_texture, {0, 0, (float) hammer_texture.width, (float) hammer_texture.height}, rect, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+                case Tile::PELLET: {
+                    const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)});
+                    const Rectangle rect = {pos.x, pos.y, static_cast<float>(GRID_WIDTH), static_cast<float>(GRID_HEIGHT)};
+                    DrawTexturePro(textures.pellet, {0, 0, static_cast<float>(textures.pellet.width), static_cast<float>(textures.pellet.height)}, rect, {GRID_WIDTH / 2.0f, GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
                     break;
                 }
 
-                case TILE_HAMMER: {
-                    const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)}, map_data);
-                    const Rectangle rect = {pos.x, pos.y, (float) map_data.GRID_WIDTH, (float) map_data.GRID_HEIGHT};
-                    DrawTexturePro(hammer_texture, {0, 0, (float) hammer_texture.width, (float) hammer_texture.height}, rect, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+                case Tile::HAMMER: {
+                    const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)});
+                    const Rectangle rect = {pos.x, pos.y, static_cast<float>(GRID_WIDTH), static_cast<float>(GRID_HEIGHT)};
+                    DrawTexturePro(textures.hammer, {0, 0, static_cast<float>(textures.hammer.width), static_cast<float>(textures.hammer.height)}, rect, {GRID_WIDTH / 2.0f, GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
                     break;
                 }
 
-                case TILE_SPAWNER: {
-                    const v2 pos = get_pos_from_grid(map_data.spawner_pos, map_data);
-                    const Rectangle rect = {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
-                    DrawRectanglePro(rect, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, RED);
+                case Tile::SPAWNER: {
+                    const v2 pos = get_pos_from_grid(spawner_pos);
+                    const Rectangle rect = {pos.x, pos.y, static_cast<float>(GRID_WIDTH), static_cast<float>(GRID_HEIGHT)};
+                    DrawRectanglePro(rect, {GRID_WIDTH / 2.0f, GRID_HEIGHT / 2.0f}, 0.0f, RED);
                     break;
                 }
 
-                case TILE_PORTAL: {
-                    const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)}, map_data);
-                    const Rectangle rect = {pos.x, pos.y, (float) map_data.GRID_WIDTH, (float) map_data.GRID_HEIGHT};
-                    DrawTexturePro(portal_texture, {0, 0, (float) hammer_texture.width, (float) hammer_texture.height}, rect, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+                case Tile::PORTAL: {
+                    const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)});
+                    const Rectangle rect = {pos.x, pos.y, static_cast<float>(GRID_WIDTH), static_cast<float>(GRID_HEIGHT)};
+                    DrawTexturePro(textures.portal, {0, 0, static_cast<float>(textures.portal.width), static_cast<float>(textures.portal.height)}, rect, {GRID_WIDTH / 2.0f, GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
                     break;
                 }
 
@@ -168,31 +193,8 @@ void render_map(const MapData& map_data, const Texture2D& hammer_texture, const 
     }
 }
 
-v2 get_second_portal_pos(const v2& portal_pos, const MapData& map_data) {
-    if (map_data.portal_pos[0] == portal_pos) {
-        return map_data.portal_pos[1];
-    } else {
-        return map_data.portal_pos[0];
-    }
+bool MapData::in_about_center(const v2& pos) const {
+    auto center_pos = get_grid_center(pos);
+    return (center_pos.x - 4 <= pos.x && center_pos.x + 4 >= pos.x) && (center_pos.y - 4 <= pos.y && center_pos.y + 4 >= pos.y);
 }
 
-const char* print_tile(TileType tile) {
-    switch (tile) {
-        case TILE_EMPTY:
-            return "empty";
-        case TILE_WALL:
-            return "wall";
-        case TILE_PELLET:
-            return "pellet";
-        case TILE_HAMMER:
-            return "hammer";
-        case TILE_SPAWNER:
-            return "spawner";
-        case TILE_START_POS:
-            return "start_pos";
-        case TILE_PORTAL:
-            return "portal";
-    }
-
-    return "";
-}

@@ -1,6 +1,4 @@
-#include "map.hpp"
 #include "robot.hpp"
-#include "bug.hpp"
 #include "game.hpp"
 
 #include "raylib.h"
@@ -8,16 +6,13 @@
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 #include <ctime>
-#include <string>
-#include <span>
-#include <filesystem>
 
 // TODO
 // entrance screen
 // - play, enter edit mode, change setting(max fps, etc.)
 //
 // TODO
-// edit mode
+// *edit mode
 // - gui for it
 // - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
 // - maybe a map selector when entering game mode, that would look at all .txt files inside of map/ directory
@@ -34,14 +29,14 @@
 //   - lifes
 //   - walls
 //   - spawner
-//   - robot with hammer
-//   - deaths
-//   - portals
+//   - robot with hammer (animations)
+//   - deaths (animations)
+//   - portals (animations)
 //
 // TODO
 // music
 //
-// TODO
+// TODO maybe
 // lower ram usage ????
 // i might be wrong but i think this thing takes 400mb of ram to run which is a little insane tbh
 // 400mb in debug, 50mb in release
@@ -59,49 +54,47 @@ int main() {
     SetExitKey(KEY_NULL);
 
     GameData game{};
-    init_game(game);
 
     while (!WindowShouldClose() && !game.close_window) {
         game.mean_fps = (game.mean_fps + GetFPS()) / 2.0f;
 
         switch (game.state) {
-            case GAME_START_SCREEN:
+            case GameState::START_SCREEN:
                 start_screen(game);
                 break;
 
-            case GAME_EDIT_MODE:
+            case GameState::EDIT_MODE:
                 edit_mode(game.edit_mode.map, game);
                 break;
 
-            case GAME_SETTINGS:
+            case GameState::SETTINGS:
                 settings(game);
                 break;
 
-            case GAME_MAP_SELECTOR:
+            case GameState::MAP_SELECTOR:
                 map_selector(game);
                 break;
 
-            case GAME_RUNNING:
+            case GameState::RUNNING:
                 running(game.running.bugs, game.running.robot, game.running.map, game);
                 break;
 
-            case GAME_WON:
+            case GameState::WON:
                 won();
                 break;
 
-            case GAME_LOST:
+            case GameState::LOST:
                 lost();
                 break;
 
             // just here to satisfy a warning
-            case GAME_EXIT:
+            case GameState::EXIT:
                 break;
         }
     }
 
     printf("fps: %f\n", game.mean_fps);
 
-    close_game(game);
     CloseWindow();
     return 0;
 }

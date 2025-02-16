@@ -29,8 +29,8 @@ std::vector<v2> find_path(const v2& start_grid_pos, const v2& end_grid_pos, cons
             Node{.pos = {.x = q.pos.x, .y = q.pos.y - 1}, .parent = q.pos},
         };
 
-        if (get_tile(q.pos, map_data) == TILE_PORTAL) {
-            successors.push_back(Node{.pos = get_second_portal_pos(q.pos, map_data), .parent = q.pos});
+        if (map_data.get_tile(q.pos) == Tile::PORTAL) {
+            successors.push_back(Node{.pos = map_data.get_second_portal_pos(q.pos), .parent = q.pos});
         }
 
         for (auto& successor : successors) {
@@ -55,7 +55,7 @@ std::vector<v2> find_path(const v2& start_grid_pos, const v2& end_grid_pos, cons
                 return path;
             }
 
-            if (get_tile(successor.pos, map_data) == TILE_WALL || get_tile(successor.pos, map_data) == TILE_SPAWNER) {
+            if (map_data.get_tile(successor.pos) == Tile::WALL || map_data.get_tile(successor.pos) == Tile::SPAWNER) {
                 continue;
             }
 

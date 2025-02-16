@@ -4,18 +4,29 @@
 #include "map.hpp"
 #include "robot.hpp"
 
+#include <string_view>
 #include <vector>
 
 // Gotta love circular dependencies
 struct TexturesType;
 
-enum BugStateType : u8 {
-    BUG_ALIVE,
-    BUG_DEAD,
-    BUG_RESPAWNING,
+enum class BugState : u8 {
+    ALIVE,
+    DEAD,
+    RESPAWNING,
 };
 
 struct BugData {
+public:
+    BugData(const v2& pos);
+
+    Rectangle get_collision_rect(const MapData& map_data) const;
+
+    void render(const MapData& map_data, const TexturesType& textures) const;
+    void move(float dt, const RobotData& robot_data, const MapData& map_data);
+    void collide(RobotData& robot_data, MapData& map_data);
+
+public:
     v2 pos{};
     v2 movement{};
 
@@ -23,7 +34,7 @@ struct BugData {
     u8 texture_frame{};
     Color tint{WHITE};
 
-    BugStateType state{};
+    BugState state{};
     float dead_time{};
     bool death_display{};
 
@@ -34,11 +45,8 @@ struct BugData {
     v2 last_pos{};
     v2 last_movement{};
     bool teleported;
+
 };
 
-const char* print_bug_state(BugStateType bug_state);
-BugData init_bug(const v2& pos);
-Rectangle bug_get_rect(const BugData& bug_data, const MapData& map_data);
-void render_bug(const BugData& bug_data, const MapData& map_data, const TexturesType& textures);
-void bug_move(float dt, BugData& bug_data, const RobotData& robot_data, const MapData& map_data);
-void bug_collide(BugData& bug_data, RobotData& robot_data, MapData& map_data);
+std::string_view print_bug_state(BugState bug_state);
+

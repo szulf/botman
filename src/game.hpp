@@ -9,15 +9,15 @@
 
 #include <vector>
 
-enum GameStateType : u8 {
-    GAME_START_SCREEN,
-    GAME_EDIT_MODE,
-    GAME_SETTINGS,
-    GAME_MAP_SELECTOR,
-    GAME_RUNNING,
-    GAME_WON,
-    GAME_LOST,
-    GAME_EXIT,
+enum class GameState : u8 {
+    START_SCREEN,
+    EDIT_MODE,
+    SETTINGS,
+    MAP_SELECTOR,
+    RUNNING,
+    WON,
+    LOST,
+    EXIT,
 };
 
 struct TexturesType {
@@ -31,7 +31,16 @@ struct TexturesType {
 };
 
 struct GameData {
-    GameStateType state{};
+public:
+    GameData();
+    ~GameData();
+
+    // TODO
+    // maybe change an operator= overload on GameState enum
+    void set_state(GameState state);
+
+public:
+    GameState state{};
 
     bool close_window{};
 
@@ -53,7 +62,9 @@ struct GameData {
     struct EditModeType {
         MapData map{};
 
-        TileType chosen_tile{};
+        Tile chosen_tile{};
+
+        char map_name[128];
 
         bool exit_btn{};
         bool save_btn{};
@@ -78,19 +89,12 @@ struct GameData {
 
 };
 
-void init_game(GameData& game);
-void close_game(GameData& game);
-void set_game_state(GameStateType state, GameData& game_data);
-
 // TODO
 // change these names
 void start_screen(GameData& game);
-// TODO
-// give an option to display a grid
-// so you know what square you are clicking at
 void edit_mode(MapData& map, GameData& game);
 void settings(GameData& game);
 void map_selector(GameData& game);
-void running(std::vector<BugData>& bugs_data, RobotData& robot_data, MapData& map_data, GameData& game);
+void running(std::vector<BugData>& bugs, RobotData& robot, MapData& map, GameData& game);
 void won();
 void lost();
