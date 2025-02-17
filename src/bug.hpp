@@ -22,7 +22,7 @@ public:
 
     Rectangle collision_rect(const MapData& map_data) const;
 
-    void render(const MapData& map_data, const TexturesType& textures) const;
+    void render(const MapData& map_data, const TexturesType& textures);
     void move(float dt, const RobotData& robot_data, const MapData& map_data);
     void collide(RobotData& robot_data, MapData& map_data);
 
@@ -30,9 +30,10 @@ public:
     v2 pos{};
     v2 movement{};
 
-    Texture2D texture{};
-    u8 texture_frame{};
     Color tint{WHITE};
+    float texture_accumulator{};
+    u8 texture_frame{};
+    Flip flip{Flip::LEFT};
 
     BugState state{BugState::RESPAWNING};
     float dead_time{};

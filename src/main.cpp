@@ -35,6 +35,9 @@
 // TODO
 // music
 //
+// TODO
+// replace all the 'GetTime's with something
+//
 // TODO maybe
 // lower ram usage ????
 // i might be wrong but i think this thing takes 400mb of ram to run which is a little insane tbh

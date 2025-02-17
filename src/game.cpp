@@ -53,7 +53,7 @@ GameData::GameData() {
 
     textures.robot_walk = LoadTexture(ROOT_PATH "/assets/robot.png");
 
-    textures.bug_walk = LoadTexture(ROOT_PATH "/assets/bug_test.png");
+    textures.bug_walk = LoadTexture(ROOT_PATH "/assets/bug.png");
 
     textures.start_pos = LoadTexture(ROOT_PATH "/assets/start.png");
     textures.empty = LoadTexture(ROOT_PATH "/assets/empty.png");
@@ -224,7 +224,6 @@ void GameData::EditModeType::run(GameData& game) {
         DrawFPS(10, 10);
 
         exit_btn = GuiButton({100, 100, 50, 50}, "go back");
-        save_btn = GuiButton({100, 200, 50, 50}, "save");
 
         DrawText("chosen tile:", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * 0.05f, 20, BLACK);
         const Texture2D& chosen_tile_texture = game.textures.get_texture_from_tile(chosen_tile);
@@ -235,6 +234,13 @@ void GameData::EditModeType::run(GameData& game) {
             const Texture2D& texture = game.textures.get_texture_from_tile(static_cast<Tile>(i));
             DrawTexturePro(texture, {0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 6), HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
         }
+
+        save_btn = GuiButton({
+                    ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f),
+                    HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 5)),
+                    (WIDTH - (WIDTH * 0.05f)) - (((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f)),
+                    50
+                }, "save map");
 
         // dont know if i want that here
         if (show_save_menu) {
@@ -348,7 +354,7 @@ void GameData::RunningType::run(GameData& game) {
 
         robot.render(map, game.textures);
 
-        for (const auto& bug : bugs) {
+        for (auto& bug : bugs) {
             bug.render(map, game.textures);
         }
 

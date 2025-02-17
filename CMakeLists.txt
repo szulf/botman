@@ -51,5 +51,5 @@ target_link_libraries(botman PUBLIC raylib)
 target_include_directories(botman PRIVATE ${FETCHCONTENT_BASE_DIR}/raygui-src/src)
 target_compile_definitions(botman PRIVATE ROOT_PATH="${CMAKE_SOURCE_DIR}")
 #
-set(CMAKE_C_COMPILER gcc)
-set(CMAKE_CXX_COMPILER g++)
+# set(CMAKE_C_COMPILER gcc)
+# set(CMAKE_CXX_COMPILER g++)

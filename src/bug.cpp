@@ -2,8 +2,10 @@
 #include "path.hpp"
 #include "game.hpp"
 
+#include "raylib.h"
 #include "raymath.h"
 #include <cstdio>
+#include <iostream>
 
 std::string_view print_bug_state(BugState bug_state) {
     switch (bug_state) {
@@ -30,12 +32,16 @@ Rectangle BugData::collision_rect(const MapData& map_data) const {
     return {pos.x - map_data.GRID_WIDTH / 2.0f, pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
 }
 
-void BugData::render(const MapData& map_data, const TexturesType& textures) const {
+void BugData::render(const MapData& map_data, const TexturesType& textures) {
     if (death_display) {
         DrawText("100", pos.x - 20, pos.y - 25, 20, GREEN);
     }
 
-    DrawTexturePro(textures.bug_walk, {static_cast<float>(map_data.GRID_WIDTH * texture_frame), 0, static_cast<float>(map_data.GRID_WIDTH / 2.0f), static_cast<float>(map_data.GRID_HEIGHT / 2.0f)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, tint);
+    // TODO
+    // This should not be here
+    texture_frame = fmod(-texture_accumulator * 4.0f, 4.0f);
+
+    DrawTexturePro(textures.bug_walk, {static_cast<float>(textures.bug_width * texture_frame), 0, static_cast<float>(textures.bug_width), static_cast<float>(textures.bug_height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, tint);
 }
 
 void BugData::move(float dt, const RobotData& robot_data, const MapData& map_data) {
@@ -120,6 +126,7 @@ void BugData::move(float dt, const RobotData& robot_data, const MapData& map_dat
         }
 
         pos -= movement * dt * MOVEMENT_SPEED * 0.85f;
+        texture_accumulator += dt;
     }
 }
 

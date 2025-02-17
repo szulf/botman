@@ -28,8 +28,12 @@ struct TexturesType {
     Texture2D spawner{};
 
     Texture2D robot_walk{};
+    static constexpr u8 robot_width{16};
+    static constexpr u8 robot_height{16};
 
     Texture2D bug_walk{};
+    static constexpr u8 bug_width{16};
+    static constexpr u8 bug_height{16};
 
     Texture2D start_pos;
     Texture2D empty;
