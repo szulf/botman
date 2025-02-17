@@ -3,7 +3,6 @@
 #include "game.hpp"
 #include "raylib.h"
 #include "raymath.h"
-#include <iostream>
 
 std::string_view print_movement(Movement move) {
     switch (move) {
@@ -27,7 +26,7 @@ void RobotData::render(const MapData& map_data, const TexturesType& textures) {
     // this should not be here
     texture_frame = fmod(-texture_accumulator * 5.0f, 4.0f);
 
-    DrawTexturePro(textures.robot_walk, {static_cast<float>(textures.robot_width * texture_frame), 0, static_cast<float>(textures.robot_width * static_cast<i8>(flip)), static_cast<float>(textures.robot_height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+    DrawTexturePro(textures.robot.texture, {static_cast<float>(textures.robot.width * texture_frame), 0, static_cast<float>(textures.robot.width * static_cast<i8>(flip)), static_cast<float>(textures.robot.height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
 }
 
 void RobotData::move(Movement move, float dt, const MapData& map_data) {

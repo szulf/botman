@@ -36,7 +36,7 @@ const Texture2D& TexturesType::get_texture_from_tile(Tile tile) {
             return start_pos;
 
         case Tile::PORTAL:
-            return portal;
+            return portal.texture;
     }
 
     return empty;
@@ -46,14 +46,14 @@ GameData::GameData() {
     change_state(GameState::START_SCREEN);
 
     textures.hammer = LoadTexture(ROOT_PATH "/assets/hammer.png");
-    textures.portal = LoadTexture(ROOT_PATH "/assets/portal.png");
+    textures.portal.texture = LoadTexture(ROOT_PATH "/assets/portal.png");
     textures.pellet = LoadTexture(ROOT_PATH "/assets/gold_coin.png");
     textures.wall = LoadTexture(ROOT_PATH "/assets/wall.png");
     textures.spawner = LoadTexture(ROOT_PATH "/assets/spawner.png");
 
-    textures.robot_walk = LoadTexture(ROOT_PATH "/assets/robot.png");
+    textures.robot.texture = LoadTexture(ROOT_PATH "/assets/robot.png");
 
-    textures.bug_walk = LoadTexture(ROOT_PATH "/assets/bug.png");
+    textures.bug.texture = LoadTexture(ROOT_PATH "/assets/bug.png");
 
     textures.start_pos = LoadTexture(ROOT_PATH "/assets/start.png");
     textures.empty = LoadTexture(ROOT_PATH "/assets/empty.png");
@@ -61,14 +61,14 @@ GameData::GameData() {
 
 GameData::~GameData() {
     UnloadTexture(textures.hammer);
-    UnloadTexture(textures.portal);
+    UnloadTexture(textures.portal.texture);
     UnloadTexture(textures.pellet);
     UnloadTexture(textures.wall);
     UnloadTexture(textures.spawner);
 
-    UnloadTexture(textures.robot_walk);
+    UnloadTexture(textures.robot.texture);
 
-    UnloadTexture(textures.bug_walk);
+    UnloadTexture(textures.bug.texture);
 
     UnloadTexture(textures.start_pos);
     UnloadTexture(textures.empty);
@@ -350,7 +350,7 @@ void GameData::RunningType::run(GameData& game) {
         BeginDrawing();
         ClearBackground(WHITE);
 
-        map.render(game.textures);
+        map.render(game.textures, game.dt);
 
         robot.render(map, game.textures);
 

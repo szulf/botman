@@ -3,6 +3,7 @@
 
 #include "raymath.h"
 #include <fstream>
+#include <iostream>
 #include <string>
 #include <cmath>
 
@@ -146,7 +147,12 @@ v2 MapData::get_second_portal_pos(const v2& portal_grid_pos) const {
     }
 }
 
-void MapData::render(const TexturesType& textures) const {
+void MapData::render(TexturesType& textures, float dt) const {
+    // TODO
+    // This should not be here
+    textures.portal.texture_accumulator += dt;
+    textures.portal.texture_frame = fmod(-textures.portal.texture_accumulator * 4.0f, 4.0f);
+
     for (u32 i = 0; i < WIDTH; i++) {
         for (u32 j = 0; j < HEIGHT; j++) {
             Tile tile = get_tile({static_cast<float>(i), static_cast<float>(j)});
@@ -182,7 +188,7 @@ void MapData::render(const TexturesType& textures) const {
                 case Tile::PORTAL: {
                     const v2 pos = get_pos_from_grid({static_cast<float>(i), static_cast<float>(j)});
                     const Rectangle rect = {pos.x, pos.y, static_cast<float>(GRID_WIDTH), static_cast<float>(GRID_HEIGHT)};
-                    DrawTexturePro(textures.portal, {0, 0, static_cast<float>(textures.portal.width), static_cast<float>(textures.portal.height)}, rect, {GRID_WIDTH / 2.0f, GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+                    DrawTexturePro(textures.portal.texture, {static_cast<float>(textures.portal.width * textures.portal.texture_frame), 0, static_cast<float>(textures.portal.width), static_cast<float>(textures.portal.height)}, rect, {GRID_WIDTH / 2.0f, GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
                     break;
                 }
 

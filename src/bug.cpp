@@ -5,7 +5,6 @@
 #include "raylib.h"
 #include "raymath.h"
 #include <cstdio>
-#include <iostream>
 
 std::string_view print_bug_state(BugState bug_state) {
     switch (bug_state) {
@@ -41,7 +40,7 @@ void BugData::render(const MapData& map_data, const TexturesType& textures) {
     // This should not be here
     texture_frame = fmod(-texture_accumulator * 4.0f, 4.0f);
 
-    DrawTexturePro(textures.bug_walk, {static_cast<float>(textures.bug_width * texture_frame), 0, static_cast<float>(textures.bug_width), static_cast<float>(textures.bug_height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, tint);
+    DrawTexturePro(textures.bug.texture, {static_cast<float>(textures.bug.width * texture_frame), 0, static_cast<float>(textures.bug.width), static_cast<float>(textures.bug.height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, tint);
 }
 
 void BugData::move(float dt, const RobotData& robot_data, const MapData& map_data) {
