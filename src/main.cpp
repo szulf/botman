@@ -26,15 +26,16 @@
 // art
 // - for
 //   - lifes
-//   - robot with hammer (animations)
-//   - deaths (animations)
-//   - bugs (animations, when entering/leaving the spawner(?))
+//   - robot with hammer (walking/death animations)
+//   - bugs (death animations, when entering/leaving the spawner(?))
+//   - spawner (hole)
 //
 // TODO
 // music
 //
 // TODO
 // replace all the 'GetTime's with something
+// probably accumulators like for animations
 //
 // TODO maybe
 // lower ram usage ????

@@ -4,3 +4,4 @@ build-release/
 commit_msg.txt
 perf.data
 makeprg
+*.asperite
