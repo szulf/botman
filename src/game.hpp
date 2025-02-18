@@ -23,16 +23,21 @@ enum class GameState : u8 {
 struct TexturesType {
     Texture2D hammer{};
     Texture2D pellet{};
-    Texture2D wall{};
     Texture2D spawner{};
+
+    struct WallTextureType {
+        Texture2D texture{};
+        static constexpr u8 width{16};
+        static constexpr u8 height{16};
+    } wall;
 
     struct PortalTextureType {
         Texture2D texture{};
         static constexpr u8 width{16};
         static constexpr u8 height{16};
 
-        float texture_accumulator{};
-        u8 texture_frame{};
+        float accumulator{};
+        u8 frame{};
     } portal;
 
     struct RobotTextureType {

@@ -59,6 +59,9 @@ public:
 
     bool in_about_center(const v2& pos) const;
 
+private:
+    u8 calc_wall_texture(const v2& grid_pos) const;
+
 public:
     static constexpr u32 WIDTH{17};
     static constexpr u32 HEIGHT{22};

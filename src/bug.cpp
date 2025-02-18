@@ -62,12 +62,13 @@ void BugData::move(float dt, const RobotData& robot_data, const MapData& map_dat
         state = BugState::RESPAWNING;
         dead_time = GetTime();
         pos = map_data.get_grid_center(pos);
-        tint.a = 255;
+        tint.a = 0;
         return;
     }
 
     if (state == BugState::RESPAWNING && GetTime() - dead_time > 1) {
         state = BugState::ALIVE;
+        tint.a = 255;
         return;
     }
 

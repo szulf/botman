@@ -21,7 +21,7 @@ const Texture2D& TexturesType::get_texture_from_tile(Tile tile) {
             return empty;
 
         case Tile::WALL:
-            return wall;
+            return wall.texture;
 
         case Tile::PELLET:
             return pellet;
@@ -48,7 +48,7 @@ GameData::GameData() {
     textures.hammer = LoadTexture(ROOT_PATH "/assets/hammer.png");
     textures.portal.texture = LoadTexture(ROOT_PATH "/assets/portal.png");
     textures.pellet = LoadTexture(ROOT_PATH "/assets/gold_coin.png");
-    textures.wall = LoadTexture(ROOT_PATH "/assets/wall.png");
+    textures.wall.texture = LoadTexture(ROOT_PATH "/assets/wall.png");
     textures.spawner = LoadTexture(ROOT_PATH "/assets/spawner.png");
 
     textures.robot.texture = LoadTexture(ROOT_PATH "/assets/robot.png");
@@ -63,7 +63,7 @@ GameData::~GameData() {
     UnloadTexture(textures.hammer);
     UnloadTexture(textures.portal.texture);
     UnloadTexture(textures.pellet);
-    UnloadTexture(textures.wall);
+    UnloadTexture(textures.wall.texture);
     UnloadTexture(textures.spawner);
 
     UnloadTexture(textures.robot.texture);
@@ -142,6 +142,8 @@ void GameData::StartScreenType::run(GameData& game) {
 // TODO
 // make an option to display a grid
 // so you know what square you are clicking at
+// TODO
+// animate the portal in here aswell
 void GameData::EditModeType::run(GameData& game) {
     // -----
     // INPUT
@@ -227,12 +229,36 @@ void GameData::EditModeType::run(GameData& game) {
 
         DrawText("chosen tile:", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * 0.05f, 20, BLACK);
         const Texture2D& chosen_tile_texture = game.textures.get_texture_from_tile(chosen_tile);
-        DrawTexturePro(chosen_tile_texture, {0, 0, static_cast<float>(chosen_tile_texture.width), static_cast<float>(chosen_tile_texture.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 14), HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+        switch (chosen_tile) {
+            case Tile::WALL:
+                DrawTexturePro(chosen_tile_texture, {0, 0, static_cast<float>(game.textures.wall.width), static_cast<float>(game.textures.wall.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 14), HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+                break;
+
+            default:
+                DrawTexturePro(chosen_tile_texture, {0, 0, static_cast<float>(chosen_tile_texture.width), static_cast<float>(chosen_tile_texture.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 14), HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+                break;
+        }
 
         for (u8 i = 0; i <= static_cast<u8>(Tile::PORTAL); i++) {
             DrawText((std::to_string(i + 1) + " ->").c_str(), ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), (HEIGHT * (0.05f * (i + 3))), 20, BLACK);
+
             const Texture2D& texture = game.textures.get_texture_from_tile(static_cast<Tile>(i));
-            DrawTexturePro(texture, {0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 6), HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+
+            switch (i) {
+                case static_cast<u8>(Tile::WALL):
+                    DrawTexturePro(texture,
+                                {0, 0, static_cast<float>(game.textures.wall.width), static_cast<float>(game.textures.wall.height)},
+                                {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 6), HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)},
+                                {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f},
+                                0.0f,
+                                WHITE
+                            );
+                    break;
+
+                default:
+                    DrawTexturePro(texture, {0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 6), HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+                    break;
+            }
         }
 
         save_btn = GuiButton({

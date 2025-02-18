@@ -30,7 +30,7 @@ public:
     v2 pos{};
     v2 movement{};
 
-    Color tint{WHITE};
+    Color tint{255, 255, 255, 0};
     float texture_accumulator{};
     u8 texture_frame{};
     Flip flip{Flip::LEFT};

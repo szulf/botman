@@ -5,13 +5,14 @@
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 #include <ctime>
+#include <iostream>
 
 // TODO
 // entrance screen
 // - play, enter edit mode, change setting(max fps, etc.)
 //
 // TODO
-// *edit mode
+// edit mode
 // - gui for it
 // - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
 // - maybe a map selector when entering game mode, that would look at all .txt files inside of map/ directory
@@ -24,13 +25,10 @@
 // TODO
 // art
 // - for
-//   - bugs
 //   - lifes
-//   - walls
-//   - spawner
 //   - robot with hammer (animations)
 //   - deaths (animations)
-//   - portals (animations)
+//   - bugs (animations, when entering/leaving the spawner(?))
 //
 // TODO
 // music
@@ -93,7 +91,7 @@ int main() {
         }
     }
 
-    printf("fps: %f\n", game.mean_fps);
+    std::cout << "fps: " << game.mean_fps << std::endl;
 
     CloseWindow();
     return 0;
