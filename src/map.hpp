@@ -55,7 +55,7 @@ public:
 
     // TODO
     // dt should not be here
-    void render(TexturesType& textures, float dt = 0.0f) const;
+    void render(TexturesType& textures, float dt) const;
 
     bool in_about_center(const v2& pos) const;
 

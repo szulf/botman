@@ -57,6 +57,18 @@ GameData::GameData() {
 
     textures.start_pos = LoadTexture(ROOT_PATH "/assets/start.png");
     textures.empty = LoadTexture(ROOT_PATH "/assets/empty.png");
+
+    GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, 0xffffffff);
+    GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, 0x000000ff);
+    GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, 0x29adffff);
+
+    GuiSetStyle(DEFAULT, TEXT_COLOR_FOCUSED, 0xffffffff);
+    GuiSetStyle(DEFAULT, BASE_COLOR_FOCUSED, 0x303030ff);
+    GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, 0x59ddffff);
+
+    GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, 0xffffffff);
+    GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, 0xadd8e6ff);
+    GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, 0x59ddffff);
 }
 
 GameData::~GameData() {
@@ -125,9 +137,9 @@ void GameData::StartScreenType::run(GameData& game) {
     }
 
     BeginDrawing();
-    ClearBackground(WHITE);
+    ClearBackground(BLACK);
 
-    DrawText("HELLO!", 200, 50, 50, BLACK);
+    DrawText("HELLO!", 200, 50, 50, WHITE);
     DrawFPS(10, 10);
 
     game_btn = GuiButton({100, 100, 50, 50}, "game");
@@ -145,6 +157,10 @@ void GameData::StartScreenType::run(GameData& game) {
 // TODO
 // animate the portal in here aswell
 void GameData::EditModeType::run(GameData& game) {
+    float current_frame = GetTime();
+    game.dt = game.last_frame - current_frame;
+    game.last_frame = current_frame;
+
     // -----
     // INPUT
     // -----
@@ -219,19 +235,23 @@ void GameData::EditModeType::run(GameData& game) {
     // ---------
     {
         BeginDrawing();
-        ClearBackground(WHITE);
+        ClearBackground(BLACK);
 
-        map.render(game.textures);
+        map.render(game.textures, game.dt);
 
         DrawFPS(10, 10);
 
         exit_btn = GuiButton({100, 100, 50, 50}, "go back");
 
-        DrawText("chosen tile:", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * 0.05f, 20, BLACK);
+        DrawText("chosen tile:", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * 0.05f, 20, WHITE);
         const Texture2D& chosen_tile_texture = game.textures.get_texture_from_tile(chosen_tile);
         switch (chosen_tile) {
             case Tile::WALL:
                 DrawTexturePro(chosen_tile_texture, {0, 0, static_cast<float>(game.textures.wall.width), static_cast<float>(game.textures.wall.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 14), HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+                break;
+
+            case Tile::PORTAL:
+                DrawTexturePro(chosen_tile_texture, {static_cast<float>(game.textures.portal.width * game.textures.portal.frame), 0, static_cast<float>(game.textures.portal.width), static_cast<float>(game.textures.portal.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 14), HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
                 break;
 
             default:
@@ -240,7 +260,7 @@ void GameData::EditModeType::run(GameData& game) {
         }
 
         for (u8 i = 0; i <= static_cast<u8>(Tile::PORTAL); i++) {
-            DrawText((std::to_string(i + 1) + " ->").c_str(), ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), (HEIGHT * (0.05f * (i + 3))), 20, BLACK);
+            DrawText((std::to_string(i + 1) + " ->").c_str(), ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), (HEIGHT * (0.05f * (i + 3))), 20, WHITE);
 
             const Texture2D& texture = game.textures.get_texture_from_tile(static_cast<Tile>(i));
 
@@ -248,6 +268,16 @@ void GameData::EditModeType::run(GameData& game) {
                 case static_cast<u8>(Tile::WALL):
                     DrawTexturePro(texture,
                                 {0, 0, static_cast<float>(game.textures.wall.width), static_cast<float>(game.textures.wall.height)},
+                                {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 6), HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)},
+                                {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f},
+                                0.0f,
+                                WHITE
+                            );
+                    break;
+
+                case static_cast<u8>(Tile::PORTAL):
+                    DrawTexturePro(texture,
+                                {static_cast<float>(game.textures.portal.width * game.textures.portal.frame), 0, static_cast<float>(game.textures.portal.width), static_cast<float>(game.textures.portal.height)},
                                 {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 6), HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)},
                                 {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f},
                                 0.0f,
@@ -286,9 +316,9 @@ void GameData::SettingsType::run(GameData& game) {
     }
 
     BeginDrawing();
-    ClearBackground(WHITE);
+    ClearBackground(BLACK);
 
-    DrawText("not yet D:", 100, 100, 50, BLACK);
+    DrawText("not yet D:", 100, 100, 50, WHITE);
     DrawFPS(10, 10);
 
     back_btn = GuiButton({200, 100, 50, 50}, "go back");
@@ -306,7 +336,7 @@ void GameData::MapSelectorType::run(GameData& game) {
     }
 
     BeginDrawing();
-    ClearBackground(WHITE);
+    ClearBackground(BLACK);
 
     DrawFPS(10, 10);
 
@@ -374,7 +404,7 @@ void GameData::RunningType::run(GameData& game) {
     // ---------
     {
         BeginDrawing();
-        ClearBackground(WHITE);
+        ClearBackground(BLACK);
 
         map.render(game.textures, game.dt);
 
@@ -384,10 +414,10 @@ void GameData::RunningType::run(GameData& game) {
             bug.render(map, game.textures);
         }
 
-        DrawText(std::to_string(map.score).c_str(), 50, 100, 50, BLACK);
+        DrawText(std::to_string(map.score).c_str(), 50, 100, 50, WHITE);
 
         if (robot.smashing_mode) {
-            DrawText("s", 50, 150, 50, BLACK);
+            DrawText("s", 50, 150, 50, WHITE);
         }
 
         DrawFPS(10, 10);
@@ -402,9 +432,9 @@ void GameData::WonType::run(GameData& game) {
     }
 
     BeginDrawing();
-    ClearBackground(WHITE);
+    ClearBackground(BLACK);
 
-    DrawText("YOU WON!", 100, 100, 50, BLACK);
+    DrawText("YOU WON!", 100, 100, 50, WHITE);
     DrawFPS(10, 10);
 
     exit_btn = GuiButton({100, 100, 50, 50}, "go back");
@@ -418,9 +448,9 @@ void GameData::LostType::run(GameData& game) {
     }
 
     BeginDrawing();
-    ClearBackground(WHITE);
+    ClearBackground(BLACK);
 
-    DrawText("YOU LOST!", 100, 100, 50, BLACK);
+    DrawText("YOU LOST!", 100, 100, 50, WHITE);
     DrawFPS(10, 10);
 
     exit_btn = GuiButton({100, 100, 50, 50}, "go back");
