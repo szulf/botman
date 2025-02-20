@@ -28,14 +28,14 @@ public:
 public:
     GameState state{};
 
-    bool close_window{};
-
     float mean_fps{};
 
     float dt{};
     float last_frame{};
 
     TexturesType textures;
+
+    bool show_fps{};
 
     // Absolutely hate passing in GameData to run methods, but dont really know how to change that
     struct StartScreenType {

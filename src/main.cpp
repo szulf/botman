@@ -28,6 +28,7 @@
 //   - robot with hammer (walking/death animations)
 //   - bugs (death animations, when entering/leaving the spawner(?))
 //   - spawner (hole)
+//   - robot smashing bug for title screen
 //
 // TODO
 // music
@@ -57,7 +58,7 @@ int main() {
 
     GameData game{};
 
-    while (!WindowShouldClose() && !game.close_window) {
+    while (!WindowShouldClose() && game.state != GameState::EXIT) {
         game.mean_fps = (game.mean_fps + GetFPS()) / 2.0f;
 
         switch (game.state) {

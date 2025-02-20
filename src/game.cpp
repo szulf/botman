@@ -44,16 +44,11 @@ void GameData::change_state(GameState new_state) {
             set_bugs_dead_time(running.bugs);
 
             running.first = true;
-
             break;
 
-        case GameState::EDIT_MODE: {
+        case GameState::EDIT_MODE:
             edit_mode.map = MapData{{(WIDTH - static_cast<float>(MapData::WIDTH * MapData::GRID_WIDTH)) / 2.0f, (HEIGHT - static_cast<float>(MapData::HEIGHT * MapData::GRID_HEIGHT)) / 2.0f}};
             break;
-                                   }
-
-        case GameState::EXIT:
-            close_window = true;
 
         default:
             break;
@@ -63,66 +58,73 @@ void GameData::change_state(GameState new_state) {
 }
 
 void GameData::StartScreenType::run(GameData& game) {
-    if (game_btn) {
-        game.change_state(GameState::RUNNING);
+    {
+        if (game_btn) {
+            game.change_state(GameState::RUNNING);
+        }
+
+        if (edit_btn) {
+            game.change_state(GameState::EDIT_MODE);
+        }
+
+        if (settings_btn) {
+            game.change_state(GameState::SETTINGS);
+        }
+
+        if (map_selector_btn) {
+            game.change_state(GameState::MAP_SELECTOR);
+        }
+
+        if (exit_btn) {
+            game.change_state(GameState::EXIT);
+        }
     }
 
-    if (edit_btn) {
-        game.change_state(GameState::EDIT_MODE);
+    {
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        DrawText("BOTMAN", WIDTH * 0.05f, HEIGHT * 0.1f, 50, WHITE);
+
+        game_btn = GuiButton({
+                    WIDTH * 0.05f,
+                    HEIGHT * 0.3f,
+                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "start game");
+
+        edit_btn = GuiButton({
+                    WIDTH * 0.05f,
+                    HEIGHT * 0.4f,
+                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "edit mode");
+
+        settings_btn = GuiButton({
+                    WIDTH * 0.05f,
+                    HEIGHT * 0.5f,
+                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "settings");
+
+        map_selector_btn = GuiButton({
+                    WIDTH * 0.05f,
+                    HEIGHT * 0.6f,
+                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "map selector");
+
+        exit_btn = GuiButton({
+                    WIDTH * 0.05f,
+                    HEIGHT * 0.9f,
+                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "quit");
+
+        if (game.show_fps) {
+            DrawFPS(10, 10);
+        }
     }
-
-    if (settings_btn) {
-        game.change_state(GameState::SETTINGS);
-    }
-
-    if (map_selector_btn) {
-        game.change_state(GameState::MAP_SELECTOR);
-    }
-
-    if (exit_btn) {
-        game.change_state(GameState::EXIT);
-    }
-
-    BeginDrawing();
-    ClearBackground(BLACK);
-
-    DrawText("HELLO!", 200, 50, 50, WHITE);
-    DrawFPS(10, 10);
-
-    game_btn = GuiButton({
-                WIDTH * 0.05f,
-                HEIGHT * 0.3f,
-                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
-                50
-            }, "start game");
-
-    edit_btn = GuiButton({
-                WIDTH * 0.05f,
-                HEIGHT * 0.4f,
-                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
-                50
-            }, "edit mode");
-
-    settings_btn = GuiButton({
-                WIDTH * 0.05f,
-                HEIGHT * 0.5f,
-                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
-                50
-            }, "settings");
-
-    map_selector_btn = GuiButton({
-                WIDTH * 0.05f,
-                HEIGHT * 0.6f,
-                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
-                50
-            }, "map selector");
-
-    exit_btn = GuiButton({
-                WIDTH * 0.05f,
-                HEIGHT * 0.9f,
-                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
-                50
-            }, "quit");
 
     EndDrawing();
 }
@@ -213,8 +215,6 @@ void GameData::EditModeType::run(GameData& game) {
 
         map.render(game.textures);
 
-        DrawFPS(10, 10);
-
         exit_btn = GuiButton({
                     WIDTH * 0.05f,
                     HEIGHT * 0.9f,
@@ -285,6 +285,10 @@ void GameData::EditModeType::run(GameData& game) {
             }
         }
 
+        if (game.show_fps) {
+            DrawFPS(10, 10);
+        }
+
         EndDrawing();
     }
 }
@@ -298,7 +302,6 @@ void GameData::SettingsType::run(GameData& game) {
     ClearBackground(BLACK);
 
     DrawText("not yet D:", 100, 100, 50, WHITE);
-    DrawFPS(10, 10);
 
     exit_btn = GuiButton({
                 WIDTH * 0.05f,
@@ -306,6 +309,10 @@ void GameData::SettingsType::run(GameData& game) {
                 0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                 50
             }, "go back");
+
+    if (game.show_fps) {
+        DrawFPS(10, 10);
+    }
 
     EndDrawing();
 }
@@ -322,14 +329,16 @@ void GameData::MapSelectorType::run(GameData& game) {
     BeginDrawing();
     ClearBackground(BLACK);
 
-    DrawFPS(10, 10);
-
     exit_btn = GuiButton({
                 WIDTH * 0.05f,
                 HEIGHT * 0.9f,
                 0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                 50
             }, "go back");
+
+    if (game.show_fps) {
+        DrawFPS(10, 10);
+    }
 
     EndDrawing();
 }
@@ -424,7 +433,9 @@ void GameData::RunningType::run(GameData& game) {
             DrawText("s", 50, 150, 50, WHITE);
         }
 
-        DrawFPS(10, 10);
+        if (game.show_fps) {
+            DrawFPS(10, 10);
+        }
 
         EndDrawing();
     }
@@ -439,7 +450,6 @@ void GameData::WonType::run(GameData& game) {
     ClearBackground(BLACK);
 
     DrawText("YOU WON!", 100, 100, 50, WHITE);
-    DrawFPS(10, 10);
 
     exit_btn = GuiButton({
                 WIDTH * 0.05f,
@@ -447,6 +457,10 @@ void GameData::WonType::run(GameData& game) {
                 0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                 50
             }, "go back");
+
+    if (game.show_fps) {
+        DrawFPS(10, 10);
+    }
 
     EndDrawing();
 }
@@ -460,7 +474,6 @@ void GameData::LostType::run(GameData& game) {
     ClearBackground(BLACK);
 
     DrawText("YOU LOST!", 100, 100, 50, WHITE);
-    DrawFPS(10, 10);
 
     exit_btn = GuiButton({
                 WIDTH * 0.05f,
@@ -468,6 +481,10 @@ void GameData::LostType::run(GameData& game) {
                 0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                 50
             }, "go back");
+
+    if (game.show_fps) {
+        DrawFPS(10, 10);
+    }
 
     EndDrawing();
 }
