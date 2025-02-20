@@ -15,48 +15,10 @@ inline static void reset_game(std::vector<BugData>& bugs, RobotData& robot, MapD
     set_bugs_dead_time(bugs);
 }
 
-const Texture2D& TexturesType::get_texture_from_tile(Tile tile) {
-    switch (tile) {
-        case Tile::EMPTY:
-            return empty;
-
-        case Tile::WALL:
-            return wall.texture;
-
-        case Tile::PELLET:
-            return pellet;
-
-        case Tile::HAMMER:
-            return hammer;
-
-        case Tile::SPAWNER:
-            return spawner;
-
-        case Tile::START_POS:
-            return start_pos;
-
-        case Tile::PORTAL:
-            return portal.texture;
-    }
-
-    return empty;
-}
-
-GameData::GameData() {
+GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/assets/gold_coin.png", ROOT_PATH "/assets/spawner.png", ROOT_PATH "/assets/wall.png", ROOT_PATH "/assets/portal.png", ROOT_PATH "/assets/robot.png", ROOT_PATH "/assets/bug.png", ROOT_PATH "/assets/start.png", ROOT_PATH "/assets/empty.png"} {
     change_state(GameState::START_SCREEN);
 
-    textures.hammer = LoadTexture(ROOT_PATH "/assets/hammer.png");
-    textures.portal.texture = LoadTexture(ROOT_PATH "/assets/portal.png");
-    textures.pellet = LoadTexture(ROOT_PATH "/assets/gold_coin.png");
-    textures.wall.texture = LoadTexture(ROOT_PATH "/assets/wall.png");
-    textures.spawner = LoadTexture(ROOT_PATH "/assets/spawner.png");
-
-    textures.robot.texture = LoadTexture(ROOT_PATH "/assets/robot.png");
-
-    textures.bug.texture = LoadTexture(ROOT_PATH "/assets/bug.png");
-
-    textures.start_pos = LoadTexture(ROOT_PATH "/assets/start.png");
-    textures.empty = LoadTexture(ROOT_PATH "/assets/empty.png");
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
 
     GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, 0xffffffff);
     GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, 0x000000ff);
@@ -69,21 +31,6 @@ GameData::GameData() {
     GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, 0xffffffff);
     GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, 0xadd8e6ff);
     GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, 0x59ddffff);
-}
-
-GameData::~GameData() {
-    UnloadTexture(textures.hammer);
-    UnloadTexture(textures.portal.texture);
-    UnloadTexture(textures.pellet);
-    UnloadTexture(textures.wall.texture);
-    UnloadTexture(textures.spawner);
-
-    UnloadTexture(textures.robot.texture);
-
-    UnloadTexture(textures.bug.texture);
-
-    UnloadTexture(textures.start_pos);
-    UnloadTexture(textures.empty);
 }
 
 void GameData::change_state(GameState new_state) {
@@ -128,12 +75,12 @@ void GameData::StartScreenType::run(GameData& game) {
         game.change_state(GameState::SETTINGS);
     }
 
-    if (quit_btn) {
-        game.change_state(GameState::EXIT);
-    }
-
     if (map_selector_btn) {
         game.change_state(GameState::MAP_SELECTOR);
+    }
+
+    if (exit_btn) {
+        game.change_state(GameState::EXIT);
     }
 
     BeginDrawing();
@@ -142,11 +89,40 @@ void GameData::StartScreenType::run(GameData& game) {
     DrawText("HELLO!", 200, 50, 50, WHITE);
     DrawFPS(10, 10);
 
-    game_btn = GuiButton({100, 100, 50, 50}, "game");
-    edit_btn = GuiButton({200, 100, 50, 50}, "edit mode");
-    settings_btn = GuiButton({300, 100, 50, 50}, "settings");
-    quit_btn = GuiButton({400, 100, 50, 50}, "quit");
-    map_selector_btn = GuiButton({500, 100, 50, 50}, "maps");
+    game_btn = GuiButton({
+                WIDTH * 0.05f,
+                HEIGHT * 0.3f,
+                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                50
+            }, "start game");
+
+    edit_btn = GuiButton({
+                WIDTH * 0.05f,
+                HEIGHT * 0.4f,
+                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                50
+            }, "edit mode");
+
+    settings_btn = GuiButton({
+                WIDTH * 0.05f,
+                HEIGHT * 0.5f,
+                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                50
+            }, "settings");
+
+    map_selector_btn = GuiButton({
+                WIDTH * 0.05f,
+                HEIGHT * 0.6f,
+                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                50
+            }, "map selector");
+
+    exit_btn = GuiButton({
+                WIDTH * 0.05f,
+                HEIGHT * 0.9f,
+                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                50
+            }, "quit");
 
     EndDrawing();
 }
@@ -154,8 +130,6 @@ void GameData::StartScreenType::run(GameData& game) {
 // TODO
 // make an option to display a grid
 // so you know what square you are clicking at
-// TODO
-// animate the portal in here aswell
 void GameData::EditModeType::run(GameData& game) {
     float current_frame = GetTime();
     game.dt = game.last_frame - current_frame;
@@ -237,11 +211,16 @@ void GameData::EditModeType::run(GameData& game) {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        map.render(game.textures, game.dt);
+        map.render(game.textures);
 
         DrawFPS(10, 10);
 
-        exit_btn = GuiButton({100, 100, 50, 50}, "go back");
+        exit_btn = GuiButton({
+                    WIDTH * 0.05f,
+                    HEIGHT * 0.9f,
+                    0.4f * WIDTH - 0.5f * (map.WIDTH * map.GRID_WIDTH),
+                    50
+                }, "go back");
 
         DrawText("chosen tile:", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * 0.05f, 20, WHITE);
         const Texture2D& chosen_tile_texture = game.textures.get_texture_from_tile(chosen_tile);
@@ -294,7 +273,7 @@ void GameData::EditModeType::run(GameData& game) {
         save_btn = GuiButton({
                     ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f),
                     HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 5)),
-                    (WIDTH - (WIDTH * 0.05f)) - (((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f)),
+                    0.4f * WIDTH - 0.5f * (map.WIDTH * map.GRID_WIDTH),
                     50
                 }, "save map");
 
@@ -311,7 +290,7 @@ void GameData::EditModeType::run(GameData& game) {
 }
 
 void GameData::SettingsType::run(GameData& game) {
-    if (back_btn) {
+    if (exit_btn) {
         game.change_state(GameState::START_SCREEN);
     }
 
@@ -321,7 +300,12 @@ void GameData::SettingsType::run(GameData& game) {
     DrawText("not yet D:", 100, 100, 50, WHITE);
     DrawFPS(10, 10);
 
-    back_btn = GuiButton({200, 100, 50, 50}, "go back");
+    exit_btn = GuiButton({
+                WIDTH * 0.05f,
+                HEIGHT * 0.9f,
+                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                50
+            }, "go back");
 
     EndDrawing();
 }
@@ -340,11 +324,18 @@ void GameData::MapSelectorType::run(GameData& game) {
 
     DrawFPS(10, 10);
 
-    exit_btn = GuiButton({100, 100, 50, 50}, "go back");
+    exit_btn = GuiButton({
+                WIDTH * 0.05f,
+                HEIGHT * 0.9f,
+                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                50
+            }, "go back");
 
     EndDrawing();
 }
 
+// TODO
+// Maybe an exit_btn here, not sure about that
 void GameData::RunningType::run(GameData& game) {
     float current_frame = GetTime();
     game.dt = game.last_frame - current_frame;
@@ -392,11 +383,23 @@ void GameData::RunningType::run(GameData& game) {
     {
         robot.collect(map, game);
 
-        for (auto& bug : bugs) {
+        if (robot.movement != v2{0, 0}) {
+            game.textures.robot.progress(game.dt);
+        }
+
+        for (u8 bug_idx = 0; auto& bug : bugs) {
             bug.move(game.dt, robot, map);
 
             bug.collide(robot, map);
+
+            if (bug.moving) {
+                game.textures.bug.progress(bug_idx, game.dt);
+            }
+
+            bug_idx++;
         }
+
+        game.textures.portal.progress(game.dt);
     }
 
     // ---------
@@ -406,12 +409,13 @@ void GameData::RunningType::run(GameData& game) {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        map.render(game.textures, game.dt);
+        map.render(game.textures);
 
         robot.render(map, game.textures);
 
-        for (auto& bug : bugs) {
-            bug.render(map, game.textures);
+        for (u8 bug_idx = 0; auto& bug : bugs) {
+            bug.render(map, game.textures, bug_idx);
+            bug_idx++;
         }
 
         DrawText(std::to_string(map.score).c_str(), 50, 100, 50, WHITE);
@@ -437,7 +441,12 @@ void GameData::WonType::run(GameData& game) {
     DrawText("YOU WON!", 100, 100, 50, WHITE);
     DrawFPS(10, 10);
 
-    exit_btn = GuiButton({100, 100, 50, 50}, "go back");
+    exit_btn = GuiButton({
+                WIDTH * 0.05f,
+                HEIGHT * 0.9f,
+                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                50
+            }, "go back");
 
     EndDrawing();
 }
@@ -453,7 +462,12 @@ void GameData::LostType::run(GameData& game) {
     DrawText("YOU LOST!", 100, 100, 50, WHITE);
     DrawFPS(10, 10);
 
-    exit_btn = GuiButton({100, 100, 50, 50}, "go back");
+    exit_btn = GuiButton({
+                WIDTH * 0.05f,
+                HEIGHT * 0.9f,
+                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                50
+            }, "go back");
 
     EndDrawing();
 }

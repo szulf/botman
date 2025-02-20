@@ -53,9 +53,7 @@ public:
 
     v2 get_second_portal_pos(const v2& portal_pos) const;
 
-    // TODO
-    // dt should not be here
-    void render(TexturesType& textures, float dt) const;
+    void render(TexturesType& textures) const;
 
     bool in_about_center(const v2& pos) const;
 

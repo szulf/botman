@@ -9,13 +9,12 @@
 
 // TODO
 // entrance screen
-// - play, enter edit mode, change setting(max fps, etc.)
+// - title screen
 //
 // TODO
 // edit mode
 // - gui for it
 // - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
-// - maybe a map selector when entering game mode, that would look at all .txt files inside of map/ directory
 // - map files should also store how many bugs are there, how many lifes does the robot have
 //
 // TODO
@@ -46,6 +45,10 @@
 // would be cool to have an arena allocator and only allocate memory when entering different game states
 // no idea how that would work with something like LoadTexture
 // just an idea, probably wont do that
+//
+// TODO
+// turns out the ROOT_PATH macro is a pretty bad idea(when you try to send a already compiled version of the game to someone it will not work)
+// gotta figure out something else
 int main() {
     srand(time(0));
 

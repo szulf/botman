@@ -31,16 +31,12 @@ Rectangle BugData::collision_rect(const MapData& map_data) const {
     return {pos.x - map_data.GRID_WIDTH / 2.0f, pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
 }
 
-void BugData::render(const MapData& map_data, const TexturesType& textures) {
+void BugData::render(const MapData& map_data, const TexturesType& textures, u8 idx) const {
     if (death_display) {
         DrawText("100", pos.x - 20, pos.y - 25, 20, GREEN);
     }
 
-    // TODO
-    // This should not be here
-    texture_frame = fmod(-texture_accumulator * 4.0f, 4.0f);
-
-    DrawTexturePro(textures.bug.texture, {static_cast<float>(textures.bug.width * texture_frame), 0, static_cast<float>(textures.bug.width), static_cast<float>(textures.bug.height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, tint);
+    DrawTexturePro(textures.bug.texture, {static_cast<float>(textures.bug.width * textures.bug.frame[idx]), 0, static_cast<float>(textures.bug.width), static_cast<float>(textures.bug.height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, tint);
 }
 
 void BugData::move(float dt, const RobotData& robot_data, const MapData& map_data) {
@@ -50,12 +46,14 @@ void BugData::move(float dt, const RobotData& robot_data, const MapData& map_dat
             tint.a = tint.a == 255 ? 80 : 255;
             flash_delay = GetTime();
         }
+        moving = false;
         return;
     }
 
     if (state == BugState::DEAD) {
         death_display = false;
         tint.a = 80;
+        moving = false;
     }
 
     if (state == BugState::DEAD && map_data.in_about_center(pos) && map_data.get_grid_from_pos(pos) == map_data.spawner_pos) {
@@ -63,16 +61,19 @@ void BugData::move(float dt, const RobotData& robot_data, const MapData& map_dat
         dead_time = GetTime();
         pos = map_data.get_grid_center(pos);
         tint.a = 0;
+        moving = false;
         return;
     }
 
     if (state == BugState::RESPAWNING && GetTime() - dead_time > 1) {
         state = BugState::ALIVE;
         tint.a = 255;
+        moving = false;
         return;
     }
 
     if (state == BugState::RESPAWNING) {
+        moving = false;
         return;
     }
 
@@ -113,6 +114,7 @@ void BugData::move(float dt, const RobotData& robot_data, const MapData& map_dat
             )
         ) {
         pos = map_data.get_grid_center(pos);
+        moving = false;
         return;
     } else {
         if (map_data.get_tile(grid_pos) == Tile::PORTAL) {
@@ -126,7 +128,7 @@ void BugData::move(float dt, const RobotData& robot_data, const MapData& map_dat
         }
 
         pos -= movement * dt * MOVEMENT_SPEED * 0.85f;
-        texture_accumulator += dt;
+        moving = true;
     }
 }
 

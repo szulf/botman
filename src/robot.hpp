@@ -27,7 +27,7 @@ public:
 
     Rectangle collision_rect(const MapData& map_data) const;
 
-    void render(const MapData& map_data, const TexturesType& textures);
+    void render(const MapData& map_data, const TexturesType& textures) const;
     void move(Movement move, float dt, const MapData& map_data);
     void collect(MapData& map_data, GameData& game);
 
@@ -40,8 +40,6 @@ public:
     Movement next_move{Movement::LEFT};
     float time_between_moves{};
 
-    float texture_accumulator{};
-    u8 texture_frame{};
     Flip flip{Flip::LEFT};
 
     bool smashing_mode{};

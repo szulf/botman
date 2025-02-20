@@ -22,7 +22,7 @@ public:
 
     Rectangle collision_rect(const MapData& map_data) const;
 
-    void render(const MapData& map_data, const TexturesType& textures);
+    void render(const MapData& map_data, const TexturesType& textures, u8 idx) const;
     void move(float dt, const RobotData& robot_data, const MapData& map_data);
     void collide(RobotData& robot_data, MapData& map_data);
 
@@ -31,8 +31,6 @@ public:
     v2 movement{};
 
     Color tint{255, 255, 255, 0};
-    float texture_accumulator{};
-    u8 texture_frame{};
     Flip flip{Flip::LEFT};
 
     BugState state{BugState::RESPAWNING};
@@ -41,6 +39,7 @@ public:
 
     // not proud of this
     float flash_delay{};
+    bool moving{};
 
     std::vector<v2> path{};
     v2 last_pos{};

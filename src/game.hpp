@@ -4,8 +4,7 @@
 #include "map.hpp"
 #include "robot.hpp"
 #include "bug.hpp"
-
-#include "raylib.h"
+#include "textures.hpp"
 
 #include <vector>
 
@@ -20,50 +19,9 @@ enum class GameState : u8 {
     EXIT,
 };
 
-struct TexturesType {
-    Texture2D hammer{};
-    Texture2D pellet{};
-    Texture2D spawner{};
-
-    struct WallTextureType {
-        Texture2D texture{};
-        static constexpr u8 width{16};
-        static constexpr u8 height{16};
-    } wall;
-
-    struct PortalTextureType {
-        Texture2D texture{};
-        static constexpr u8 width{16};
-        static constexpr u8 height{16};
-
-        float accumulator{};
-        u8 frame{};
-    } portal;
-
-    struct RobotTextureType {
-        Texture2D texture{};
-
-        static constexpr u8 width{16};
-        static constexpr u8 height{16};
-    } robot;
-
-    struct BugTextureType {
-        Texture2D texture;
-
-        static constexpr u8 width{16};
-        static constexpr u8 height{16};
-    } bug;
-
-    Texture2D start_pos;
-    Texture2D empty;
-
-    const Texture2D& get_texture_from_tile(Tile tile);
-};
-
 struct GameData {
 public:
     GameData();
-    ~GameData();
 
     void change_state(GameState state);
 
@@ -84,8 +42,8 @@ public:
         bool game_btn{};
         bool edit_btn{};
         bool settings_btn{};
-        bool quit_btn{};
         bool map_selector_btn{};
+        bool exit_btn{};
 
         void run(GameData& game);
     } start_screen;
@@ -105,7 +63,7 @@ public:
     } edit_mode;
 
     struct SettingsType {
-        bool back_btn{};
+        bool exit_btn{};
 
         void run(GameData& game);
     } settings;

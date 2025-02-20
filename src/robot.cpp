@@ -21,12 +21,8 @@ std::string_view print_movement(Movement move) {
     return "";
 }
 
-void RobotData::render(const MapData& map_data, const TexturesType& textures) {
-    // TODO
-    // this should not be here
-    texture_frame = fmod(-texture_accumulator * 5.0f, 4.0f);
-
-    DrawTexturePro(textures.robot.texture, {static_cast<float>(textures.robot.width * texture_frame), 0, static_cast<float>(textures.robot.width * static_cast<i8>(flip)), static_cast<float>(textures.robot.height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+void RobotData::render(const MapData& map_data, const TexturesType& textures) const {
+    DrawTexturePro(textures.robot.texture, {static_cast<float>(textures.robot.width * textures.robot.frame), 0, static_cast<float>(textures.robot.width * static_cast<i8>(flip)), static_cast<float>(textures.robot.height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
 }
 
 void RobotData::move(Movement move, float dt, const MapData& map_data) {
@@ -175,7 +171,6 @@ void RobotData::move(Movement move, float dt, const MapData& map_data) {
         ) {
         movement = {0, 0};
         pos = map_data.get_grid_center(pos);
-        texture_accumulator = 0.0f;
     } else {
         if (map_data.get_tile(map_data.get_grid_from_pos(pos)) == Tile::PORTAL) {
             if (!teleported && map_data.in_about_center(pos)) {
@@ -187,10 +182,6 @@ void RobotData::move(Movement move, float dt, const MapData& map_data) {
         }
 
         pos -= movement * dt * MOVEMENT_SPEED;
-
-        if (movement != v2{0, 0}) {
-            texture_accumulator += dt;
-        }
     }
 }
 
