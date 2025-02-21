@@ -13,9 +13,7 @@
 //
 // TODO
 // edit mode
-// - gui for it
-// - saving and loading from different named files(on game start still just load from ROOT_PATH "/map.txt")
-// - map files should also store how many bugs are there, how many lifes does the robot have
+// - *map files should also store how many bugs are there, how many lifes does the robot have
 //
 // TODO
 // map selector

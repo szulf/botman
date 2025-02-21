@@ -5,6 +5,7 @@
 #include "raylib.h"
 #include "raymath.h"
 
+#include <cstring>
 #include <vector>
 #include <string>
 
@@ -124,9 +125,9 @@ void GameData::StartScreenType::run(GameData& game) {
         if (game.show_fps) {
             DrawFPS(10, 10);
         }
-    }
 
-    EndDrawing();
+        EndDrawing();
+    }
 }
 
 // TODO
@@ -137,9 +138,6 @@ void GameData::EditModeType::run(GameData& game) {
     game.dt = game.last_frame - current_frame;
     game.last_frame = current_frame;
 
-    // -----
-    // INPUT
-    // -----
     {
         if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
             v2 pos = map.get_grid_from_pos(GetMousePosition());
@@ -189,26 +187,38 @@ void GameData::EditModeType::run(GameData& game) {
         }
 
         if (save_btn) {
-            if (
-                    map.get_tile(map.spawner_pos) == Tile::SPAWNER &&
-                    map.get_tile(map.start_pos) == Tile::START_POS &&
-                    (
-                     (map.get_tile(map.portal_pos[0]) == Tile::PORTAL && map.get_tile(map.portal_pos[1]) == Tile::PORTAL) ||
-                     (map.get_tile(map.portal_pos[0]) != Tile::PORTAL && map.get_tile(map.portal_pos[1]) != Tile::PORTAL)
-                    ) &&
-                    map.portal_pos[0] != map.portal_pos[1]
-                ) {
-                show_save_menu = true;
+            if (map.get_tile(map.spawner_pos) != Tile::SPAWNER) {
+                err_msg = ErrMsgType::SPAWNER;
+            } else if (map.get_tile(map.start_pos) != Tile::START_POS) {
+                err_msg = ErrMsgType::START_POS;
+            } else if ((map.get_tile(map.portal_pos[0]) == Tile::PORTAL && map.get_tile(map.portal_pos[1]) != Tile::PORTAL) ||
+                        (map.get_tile(map.portal_pos[0]) != Tile::PORTAL && map.get_tile(map.portal_pos[1]) == Tile::PORTAL) ||
+                        map.portal_pos[0] == map.portal_pos[1]
+                    ) {
+                err_msg = ErrMsgType::PORTALS;
             } else {
-                // TODO
-                // show a message saying there needs to be a spawner, start_pos and two or none portals
+                show_map_name_textbox = true;
+                err_msg = ErrMsgType::NONE;
             }
+        }
+
+        if (map_name_textbox) {
+            if (std::string_view{""} == map_name) {
+                err_msg = ErrMsgType::MAP_NAME;
+            } else {
+                map.save(map_name);
+                memset(map_name, 0, 128);
+            }
+
+            show_map_name_textbox = false;
+            map_name_textbox = false;
         }
     }
 
-    // ---------
-    // RENDERING
-    // ---------
+    {
+        game.textures.portal.progress(game.dt);
+    }
+
     {
         BeginDrawing();
         ClearBackground(BLACK);
@@ -278,12 +288,31 @@ void GameData::EditModeType::run(GameData& game) {
                     50
                 }, "save map");
 
-        // dont know if i want that here
-        if (show_save_menu) {
-            if (GuiTextBox({100, 250, 100, 50}, map_name, 128, true)) {
-                show_save_menu = false;
-                map.save(map_name);
-            }
+        switch (err_msg) {
+            case ErrMsgType::START_POS:
+                DrawText("There needs to be one start position.", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
+                break;
+            case ErrMsgType::SPAWNER:
+                DrawText("There needs to be one spawner.", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
+                break;
+            case ErrMsgType::PORTALS:
+                DrawText("There need to be exactly zero\nor two portals.", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
+                break;
+            case ErrMsgType::MAP_NAME:
+                DrawText("Please provide a proper map name.", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
+                break;
+
+            case ErrMsgType::NONE:
+                break;
+        }
+
+        if (show_map_name_textbox) {
+            map_name_textbox = GuiTextBox({
+                    ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f),
+                    HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)),
+                    0.4f * WIDTH - 0.5f * (map.WIDTH * map.GRID_WIDTH),
+                    50
+                }, map_name, 128, true);
         }
 
         if (game.show_fps) {
@@ -295,53 +324,61 @@ void GameData::EditModeType::run(GameData& game) {
 }
 
 void GameData::SettingsType::run(GameData& game) {
-    if (exit_btn) {
-        game.change_state(GameState::START_SCREEN);
+    {
+        if (exit_btn) {
+            game.change_state(GameState::START_SCREEN);
+        }
     }
 
-    BeginDrawing();
-    ClearBackground(BLACK);
+    {
+        BeginDrawing();
+        ClearBackground(BLACK);
 
-    DrawText("not yet D:", 100, 100, 50, WHITE);
+        DrawText("not yet D:", 100, 100, 50, WHITE);
 
-    exit_btn = GuiButton({
-                WIDTH * 0.05f,
-                HEIGHT * 0.9f,
-                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
-                50
-            }, "go back");
+        exit_btn = GuiButton({
+                    WIDTH * 0.05f,
+                    HEIGHT * 0.9f,
+                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "go back");
 
-    if (game.show_fps) {
-        DrawFPS(10, 10);
+        if (game.show_fps) {
+            DrawFPS(10, 10);
+        }
+
+        EndDrawing();
     }
-
-    EndDrawing();
 }
 
 void GameData::MapSelectorType::run(GameData& game) {
-    if (maps_reload) {
-        maps_reload = false;
+    {
+        if (maps_reload) {
+            maps_reload = false;
+        }
+
+        if (exit_btn) {
+            game.change_state(GameState::START_SCREEN);
+        }
     }
 
-    if (exit_btn) {
-        game.change_state(GameState::START_SCREEN);
+    {
+        BeginDrawing();
+        ClearBackground(BLACK);
+
+        exit_btn = GuiButton({
+                    WIDTH * 0.05f,
+                    HEIGHT * 0.9f,
+                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "go back");
+
+        if (game.show_fps) {
+            DrawFPS(10, 10);
+        }
+
+        EndDrawing();
     }
-
-    BeginDrawing();
-    ClearBackground(BLACK);
-
-    exit_btn = GuiButton({
-                WIDTH * 0.05f,
-                HEIGHT * 0.9f,
-                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
-                50
-            }, "go back");
-
-    if (game.show_fps) {
-        DrawFPS(10, 10);
-    }
-
-    EndDrawing();
 }
 
 // TODO
@@ -370,10 +407,11 @@ void GameData::RunningType::run(GameData& game) {
         first = false;
     }
 
-    // -----
-    // INPUT
-    // -----
     {
+        if (exit_btn) {
+            game.change_state(GameState::START_SCREEN);
+        }
+
         if (IsKeyPressed(KEY_UP)) {
             robot.move(Movement::UP, game.dt, map);
         } else if (IsKeyPressed(KEY_DOWN)) {
@@ -387,21 +425,22 @@ void GameData::RunningType::run(GameData& game) {
         }
     }
 
-    // --------
-    // GAMEPLAY
-    // --------
     {
         robot.collect(map, game);
 
+        for (auto& bug : bugs) {
+            bug.move(game.dt, robot, map);
+
+            bug.collide(robot, map);
+        }
+    }
+
+    {
         if (robot.movement != v2{0, 0}) {
             game.textures.robot.progress(game.dt);
         }
 
-        for (u8 bug_idx = 0; auto& bug : bugs) {
-            bug.move(game.dt, robot, map);
-
-            bug.collide(robot, map);
-
+        for (u8 bug_idx = 0; const auto& bug : bugs) {
             if (bug.moving) {
                 game.textures.bug.progress(bug_idx, game.dt);
             }
@@ -412,12 +451,16 @@ void GameData::RunningType::run(GameData& game) {
         game.textures.portal.progress(game.dt);
     }
 
-    // ---------
-    // RENDERING
-    // ---------
     {
         BeginDrawing();
         ClearBackground(BLACK);
+
+        exit_btn = GuiButton({
+                    WIDTH * 0.05f,
+                    HEIGHT * 0.9f,
+                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "go back");
 
         map.render(game.textures);
 
@@ -431,7 +474,6 @@ void GameData::RunningType::run(GameData& game) {
         for (u8 i = 0; i < robot.lifes; i++) {
             DrawTexturePro(game.textures.heart, {0, 0, static_cast<float>(game.textures.heart.width), static_cast<float>(game.textures.heart.height)}, {((WIDTH + (map.GRID_WIDTH * map.WIDTH)) * 0.5f) + (WIDTH * 0.05f * ((i % 3) + 1)), HEIGHT * 0.05f * (std::floor(i / 3.0f) + 1), map.GRID_WIDTH * 2.0f, map.GRID_HEIGHT * 2.0f}, {0, 0}, 0.0f, WHITE);
         }
-
 
         DrawText(std::to_string(map.score).c_str(), 50, 100, 50, WHITE);
 
@@ -448,49 +490,57 @@ void GameData::RunningType::run(GameData& game) {
 }
 
 void GameData::WonType::run(GameData& game) {
-    if (exit_btn) {
-        game.change_state(GameState::START_SCREEN);
+    {
+        if (exit_btn) {
+            game.change_state(GameState::START_SCREEN);
+        }
     }
 
-    BeginDrawing();
-    ClearBackground(BLACK);
+    {
+        BeginDrawing();
+        ClearBackground(BLACK);
 
-    DrawText("YOU WON!", 100, 100, 50, WHITE);
+        DrawText("YOU WON!", 100, 100, 50, WHITE);
 
-    exit_btn = GuiButton({
-                WIDTH * 0.05f,
-                HEIGHT * 0.9f,
-                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
-                50
-            }, "go back");
+        exit_btn = GuiButton({
+                    WIDTH * 0.05f,
+                    HEIGHT * 0.9f,
+                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "go back");
 
-    if (game.show_fps) {
-        DrawFPS(10, 10);
+        if (game.show_fps) {
+            DrawFPS(10, 10);
+        }
+
+        EndDrawing();
     }
-
-    EndDrawing();
 }
 
 void GameData::LostType::run(GameData& game) {
-    if (exit_btn) {
-        game.change_state(GameState::START_SCREEN);
+    {
+        if (exit_btn) {
+            game.change_state(GameState::START_SCREEN);
+        }
     }
 
-    BeginDrawing();
-    ClearBackground(BLACK);
+    {
+        BeginDrawing();
+        ClearBackground(BLACK);
 
-    DrawText("YOU LOST!", 100, 100, 50, WHITE);
+        DrawText("YOU LOST!", 100, 100, 50, WHITE);
 
-    exit_btn = GuiButton({
-                WIDTH * 0.05f,
-                HEIGHT * 0.9f,
-                0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
-                50
-            }, "go back");
+        exit_btn = GuiButton({
+                    WIDTH * 0.05f,
+                    HEIGHT * 0.9f,
+                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "go back");
 
-    if (game.show_fps) {
-        DrawFPS(10, 10);
+        if (game.show_fps) {
+            DrawFPS(10, 10);
+        }
+
+        EndDrawing();
     }
-
-    EndDrawing();
 }

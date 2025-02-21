@@ -57,7 +57,16 @@ public:
 
         bool exit_btn{};
         bool save_btn{};
-        bool show_save_menu{};
+        bool map_name_textbox{};
+
+        bool show_map_name_textbox{};
+        enum class ErrMsgType {
+            NONE,
+            START_POS,
+            SPAWNER,
+            PORTALS,
+            MAP_NAME,
+        } err_msg{};
 
         void run(GameData& game);
     } edit_mode;
@@ -82,6 +91,7 @@ public:
         std::vector<BugData> bugs{};
 
         bool first{true};
+        bool exit_btn{};
 
         void run(GameData& game);
     } running;
