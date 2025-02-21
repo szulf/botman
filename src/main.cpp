@@ -24,7 +24,6 @@
 // TODO
 // art
 // - for
-//   - lifes
 //   - robot with hammer (walking/death animations)
 //   - bugs (death animations, when entering/leaving the spawner(?))
 //   - spawner (hole)

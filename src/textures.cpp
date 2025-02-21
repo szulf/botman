@@ -28,6 +28,7 @@ TexturesType::~TexturesType() {
     UnloadTexture(wall.texture);
     UnloadTexture(start_pos);
     UnloadTexture(empty);
+    UnloadTexture(heart);
 }
 
 const Texture2D& TexturesType::get_texture_from_tile(Tile tile) const {

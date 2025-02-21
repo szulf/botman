@@ -15,7 +15,7 @@ inline static void reset_game(std::vector<BugData>& bugs, RobotData& robot, MapD
     set_bugs_dead_time(bugs);
 }
 
-GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/assets/gold_coin.png", ROOT_PATH "/assets/spawner.png", ROOT_PATH "/assets/wall.png", ROOT_PATH "/assets/portal.png", ROOT_PATH "/assets/robot.png", ROOT_PATH "/assets/bug.png", ROOT_PATH "/assets/start.png", ROOT_PATH "/assets/empty.png"} {
+GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/assets/gold_coin.png", ROOT_PATH "/assets/spawner.png", ROOT_PATH "/assets/wall.png", ROOT_PATH "/assets/portal.png", ROOT_PATH "/assets/robot.png", ROOT_PATH "/assets/bug.png", ROOT_PATH "/assets/start.png", ROOT_PATH "/assets/empty.png", ROOT_PATH "/assets/heart.png"} {
     change_state(GameState::START_SCREEN);
 
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
@@ -38,7 +38,7 @@ void GameData::change_state(GameState new_state) {
         case GameState::RUNNING:
             running.map = MapData{{(WIDTH - static_cast<float>(MapData::WIDTH * MapData::GRID_WIDTH)) / 2.0f, (HEIGHT - static_cast<float>(MapData::HEIGHT * MapData::GRID_HEIGHT)) / 2.0f}};
 
-            running.robot = RobotData{running.map.get_pos_from_grid(running.map.start_pos), 3};
+            running.robot = RobotData{running.map.get_pos_from_grid(running.map.start_pos), 10};
 
             running.bugs = std::vector<BugData>{5, running.map.get_pos_from_grid(running.map.spawner_pos)};
             set_bugs_dead_time(running.bugs);
@@ -84,7 +84,7 @@ void GameData::StartScreenType::run(GameData& game) {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        DrawText("BOTMAN", WIDTH * 0.05f, HEIGHT * 0.1f, 50, WHITE);
+        DrawText("BOTMAN", WIDTH * 0.05f, HEIGHT * 0.1f, 60, WHITE);
 
         game_btn = GuiButton({
                     WIDTH * 0.05f,
@@ -223,6 +223,7 @@ void GameData::EditModeType::run(GameData& game) {
                 }, "go back");
 
         DrawText("chosen tile:", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * 0.05f, 20, WHITE);
+
         const Texture2D& chosen_tile_texture = game.textures.get_texture_from_tile(chosen_tile);
         switch (chosen_tile) {
             case Tile::WALL:
@@ -426,6 +427,11 @@ void GameData::RunningType::run(GameData& game) {
             bug.render(map, game.textures, bug_idx);
             bug_idx++;
         }
+
+        for (u8 i = 0; i < robot.lifes; i++) {
+            DrawTexturePro(game.textures.heart, {0, 0, static_cast<float>(game.textures.heart.width), static_cast<float>(game.textures.heart.height)}, {((WIDTH + (map.GRID_WIDTH * map.WIDTH)) * 0.5f) + (WIDTH * 0.05f * ((i % 3) + 1)), HEIGHT * 0.05f * (std::floor(i / 3.0f) + 1), map.GRID_WIDTH * 2.0f, map.GRID_HEIGHT * 2.0f}, {0, 0}, 0.0f, WHITE);
+        }
+
 
         DrawText(std::to_string(map.score).c_str(), 50, 100, 50, WHITE);
 
