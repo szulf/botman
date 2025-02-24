@@ -39,8 +39,13 @@ GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/asse
 void GameData::change_state(GameState new_state) {
     switch (new_state) {
         case GameState::RUNNING: {
+            u16 robot_lifes{};
             u16 bugs_count{};
-            load_from_file(ROOT_PATH "/map.txt", running.map, running.robot.lifes, bugs_count);
+
+            load_from_file(ROOT_PATH "/map.txt", running.map, robot_lifes, bugs_count);
+
+            running.robot = RobotData{running.map.get_pos_from_grid(running.map.start_pos), robot_lifes};
+
             running.bugs = std::vector<BugData>{bugs_count, running.map.get_pos_from_grid(running.map.spawner_pos)};
             set_bugs_dead_time(running.bugs);
 
@@ -392,7 +397,6 @@ void GameData::RunningType::run(GameData& game) {
             return;
         } else {
             if (robot.lifes == 0) {
-                std::cout << "Here\n";
                 game.change_state(GameState::LOST);
                 return;
             } else {
