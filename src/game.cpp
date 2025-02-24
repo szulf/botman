@@ -38,22 +38,18 @@ GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/asse
 
 void GameData::change_state(GameState new_state) {
     switch (new_state) {
-        case GameState::RUNNING:
-            // running.map.load();
-            //
-            // running.robot = RobotData{running.map.get_pos_from_grid(running.map.start_pos), 10};
-            //
-            // running.bugs = std::vector<BugData>{5, running.map.get_pos_from_grid(running.map.spawner_pos)};
-            // set_bugs_dead_time(running.bugs);
-
-            load_from_file(ROOT_PATH "/map.txt", running.map, running.robot, running.bugs);
+        case GameState::RUNNING: {
+            u16 bugs_count{};
+            load_from_file(ROOT_PATH "/map.txt", running.map, running.robot.lifes, bugs_count);
+            running.bugs = std::vector<BugData>{bugs_count, running.map.get_pos_from_grid(running.map.spawner_pos)};
             set_bugs_dead_time(running.bugs);
 
             running.first = true;
             break;
+        }
 
         case GameState::EDIT_MODE:
-            edit_mode.map.load(ROOT_PATH "/map.txt");
+            load_from_file(ROOT_PATH "/map.txt", edit_mode.map, edit_mode.robot_lifes, edit_mode.bugs_count);
             break;
 
         default:
@@ -211,8 +207,8 @@ void GameData::EditModeType::run(GameData& game) {
             if (std::string_view{""} == map_name) {
                 err_msg = ErrMsgType::MAP_NAME;
             } else {
-                save_to_file(map_name, map, 3, 5);
-                memset(map_name, 0, 128);
+                save_to_file(map_name, map, game.running.robot.lifes, game.running.bugs.size());
+                std::memset(map_name, 0, 128);
             }
 
             show_map_name_textbox = false;
@@ -552,7 +548,7 @@ void GameData::LostType::run(GameData& game) {
     }
 }
 
-void load_from_file(std::string_view map_file_name, MapData& map_data, RobotData& robot_data, std::vector<BugData>& bugs_data) {
+void load_from_file(std::string_view map_file_name, MapData& map_data, u16& robot_lifes, u16& bugs_count) {
     map_data.load(map_file_name);
 
     std::ifstream file{map_file_name.data(), std::ios::in};
@@ -561,13 +557,8 @@ void load_from_file(std::string_view map_file_name, MapData& map_data, RobotData
         file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     }
 
-    u16 robot_lifes{};
     file >> robot_lifes;
-    robot_data = RobotData{map_data.get_pos_from_grid(map_data.start_pos), robot_lifes};
-
-    u16 bugs_count{};
     file >> bugs_count;
-    bugs_data = std::vector<BugData>{bugs_count, map_data.get_pos_from_grid(map_data.spawner_pos)};
 }
 
 void save_to_file(std::string_view map_file_name, const MapData& map_data, u16 robot_lifes, u16 bugs_count) {

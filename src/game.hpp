@@ -54,6 +54,8 @@ public:
         Tile chosen_tile{};
 
         char map_name[128]{};
+        u16 robot_lifes{};
+        u16 bugs_count{};
 
         bool exit_btn{};
         bool save_btn{};
@@ -110,5 +112,5 @@ public:
 
 };
 
-void load_from_file(std::string_view map_file_name, MapData& map_data, RobotData& robot_data, std::vector<BugData>& bugs_data);
+void load_from_file(std::string_view map_file_name, MapData& map_data, u16& robot_lifes, u16& bugs_count);
 void save_to_file(std::string_view map_file_name, const MapData& map_data, u16 robot_lifes, u16 bugs_count);
