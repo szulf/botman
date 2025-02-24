@@ -6,8 +6,10 @@
 #include "raymath.h"
 
 #include <cstring>
+#include <iostream>
 #include <vector>
 #include <string>
+#include <fstream>
 
 inline static void reset_game(std::vector<BugData>& bugs, RobotData& robot, MapData& map) {
     robot = RobotData{map.get_pos_from_grid(map.start_pos), robot.lifes};
@@ -37,18 +39,21 @@ GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/asse
 void GameData::change_state(GameState new_state) {
     switch (new_state) {
         case GameState::RUNNING:
-            running.map = MapData{{(WIDTH - static_cast<float>(MapData::WIDTH * MapData::GRID_WIDTH)) / 2.0f, (HEIGHT - static_cast<float>(MapData::HEIGHT * MapData::GRID_HEIGHT)) / 2.0f}};
+            // running.map.load();
+            //
+            // running.robot = RobotData{running.map.get_pos_from_grid(running.map.start_pos), 10};
+            //
+            // running.bugs = std::vector<BugData>{5, running.map.get_pos_from_grid(running.map.spawner_pos)};
+            // set_bugs_dead_time(running.bugs);
 
-            running.robot = RobotData{running.map.get_pos_from_grid(running.map.start_pos), 10};
-
-            running.bugs = std::vector<BugData>{5, running.map.get_pos_from_grid(running.map.spawner_pos)};
+            load_from_file(ROOT_PATH "/map.txt", running.map, running.robot, running.bugs);
             set_bugs_dead_time(running.bugs);
 
             running.first = true;
             break;
 
         case GameState::EDIT_MODE:
-            edit_mode.map = MapData{{(WIDTH - static_cast<float>(MapData::WIDTH * MapData::GRID_WIDTH)) / 2.0f, (HEIGHT - static_cast<float>(MapData::HEIGHT * MapData::GRID_HEIGHT)) / 2.0f}};
+            edit_mode.map.load(ROOT_PATH "/map.txt");
             break;
 
         default:
@@ -85,40 +90,40 @@ void GameData::StartScreenType::run(GameData& game) {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        DrawText("BOTMAN", WIDTH * 0.05f, HEIGHT * 0.1f, 60, WHITE);
+        DrawText("BOTMAN", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.1f, 60, WHITE);
 
         game_btn = GuiButton({
-                    WIDTH * 0.05f,
-                    HEIGHT * 0.3f,
-                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.3f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "start game");
 
         edit_btn = GuiButton({
-                    WIDTH * 0.05f,
-                    HEIGHT * 0.4f,
-                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.4f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "edit mode");
 
         settings_btn = GuiButton({
-                    WIDTH * 0.05f,
-                    HEIGHT * 0.5f,
-                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.5f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "settings");
 
         map_selector_btn = GuiButton({
-                    WIDTH * 0.05f,
-                    HEIGHT * 0.6f,
-                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.6f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "map selector");
 
         exit_btn = GuiButton({
-                    WIDTH * 0.05f,
-                    HEIGHT * 0.9f,
-                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.9f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "quit");
 
@@ -206,7 +211,7 @@ void GameData::EditModeType::run(GameData& game) {
             if (std::string_view{""} == map_name) {
                 err_msg = ErrMsgType::MAP_NAME;
             } else {
-                map.save(map_name);
+                save_to_file(map_name, map, 3, 5);
                 memset(map_name, 0, 128);
             }
 
@@ -226,31 +231,31 @@ void GameData::EditModeType::run(GameData& game) {
         map.render(game.textures);
 
         exit_btn = GuiButton({
-                    WIDTH * 0.05f,
-                    HEIGHT * 0.9f,
-                    0.4f * WIDTH - 0.5f * (map.WIDTH * map.GRID_WIDTH),
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.9f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (map.WIDTH * map.GRID_WIDTH),
                     50
                 }, "go back");
 
-        DrawText("chosen tile:", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * 0.05f, 20, WHITE);
+        DrawText("chosen tile:", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f), WINDOW_HEIGHT * 0.05f, 20, WHITE);
 
         const Texture2D& chosen_tile_texture = game.textures.get_texture_from_tile(chosen_tile);
         switch (chosen_tile) {
             case Tile::WALL:
-                DrawTexturePro(chosen_tile_texture, {0, 0, static_cast<float>(game.textures.wall.width), static_cast<float>(game.textures.wall.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 14), HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+                DrawTexturePro(chosen_tile_texture, {0, 0, static_cast<float>(game.textures.wall.width), static_cast<float>(game.textures.wall.height)}, {((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + (10 * 14), WINDOW_HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
                 break;
 
             case Tile::PORTAL:
-                DrawTexturePro(chosen_tile_texture, {static_cast<float>(game.textures.portal.width * game.textures.portal.frame), 0, static_cast<float>(game.textures.portal.width), static_cast<float>(game.textures.portal.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 14), HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+                DrawTexturePro(chosen_tile_texture, {static_cast<float>(game.textures.portal.width * game.textures.portal.frame), 0, static_cast<float>(game.textures.portal.width), static_cast<float>(game.textures.portal.height)}, {((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + (10 * 14), WINDOW_HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
                 break;
 
             default:
-                DrawTexturePro(chosen_tile_texture, {0, 0, static_cast<float>(chosen_tile_texture.width), static_cast<float>(chosen_tile_texture.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 14), HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+                DrawTexturePro(chosen_tile_texture, {0, 0, static_cast<float>(chosen_tile_texture.width), static_cast<float>(chosen_tile_texture.height)}, {((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + (10 * 14), WINDOW_HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
                 break;
         }
 
         for (u8 i = 0; i <= static_cast<u8>(Tile::PORTAL); i++) {
-            DrawText((std::to_string(i + 1) + " ->").c_str(), ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), (HEIGHT * (0.05f * (i + 3))), 20, WHITE);
+            DrawText((std::to_string(i + 1) + " ->").c_str(), ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f), (WINDOW_HEIGHT * (0.05f * (i + 3))), 20, WHITE);
 
             const Texture2D& texture = game.textures.get_texture_from_tile(static_cast<Tile>(i));
 
@@ -258,7 +263,7 @@ void GameData::EditModeType::run(GameData& game) {
                 case static_cast<u8>(Tile::WALL):
                     DrawTexturePro(texture,
                                 {0, 0, static_cast<float>(game.textures.wall.width), static_cast<float>(game.textures.wall.height)},
-                                {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 6), HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)},
+                                {((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + (10 * 6), WINDOW_HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)},
                                 {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f},
                                 0.0f,
                                 WHITE
@@ -268,7 +273,7 @@ void GameData::EditModeType::run(GameData& game) {
                 case static_cast<u8>(Tile::PORTAL):
                     DrawTexturePro(texture,
                                 {static_cast<float>(game.textures.portal.width * game.textures.portal.frame), 0, static_cast<float>(game.textures.portal.width), static_cast<float>(game.textures.portal.height)},
-                                {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 6), HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)},
+                                {((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + (10 * 6), WINDOW_HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)},
                                 {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f},
                                 0.0f,
                                 WHITE
@@ -276,30 +281,30 @@ void GameData::EditModeType::run(GameData& game) {
                     break;
 
                 default:
-                    DrawTexturePro(texture, {0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height)}, {((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f) + (10 * 6), HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+                    DrawTexturePro(texture, {0, 0, static_cast<float>(texture.width), static_cast<float>(texture.height)}, {((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + (10 * 6), WINDOW_HEIGHT * (0.05f * (i + 3)), static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
                     break;
             }
         }
 
         save_btn = GuiButton({
-                    ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f),
-                    HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 5)),
-                    0.4f * WIDTH - 0.5f * (map.WIDTH * map.GRID_WIDTH),
+                    ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f),
+                    WINDOW_HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 5)),
+                    0.4f * WINDOW_WIDTH - 0.5f * (map.WIDTH * map.GRID_WIDTH),
                     50
                 }, "save map");
 
         switch (err_msg) {
             case ErrMsgType::START_POS:
-                DrawText("There needs to be one start position.", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
+                DrawText("There needs to be one start position.", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f), WINDOW_HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
                 break;
             case ErrMsgType::SPAWNER:
-                DrawText("There needs to be one spawner.", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
+                DrawText("There needs to be one spawner.", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f), WINDOW_HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
                 break;
             case ErrMsgType::PORTALS:
-                DrawText("There need to be exactly zero\nor two portals.", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
+                DrawText("There need to be exactly zero\nor two portals.", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f), WINDOW_HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
                 break;
             case ErrMsgType::MAP_NAME:
-                DrawText("Please provide a proper map name.", ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f), HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
+                DrawText("Please provide a proper map name.", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f), WINDOW_HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)), 15, WHITE);
                 break;
 
             case ErrMsgType::NONE:
@@ -308,9 +313,9 @@ void GameData::EditModeType::run(GameData& game) {
 
         if (show_map_name_textbox) {
             map_name_textbox = GuiTextBox({
-                    ((WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WIDTH * 0.05f),
-                    HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)),
-                    0.4f * WIDTH - 0.5f * (map.WIDTH * map.GRID_WIDTH),
+                    ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f),
+                    WINDOW_HEIGHT * (0.05f * (static_cast<u8>(Tile::PORTAL) + 7)),
+                    0.4f * WINDOW_WIDTH - 0.5f * (map.WIDTH * map.GRID_WIDTH),
                     50
                 }, map_name, 128, true);
         }
@@ -337,9 +342,9 @@ void GameData::SettingsType::run(GameData& game) {
         DrawText("not yet D:", 100, 100, 50, WHITE);
 
         exit_btn = GuiButton({
-                    WIDTH * 0.05f,
-                    HEIGHT * 0.9f,
-                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.9f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "go back");
 
@@ -367,9 +372,9 @@ void GameData::MapSelectorType::run(GameData& game) {
         ClearBackground(BLACK);
 
         exit_btn = GuiButton({
-                    WIDTH * 0.05f,
-                    HEIGHT * 0.9f,
-                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.9f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "go back");
 
@@ -381,8 +386,6 @@ void GameData::MapSelectorType::run(GameData& game) {
     }
 }
 
-// TODO
-// Maybe an exit_btn here, not sure about that
 void GameData::RunningType::run(GameData& game) {
     float current_frame = GetTime();
     game.dt = game.last_frame - current_frame;
@@ -393,7 +396,9 @@ void GameData::RunningType::run(GameData& game) {
             return;
         } else {
             if (robot.lifes == 0) {
+                std::cout << "Here\n";
                 game.change_state(GameState::LOST);
+                return;
             } else {
                 first = true;
                 reset_game(bugs, robot, map);
@@ -426,7 +431,9 @@ void GameData::RunningType::run(GameData& game) {
     }
 
     {
-        robot.collect(map, game);
+        if (robot.collect(map, game)) {
+            return;
+        }
 
         for (auto& bug : bugs) {
             bug.move(game.dt, robot, map);
@@ -456,9 +463,9 @@ void GameData::RunningType::run(GameData& game) {
         ClearBackground(BLACK);
 
         exit_btn = GuiButton({
-                    WIDTH * 0.05f,
-                    HEIGHT * 0.9f,
-                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.9f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "go back");
 
@@ -472,7 +479,7 @@ void GameData::RunningType::run(GameData& game) {
         }
 
         for (u8 i = 0; i < robot.lifes; i++) {
-            DrawTexturePro(game.textures.heart, {0, 0, static_cast<float>(game.textures.heart.width), static_cast<float>(game.textures.heart.height)}, {((WIDTH + (map.GRID_WIDTH * map.WIDTH)) * 0.5f) + (WIDTH * 0.05f * ((i % 3) + 1)), HEIGHT * 0.05f * (std::floor(i / 3.0f) + 1), map.GRID_WIDTH * 2.0f, map.GRID_HEIGHT * 2.0f}, {0, 0}, 0.0f, WHITE);
+            DrawTexturePro(game.textures.heart, {0, 0, static_cast<float>(game.textures.heart.width), static_cast<float>(game.textures.heart.height)}, {((WINDOW_WIDTH + (map.GRID_WIDTH * map.WIDTH)) * 0.5f) + (WINDOW_WIDTH * 0.05f * ((i % 3) + 1)), WINDOW_HEIGHT * 0.05f * (std::floor(i / 3.0f) + 1), map.GRID_WIDTH * 2.0f, map.GRID_HEIGHT * 2.0f}, {0, 0}, 0.0f, WHITE);
         }
 
         DrawText(std::to_string(map.score).c_str(), 50, 100, 50, WHITE);
@@ -503,9 +510,9 @@ void GameData::WonType::run(GameData& game) {
         DrawText("YOU WON!", 100, 100, 50, WHITE);
 
         exit_btn = GuiButton({
-                    WIDTH * 0.05f,
-                    HEIGHT * 0.9f,
-                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.9f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "go back");
 
@@ -531,9 +538,9 @@ void GameData::LostType::run(GameData& game) {
         DrawText("YOU LOST!", 100, 100, 50, WHITE);
 
         exit_btn = GuiButton({
-                    WIDTH * 0.05f,
-                    HEIGHT * 0.9f,
-                    0.4f * WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.9f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "go back");
 
@@ -543,4 +550,31 @@ void GameData::LostType::run(GameData& game) {
 
         EndDrawing();
     }
+}
+
+void load_from_file(std::string_view map_file_name, MapData& map_data, RobotData& robot_data, std::vector<BugData>& bugs_data) {
+    map_data.load(map_file_name);
+
+    std::ifstream file{map_file_name.data(), std::ios::in};
+
+    for (u8 i = 0; i < 22; i++) {
+        file.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    }
+
+    u16 robot_lifes{};
+    file >> robot_lifes;
+    robot_data = RobotData{map_data.get_pos_from_grid(map_data.start_pos), robot_lifes};
+
+    u16 bugs_count{};
+    file >> bugs_count;
+    bugs_data = std::vector<BugData>{bugs_count, map_data.get_pos_from_grid(map_data.spawner_pos)};
+}
+
+void save_to_file(std::string_view map_file_name, const MapData& map_data, u16 robot_lifes, u16 bugs_count) {
+    map_data.save(map_file_name);
+
+    std::ofstream file{ROOT_PATH "/maps/" + std::string(map_file_name) + ".txt", std::ios::out | std::ios::ate | std::ios::app};
+
+    file << robot_lifes << std::endl;
+    file << bugs_count << std::endl;
 }

@@ -110,3 +110,5 @@ public:
 
 };
 
+void load_from_file(std::string_view map_file_name, MapData& map_data, RobotData& robot_data, std::vector<BugData>& bugs_data);
+void save_to_file(std::string_view map_file_name, const MapData& map_data, u16 robot_lifes, u16 bugs_count);

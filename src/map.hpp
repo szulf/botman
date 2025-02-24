@@ -4,7 +4,7 @@
 
 #include <cmath>
 #include <string_view>
-#include <vector>
+#include <array>
 
 // Gotta love circular dependencies
 struct TexturesType;
@@ -25,9 +25,6 @@ enum class Tile : u8 {
 
 struct MapData {
 public:
-    MapData() = default;
-    MapData(const v2& map_pos);
-
     inline Tile get_tile(const v2& pos) const {
         return tiles[pos.x + WIDTH * pos.y];
     }
@@ -48,8 +45,8 @@ public:
     v2 get_pos_from_grid(const v2& grid_pos) const;
     v2 get_grid_center(const v2& pos) const;
 
-    void load(const v2& map_pos);
-    void save(const char* map_name) const;
+    void load(std::string_view map_file_path);
+    void save(std::string_view map_name) const;
 
     v2 get_second_portal_pos(const v2& portal_pos) const;
 
@@ -67,17 +64,15 @@ public:
     static constexpr u32 GRID_WIDTH{32};
     static constexpr u32 GRID_HEIGHT{32};
 
-    v2 pos{};
+    v2 pos{(WINDOW_WIDTH - static_cast<float>(MapData::WIDTH * MapData::GRID_WIDTH)) / 2.0f, (WINDOW_HEIGHT - static_cast<float>(MapData::HEIGHT * MapData::GRID_HEIGHT)) / 2.0f};
 
-    std::vector<Tile> tiles;
+    std::array<Tile, MapData::WIDTH * MapData::HEIGHT> tiles{};
     v2 start_pos{};
     v2 spawner_pos{};
     v2 portal_pos[2]{};
 
     u32 score{};
     u16 pellet_count{};
-
 };
 
 std::string_view print_tile(Tile tile);
-

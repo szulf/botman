@@ -23,16 +23,16 @@ enum class Flip : i8 {
 struct RobotData {
 public:
     RobotData() = default;
-    RobotData(const v2& pos, u8 lifes) : lifes{lifes}, pos{pos} { }
+    RobotData(const v2& pos, u16 lifes) : lifes{lifes}, pos{pos} { }
 
     Rectangle collision_rect(const MapData& map_data) const;
 
     void render(const MapData& map_data, const TexturesType& textures) const;
     void move(Movement move, float dt, const MapData& map_data);
-    void collect(MapData& map_data, GameData& game);
+    bool collect(MapData& map_data, GameData& game);
 
 public:
-    u8 lifes{};
+    u16 lifes{};
 
     v2 pos{};
     v2 movement{-1, 0};

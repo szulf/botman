@@ -15,5 +15,5 @@ using i64 = int64_t;
 using v2 = Vector2;
 
 constexpr u8 MOVEMENT_SPEED = 120;
-constexpr u16 WIDTH = 1280;
-constexpr u16 HEIGHT = 720;
+constexpr u16 WINDOW_WIDTH = 1280;
+constexpr u16 WINDOW_HEIGHT = 720;

@@ -28,10 +28,6 @@ std::string_view print_tile(Tile tile) {
     return "";
 }
 
-MapData::MapData(const v2& map_pos) {
-    load(map_pos);
-}
-
 v2 MapData::get_grid_from_pos(const v2& _pos) const {
     return {std::floor((_pos.x - pos.x) / GRID_WIDTH), std::floor((_pos.y - pos.y) / GRID_HEIGHT)};
 }
@@ -44,10 +40,7 @@ v2 MapData::get_grid_center(const v2& pos) const {
     return get_pos_from_grid(get_grid_from_pos(pos));
 }
 
-void MapData::load(const v2& map_pos) {
-    pos = map_pos;
-    tiles = {WIDTH * HEIGHT, Tile::EMPTY};
-
+void MapData::load(std::string_view map_file_path) {
     for (u8 i = 0; i < 17; i++) {
         set_tile({static_cast<float>(i), 0}, Tile::WALL);
         set_tile({static_cast<float>(i), 21}, Tile::WALL);
@@ -57,7 +50,7 @@ void MapData::load(const v2& map_pos) {
         set_tile({16, static_cast<float>(i)}, Tile::WALL);
     }
 
-    std::ifstream file{ROOT_PATH "/map.txt", std::ios::in};
+    std::ifstream file{map_file_path.data(), std::ios::in};
     std::string file_str{(std::istreambuf_iterator<char>(file)), (std::istreambuf_iterator<char>())};
 
     u8 portal_count = 0;
@@ -104,7 +97,7 @@ void MapData::load(const v2& map_pos) {
     }
 }
 
-void MapData::save(const char* map_name) const {
+void MapData::save(std::string_view map_name) const {
     std::string map_file_name = ROOT_PATH "/maps/" + std::string(map_name) + ".txt";
     std::ofstream map_file{map_file_name, std::ios::out};
 

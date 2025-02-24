@@ -185,7 +185,7 @@ void RobotData::move(Movement move, float dt, const MapData& map_data) {
     }
 }
 
-void RobotData::collect(MapData& map_data, GameData& game_data) {
+bool RobotData::collect(MapData& map_data, GameData& game_data) {
     auto grid_pos = map_data.get_grid_from_pos(pos);
 
     if (map_data.get_tile(grid_pos) == Tile::PELLET && CheckCollisionRecs({pos.x - (map_data.GRID_WIDTH / 8.0f), pos.y - (map_data.GRID_HEIGHT / 8.0f), map_data.GRID_WIDTH / 4.0f, map_data.GRID_HEIGHT / 4.0f}, collision_rect(map_data))) {
@@ -194,6 +194,7 @@ void RobotData::collect(MapData& map_data, GameData& game_data) {
         map_data.pellet_count--;
         if (map_data.pellet_count == 0) {
             game_data.change_state(GameState::WON);
+            return true;
         }
     }
 
@@ -207,6 +208,8 @@ void RobotData::collect(MapData& map_data, GameData& game_data) {
     if (smashing_mode && GetTime() - smashing_start >= 5.0f) {
         smashing_mode = false;
     }
+
+    return false;
 }
 
 Rectangle RobotData::collision_rect(const MapData& map_data) const {

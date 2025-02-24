@@ -50,7 +50,7 @@
 int main() {
     srand(time(0));
 
-    InitWindow(WIDTH, HEIGHT, "botman");
+    InitWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "botman");
     SetExitKey(KEY_NULL);
 
     GameData game{};
