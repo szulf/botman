@@ -57,6 +57,11 @@ public:
         u16 robot_lifes{};
         u16 bugs_count{};
 
+        bool robot_lifes_increase{};
+        bool robot_lifes_decrease{};
+        bool bugs_count_increase{};
+        bool bugs_count_decrease{};
+
         bool exit_btn{};
         bool save_btn{};
         bool map_name_textbox{};

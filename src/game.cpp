@@ -212,12 +212,36 @@ void GameData::EditModeType::run(GameData& game) {
             if (std::string_view{""} == map_name) {
                 err_msg = ErrMsgType::MAP_NAME;
             } else {
-                save_to_file(map_name, map, game.running.robot.lifes, game.running.bugs.size());
+                save_to_file(map_name, map, robot_lifes, bugs_count);
                 std::memset(map_name, 0, 128);
             }
 
             show_map_name_textbox = false;
             map_name_textbox = false;
+        }
+
+        if (robot_lifes_increase) {
+            if (robot_lifes < 9 && robot_lifes >= 1) {
+                robot_lifes += 1;
+            }
+        }
+
+        if (robot_lifes_decrease) {
+            if (robot_lifes <= 9 && robot_lifes > 1) {
+                robot_lifes -= 1;
+            }
+        }
+
+        if (bugs_count_increase) {
+            if (bugs_count < 9 && bugs_count >= 1) {
+                bugs_count += 1;
+            }
+        }
+
+        if (bugs_count_decrease) {
+            if (bugs_count <= 9 && bugs_count > 1) {
+                bugs_count -= 1;
+            }
         }
     }
 
@@ -243,15 +267,65 @@ void GameData::EditModeType::run(GameData& game) {
         const Texture2D& chosen_tile_texture = game.textures.get_texture_from_tile(chosen_tile);
         switch (chosen_tile) {
             case Tile::WALL:
-                DrawTexturePro(chosen_tile_texture, {0, 0, static_cast<float>(game.textures.wall.width), static_cast<float>(game.textures.wall.height)}, {((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + (10 * 14), WINDOW_HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+                DrawTexturePro(
+                        chosen_tile_texture,
+                        {
+                            0,
+                            0,
+                            static_cast<float>(game.textures.wall.width),
+                            static_cast<float>(game.textures.wall.height)
+                        },
+                        {
+                            ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + MeasureText("chosen tile: ", 20),
+                            WINDOW_HEIGHT * 0.05f,
+                            static_cast<float>(map.GRID_WIDTH),
+                            static_cast<float>(map.GRID_HEIGHT)
+                        },
+                        {0, map.GRID_HEIGHT * 0.25f},
+                        0.0f, WHITE
+                    );
                 break;
 
             case Tile::PORTAL:
-                DrawTexturePro(chosen_tile_texture, {static_cast<float>(game.textures.portal.width * game.textures.portal.frame), 0, static_cast<float>(game.textures.portal.width), static_cast<float>(game.textures.portal.height)}, {((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + (10 * 14), WINDOW_HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+                DrawTexturePro(
+                        chosen_tile_texture,
+                        {
+                            static_cast<float>(game.textures.portal.width * game.textures.portal.frame),
+                            0,
+                            static_cast<float>(game.textures.portal.width),
+                            static_cast<float>(game.textures.portal.height)
+                        },
+                        {
+                            ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + MeasureText("chosen tile: ", 20),
+                            WINDOW_HEIGHT * 0.05f,
+                            static_cast<float>(map.GRID_WIDTH),
+                            static_cast<float>(map.GRID_HEIGHT)
+                        },
+                        {0, map.GRID_HEIGHT * 0.25f},
+                        0.0f,
+                        WHITE
+                    );
                 break;
 
             default:
-                DrawTexturePro(chosen_tile_texture, {0, 0, static_cast<float>(chosen_tile_texture.width), static_cast<float>(chosen_tile_texture.height)}, {((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + (10 * 14), WINDOW_HEIGHT * 0.05f, static_cast<float>(map.GRID_WIDTH), static_cast<float>(map.GRID_HEIGHT)}, {map.GRID_WIDTH / 2.0f, map.GRID_HEIGHT * 0.3f}, 0.0f, WHITE);
+                DrawTexturePro(
+                        chosen_tile_texture,
+                        {
+                            0,
+                            0,
+                            static_cast<float>(chosen_tile_texture.width),
+                            static_cast<float>(chosen_tile_texture.height)
+                        },
+                        {
+                            ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) + (map.WIDTH * map.GRID_WIDTH) + (WINDOW_WIDTH * 0.05f) + MeasureText("chosen tile: ", 20),
+                            WINDOW_HEIGHT * 0.05f,
+                            static_cast<float>(map.GRID_WIDTH),
+                            static_cast<float>(map.GRID_HEIGHT)
+                        },
+                        {0, map.GRID_HEIGHT * 0.25f},
+                        0.0f,
+                        WHITE
+                    );
                 break;
         }
 
@@ -320,6 +394,54 @@ void GameData::EditModeType::run(GameData& game) {
                     50
                 }, map_name, 128, true);
         }
+
+        auto robot_lifes_str = std::to_string(robot_lifes) + " ";
+        robot_lifes_str.insert(0, " ");
+
+        DrawText("robot lifes:", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(robot_lifes_str.c_str(), 20) - MeasureText("robot lifes: ", 20), WINDOW_HEIGHT * 0.05f, 20, WHITE);
+        robot_lifes_decrease = GuiButton(
+                {
+                    ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(robot_lifes_str.c_str(), 20),
+                    (WINDOW_HEIGHT * 0.05f) - (map.GRID_HEIGHT * 0.25f),
+                    static_cast<float>(map.GRID_WIDTH),
+                    static_cast<float>(map.GRID_HEIGHT)
+                },
+                "-"
+            );
+        DrawText(robot_lifes_str.c_str(), ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH - MeasureText(robot_lifes_str.c_str(), 20), WINDOW_HEIGHT * 0.05f, 20, WHITE);
+        robot_lifes_increase = GuiButton(
+                {
+                    ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH,
+                    (WINDOW_HEIGHT * 0.05f) - (map.GRID_HEIGHT * 0.25f),
+                    static_cast<float>(map.GRID_WIDTH),
+                    static_cast<float>(map.GRID_HEIGHT)
+                },
+                "+"
+            );
+
+        auto bugs_count_str = std::to_string(bugs_count) + " ";
+        bugs_count_str.insert(0, " ");
+
+        DrawText("bugs count:", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(bugs_count_str.c_str(), 20) - MeasureText("bugs count: ", 20), WINDOW_HEIGHT * 0.1f, 20, WHITE);
+        bugs_count_decrease = GuiButton(
+                {
+                    ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(bugs_count_str.c_str(), 20),
+                    (WINDOW_HEIGHT * 0.1f) - (map.GRID_HEIGHT * 0.25f),
+                    static_cast<float>(map.GRID_WIDTH),
+                    static_cast<float>(map.GRID_HEIGHT)
+                },
+                "-"
+            );
+        DrawText(bugs_count_str.c_str(), ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH - MeasureText(bugs_count_str.c_str(), 20), WINDOW_HEIGHT * 0.1f, 20, WHITE);
+        bugs_count_increase = GuiButton(
+                {
+                    ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH,
+                    (WINDOW_HEIGHT * 0.1f) - (map.GRID_HEIGHT * 0.25f),
+                    static_cast<float>(map.GRID_WIDTH),
+                    static_cast<float>(map.GRID_HEIGHT)
+                },
+                "+"
+            );
 
         if (game.show_fps) {
             DrawFPS(10, 10);
