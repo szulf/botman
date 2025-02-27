@@ -22,7 +22,11 @@ std::string_view print_movement(Movement move) {
 }
 
 void RobotData::render(const MapData& map_data, const TexturesType& textures) const {
-    DrawTexturePro(textures.robot.texture, {static_cast<float>(textures.robot.width * textures.robot.frame), 0, static_cast<float>(textures.robot.width * static_cast<i8>(flip)), static_cast<float>(textures.robot.height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+    if (smashing_mode) {
+        DrawTexturePro(textures.robot_hammer.texture, {static_cast<float>(textures.robot.width * textures.robot.frame), 0, static_cast<float>(textures.robot.width * static_cast<i8>(flip)), static_cast<float>(textures.robot.height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+    } else {
+        DrawTexturePro(textures.robot.texture, {static_cast<float>(textures.robot.width * textures.robot.frame), 0, static_cast<float>(textures.robot.width * static_cast<i8>(flip)), static_cast<float>(textures.robot.height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, WHITE);
+    }
 }
 
 void RobotData::move(Movement move, float dt, const MapData& map_data) {

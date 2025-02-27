@@ -13,8 +13,8 @@
 // TODO
 // art
 // - for
-//   - robot with hammer (walking/death animations)
-//   - bugs (death animations, when entering/leaving the spawner(?))
+//   - robot with and without hammer (death animations)
+//   - bugs (death animations, when entering/leaving the hole(?))
 //   - spawner (hole)
 //   - robot smashing bug for title screen
 //
@@ -24,16 +24,6 @@
 // TODO
 // replace all the 'GetTime's with something
 // probably accumulators like for animations
-//
-// TODO maybe
-// lower ram usage ????
-// i might be wrong but i think this thing takes 400mb of ram to run which is a little insane tbh
-// 400mb in debug, 50mb in release
-//
-// TODO maybe
-// would be cool to have an arena allocator and only allocate memory when entering different game states
-// no idea how that would work with something like LoadTexture
-// just an idea, probably wont do that
 //
 // TODO
 // turns out the ROOT_PATH macro is a pretty bad idea(when you try to send a already compiled version of the game to someone it will not work)

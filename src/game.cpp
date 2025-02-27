@@ -18,7 +18,7 @@ inline static void reset_game(std::vector<BugData>& bugs, RobotData& robot, MapD
     set_bugs_dead_time(bugs);
 }
 
-GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/assets/gold_coin.png", ROOT_PATH "/assets/spawner.png", ROOT_PATH "/assets/wall.png", ROOT_PATH "/assets/portal.png", ROOT_PATH "/assets/robot.png", ROOT_PATH "/assets/bug.png", ROOT_PATH "/assets/start.png", ROOT_PATH "/assets/empty.png", ROOT_PATH "/assets/heart.png"} {
+GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/assets/gold_coin.png", ROOT_PATH "/assets/spawner.png", ROOT_PATH "/assets/wall.png", ROOT_PATH "/assets/portal.png", ROOT_PATH "/assets/robot.png", ROOT_PATH "/assets/robot_hammer.png", ROOT_PATH "/assets/bug.png", ROOT_PATH "/assets/start.png", ROOT_PATH "/assets/empty.png", ROOT_PATH "/assets/heart.png"} {
     change_state(GameState::START_SCREEN);
 
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
