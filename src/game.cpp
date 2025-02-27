@@ -34,6 +34,8 @@ GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/asse
     GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, 0xffffffff);
     GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, 0xadd8e6ff);
     GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, 0x59ddffff);
+
+    SetTargetFPS(fps_count);
 }
 
 void GameData::change_state(GameState new_state) {
@@ -398,17 +400,17 @@ void GameData::EditModeType::run(GameData& game) {
         auto robot_lifes_str = std::to_string(robot_lifes) + " ";
         robot_lifes_str.insert(0, " ");
 
-        DrawText("robot lifes:", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(robot_lifes_str.c_str(), 20) - MeasureText("robot lifes: ", 20), WINDOW_HEIGHT * 0.05f, 20, WHITE);
+        DrawText("robot lifes:", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(" 2 ", 20) - MeasureText("robot lifes: ", 20), WINDOW_HEIGHT * 0.05f, 20, WHITE);
         robot_lifes_decrease = GuiButton(
                 {
-                    ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(robot_lifes_str.c_str(), 20),
+                    ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(" 2 ", 20),
                     (WINDOW_HEIGHT * 0.05f) - (map.GRID_HEIGHT * 0.25f),
                     static_cast<float>(map.GRID_WIDTH),
                     static_cast<float>(map.GRID_HEIGHT)
                 },
                 "-"
             );
-        DrawText(robot_lifes_str.c_str(), ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH - MeasureText(robot_lifes_str.c_str(), 20), WINDOW_HEIGHT * 0.05f, 20, WHITE);
+        DrawText(robot_lifes_str.c_str(), ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH - MeasureText(" 2 ", 20), WINDOW_HEIGHT * 0.05f, 20, WHITE);
         robot_lifes_increase = GuiButton(
                 {
                     ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH,
@@ -422,17 +424,17 @@ void GameData::EditModeType::run(GameData& game) {
         auto bugs_count_str = std::to_string(bugs_count) + " ";
         bugs_count_str.insert(0, " ");
 
-        DrawText("bugs count:", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(bugs_count_str.c_str(), 20) - MeasureText("bugs count: ", 20), WINDOW_HEIGHT * 0.1f, 20, WHITE);
+        DrawText("bugs count:", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(" 2 " , 20) - MeasureText("bugs count: ", 20), WINDOW_HEIGHT * 0.1f, 20, WHITE);
         bugs_count_decrease = GuiButton(
                 {
-                    ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(bugs_count_str.c_str(), 20),
+                    ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - (map.GRID_WIDTH * 2) - MeasureText(" 2 ", 20),
                     (WINDOW_HEIGHT * 0.1f) - (map.GRID_HEIGHT * 0.25f),
                     static_cast<float>(map.GRID_WIDTH),
                     static_cast<float>(map.GRID_HEIGHT)
                 },
                 "-"
             );
-        DrawText(bugs_count_str.c_str(), ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH - MeasureText(bugs_count_str.c_str(), 20), WINDOW_HEIGHT * 0.1f, 20, WHITE);
+        DrawText(bugs_count_str.c_str(), ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH - MeasureText(" 2 ", 20), WINDOW_HEIGHT * 0.1f, 20, WHITE);
         bugs_count_increase = GuiButton(
                 {
                     ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH,
@@ -453,6 +455,11 @@ void GameData::EditModeType::run(GameData& game) {
 
 void GameData::SettingsType::run(GameData& game) {
     {
+        if (last_fps_count != game.fps_count) {
+            SetTargetFPS(game.fps_count);
+            last_fps_count = game.fps_count;
+        }
+
         if (exit_btn) {
             game.change_state(GameState::START_SCREEN);
         }
@@ -462,7 +469,21 @@ void GameData::SettingsType::run(GameData& game) {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        DrawText("not yet D:", 100, 100, 50, WHITE);
+        DrawText("show fps:", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.3f, 20, WHITE);
+        GuiCheckBox({
+                    WINDOW_WIDTH * 0.05f + MeasureText("show fps: ", 20),
+                    WINDOW_HEIGHT * 0.3f - (MapData::GRID_HEIGHT * 0.25f),
+                    MapData::GRID_WIDTH,
+                    MapData::GRID_HEIGHT
+                }, "", &game.show_fps);
+
+        DrawText("fps count:", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.4f, 20, WHITE);
+        GuiSliderBar({
+                    WINDOW_WIDTH * 0.05f + MeasureText("fps count: ", 20),
+                    WINDOW_HEIGHT * 0.4f - (MapData::GRID_HEIGHT * 0.25f),
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    MapData::GRID_HEIGHT
+                }, nullptr, nullptr, &game.fps_count, 30, 500);
 
         exit_btn = GuiButton({
                     WINDOW_WIDTH * 0.05f,

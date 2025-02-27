@@ -5,16 +5,7 @@
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
 #include <ctime>
-#include <iostream>
 
-// TODO
-// entrance screen
-// - title screen
-//
-// TODO
-// edit mode
-// - *map files should also store how many bugs are there, how many lifes does the robot have
-//
 // TODO
 // map selector
 // - separate button in the main menu
@@ -56,8 +47,6 @@ int main() {
     GameData game{};
 
     while (!WindowShouldClose() && game.state != GameState::EXIT) {
-        game.mean_fps = (game.mean_fps + GetFPS()) / 2.0f;
-
         switch (game.state) {
             case GameState::START_SCREEN:
                 game.start_screen.run(game);
@@ -92,8 +81,6 @@ int main() {
                 break;
         }
     }
-
-    std::cout << "fps: " << game.mean_fps << std::endl;
 
     CloseWindow();
     return 0;

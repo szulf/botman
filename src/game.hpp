@@ -28,14 +28,13 @@ public:
 public:
     GameState state{};
 
-    float mean_fps{};
-
     float dt{};
     float last_frame{};
 
     TexturesType textures;
 
     bool show_fps{};
+    float fps_count{60};
 
     // Absolutely hate passing in GameData to run methods, but dont really know how to change that
     struct StartScreenType {
@@ -79,6 +78,7 @@ public:
     } edit_mode;
 
     struct SettingsType {
+        float last_fps_count{60};
         bool exit_btn{};
 
         void run(GameData& game);
