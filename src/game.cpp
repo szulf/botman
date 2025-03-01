@@ -539,16 +539,32 @@ void GameData::MapSelectorType::run(GameData& game) {
 
             maps.emplace_back("DEFAULT");
             for (const auto& dir_entry : std::filesystem::directory_iterator{ROOT_PATH "/maps"}) {
-                std::string map_name = dir_entry.path().string();
+                std::string map_name{dir_entry.path().string()};
                 map_name = map_name.substr(map_name.find_last_of('/') + 1);
                 map_name = map_name.substr(0, map_name.find('.'));
                 maps.push_back(std::move(map_name));
             }
 
             maps_reload = false;
+            selected_map_idx = 0;
         }
 
         game.selected_map = maps[selected_map_idx];
+
+        if (reload_btn) {
+            maps_reload = true;
+            show_delete_err = false;
+        }
+
+        if (delete_btn) {
+            if (selected_map_idx == 0) {
+                show_delete_err = true;
+            } else {
+                std::filesystem::remove(get_map_path_from_map_name(game.selected_map, selected_map_idx));
+                maps_reload = true;
+                show_delete_err = false;
+            }
+        }
 
         if (exit_btn) {
             game.change_state(GameState::START_SCREEN);
@@ -566,6 +582,23 @@ void GameData::MapSelectorType::run(GameData& game) {
                     0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     200
                 }, get_list_view_string(maps).c_str(), &scroll_map_list_view, &selected_map_idx);
+
+        reload_btn = GuiButton({
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.15f + 200,
+                    0.2f * WINDOW_WIDTH - 0.25f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "reload");
+        delete_btn = GuiButton({
+                    WINDOW_WIDTH * 0.05f + (0.2f * WINDOW_WIDTH - 0.25f * (MapData::WIDTH * MapData::GRID_WIDTH)),
+                    WINDOW_HEIGHT * 0.15f + 200,
+                    0.2f * WINDOW_WIDTH - 0.25f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "delete");
+
+        if (show_delete_err) {
+            DrawText("cannot delete the\ndefault map", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.15f + 260, 20, WHITE);
+        }
 
         exit_btn = GuiButton({
                     WINDOW_WIDTH * 0.05f,

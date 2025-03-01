@@ -93,6 +93,10 @@ public:
         i32 selected_map_idx{};
         i32 scroll_map_list_view{};
 
+        bool reload_btn{};
+        bool delete_btn{};
+        bool show_delete_err{};
+
         bool exit_btn{};
 
         void run(GameData& game);
