@@ -7,6 +7,7 @@
 #include "textures.hpp"
 
 #include <vector>
+#include <string>
 
 enum class GameState : u8 {
     START_SCREEN,
@@ -35,6 +36,8 @@ public:
 
     bool show_fps{};
     float fps_count{60};
+
+    std::string selected_map{"DEFAULT"};
 
     // Absolutely hate passing in GameData to run methods, but dont really know how to change that
     struct StartScreenType {
@@ -86,6 +89,9 @@ public:
 
     struct MapSelectorType {
         bool maps_reload{};
+        std::vector<std::string> maps{};
+        i32 selected_map_idx{};
+        i32 scroll_map_list_view{};
 
         bool exit_btn{};
 

@@ -11,15 +11,15 @@
 // - separate button in the main menu
 //
 // TODO
+// better win and lost screens
+//
+// TODO
 // art
 // - for
 //   - robot with and without hammer (death animations)
 //   - bugs (death animations, when entering/leaving the hole(?))
 //   - spawner (hole)
 //   - robot smashing bug for title screen
-//
-// TODO
-// music
 //
 // TODO
 // replace all the 'GetTime's with something

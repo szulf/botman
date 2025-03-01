@@ -6,9 +6,10 @@
 #include "raymath.h"
 
 #include <cstring>
+#include <filesystem>
 #include <iostream>
+#include <span>
 #include <vector>
-#include <string>
 #include <fstream>
 
 inline static void reset_game(std::vector<BugData>& bugs, RobotData& robot, MapData& map) {
@@ -16,6 +17,29 @@ inline static void reset_game(std::vector<BugData>& bugs, RobotData& robot, MapD
 
     bugs = std::vector<BugData>{5, map.get_pos_from_grid(map.spawner_pos)};
     set_bugs_dead_time(bugs);
+}
+
+static std::string get_list_view_string(std::span<std::string> strs) {
+    std::string out{};
+
+    for (u16 i = 0; const auto& str : strs) {
+        if (i != 0) {
+            out += ";";
+        }
+        out += str;
+
+        i++;
+    }
+
+    return out;
+}
+
+static std::string get_map_path_from_map_name(const std::string& map_name, i32 map_idx) {
+    if (map_idx == 0) {
+        return std::string{ROOT_PATH "/map.txt"};
+    }
+
+    return ROOT_PATH "/maps/" + map_name + ".txt";
 }
 
 GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/assets/gold_coin.png", ROOT_PATH "/assets/spawner.png", ROOT_PATH "/assets/wall.png", ROOT_PATH "/assets/portal.png", ROOT_PATH "/assets/robot.png", ROOT_PATH "/assets/robot_hammer.png", ROOT_PATH "/assets/bug.png", ROOT_PATH "/assets/start.png", ROOT_PATH "/assets/empty.png", ROOT_PATH "/assets/heart.png"} {
@@ -26,13 +50,14 @@ GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/asse
     GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, 0xffffffff);
     GuiSetStyle(DEFAULT, BASE_COLOR_NORMAL, 0x000000ff);
     GuiSetStyle(DEFAULT, BORDER_COLOR_NORMAL, 0x29adffff);
+    GuiSetStyle(DEFAULT, BACKGROUND_COLOR, 0x000000ff);
 
     GuiSetStyle(DEFAULT, TEXT_COLOR_FOCUSED, 0xffffffff);
     GuiSetStyle(DEFAULT, BASE_COLOR_FOCUSED, 0x303030ff);
     GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, 0x59ddffff);
 
     GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, 0xffffffff);
-    GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, 0xadd8e6ff);
+    GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, 0x000000ff);
     GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, 0x59ddffff);
 
     SetTargetFPS(fps_count);
@@ -44,19 +69,24 @@ void GameData::change_state(GameState new_state) {
             u16 robot_lifes{};
             u16 bugs_count{};
 
-            load_from_file(ROOT_PATH "/map.txt", running.map, robot_lifes, bugs_count);
+            load_from_file(get_map_path_from_map_name(selected_map, map_selector.selected_map_idx), running.map, robot_lifes, bugs_count);
 
             running.robot = RobotData{running.map.get_pos_from_grid(running.map.start_pos), robot_lifes};
 
             running.bugs = std::vector<BugData>{bugs_count, running.map.get_pos_from_grid(running.map.spawner_pos)};
             set_bugs_dead_time(running.bugs);
+            textures.bug.set_count(bugs_count);
 
             running.first = true;
             break;
         }
 
         case GameState::EDIT_MODE:
-            load_from_file(ROOT_PATH "/map.txt", edit_mode.map, edit_mode.robot_lifes, edit_mode.bugs_count);
+            load_from_file(get_map_path_from_map_name(selected_map, map_selector.selected_map_idx), edit_mode.map, edit_mode.robot_lifes, edit_mode.bugs_count);
+            break;
+
+        case GameState::MAP_SELECTOR:
+            map_selector.maps_reload = true;
             break;
 
         default:
@@ -469,18 +499,18 @@ void GameData::SettingsType::run(GameData& game) {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        DrawText("show fps:", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.3f, 20, WHITE);
+        DrawText("show fps:", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.1f, 20, WHITE);
         GuiCheckBox({
                     WINDOW_WIDTH * 0.05f + MeasureText("show fps: ", 20),
-                    WINDOW_HEIGHT * 0.3f - (MapData::GRID_HEIGHT * 0.25f),
+                    WINDOW_HEIGHT * 0.1f - (MapData::GRID_HEIGHT * 0.25f),
                     MapData::GRID_WIDTH,
                     MapData::GRID_HEIGHT
                 }, "", &game.show_fps);
 
-        DrawText("fps count:", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.4f, 20, WHITE);
+        DrawText("fps count:", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.2f, 20, WHITE);
         GuiSliderBar({
                     WINDOW_WIDTH * 0.05f + MeasureText("fps count: ", 20),
-                    WINDOW_HEIGHT * 0.4f - (MapData::GRID_HEIGHT * 0.25f),
+                    WINDOW_HEIGHT * 0.2f - (MapData::GRID_HEIGHT * 0.25f),
                     0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     MapData::GRID_HEIGHT
                 }, nullptr, nullptr, &game.fps_count, 30, 500);
@@ -500,11 +530,25 @@ void GameData::SettingsType::run(GameData& game) {
     }
 }
 
+// TODO
+// button to refresh maps
 void GameData::MapSelectorType::run(GameData& game) {
     {
         if (maps_reload) {
+            maps.clear();
+
+            maps.emplace_back("DEFAULT");
+            for (const auto& dir_entry : std::filesystem::directory_iterator{ROOT_PATH "/maps"}) {
+                std::string map_name = dir_entry.path().string();
+                map_name = map_name.substr(map_name.find_last_of('/') + 1);
+                map_name = map_name.substr(0, map_name.find('.'));
+                maps.push_back(std::move(map_name));
+            }
+
             maps_reload = false;
         }
+
+        game.selected_map = maps[selected_map_idx];
 
         if (exit_btn) {
             game.change_state(GameState::START_SCREEN);
@@ -514,6 +558,14 @@ void GameData::MapSelectorType::run(GameData& game) {
     {
         BeginDrawing();
         ClearBackground(BLACK);
+
+        DrawText(("selected map: " + game.selected_map).c_str(), WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.1f, 20, WHITE);
+        GuiListView({
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.15f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    200
+                }, get_list_view_string(maps).c_str(), &scroll_map_list_view, &selected_map_idx);
 
         exit_btn = GuiButton({
                     WINDOW_WIDTH * 0.05f,

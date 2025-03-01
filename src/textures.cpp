@@ -21,6 +21,11 @@ void AnimatedTextureList::progress(u8 idx, float dt) {
     frame[idx] = fmod(-accumulator[idx] * fps, frame_count);
 }
 
+void AnimatedTextureList::set_count(u8 count) {
+    accumulator.reserve(count);
+    frame.reserve(count);
+}
+
 TexturesType::~TexturesType() {
     UnloadTexture(hammer);
     UnloadTexture(pellet);
