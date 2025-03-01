@@ -16,10 +16,6 @@ enum class Tile : u8 {
     HAMMER,
     SPAWNER,
     START_POS,
-
-    // TODO
-    // for now only allowing two portals that link to each other
-    // maybe change that in the future
     PORTAL,
 };
 

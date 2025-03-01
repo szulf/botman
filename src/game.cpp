@@ -475,6 +475,23 @@ void GameData::EditModeType::run(GameData& game) {
                 "+"
             );
 
+        DrawText("display grid:", ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH - MeasureText("display grid: ", 20), WINDOW_HEIGHT * 0.15f, 20, WHITE);
+        GuiCheckBox({
+                    ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH,
+                    (WINDOW_HEIGHT * 0.15f) - (map.GRID_HEIGHT * 0.25f),
+                    static_cast<float>(map.GRID_WIDTH),
+                    static_cast<float>(map.GRID_HEIGHT)
+                }, nullptr, &display_grid);
+
+        if (display_grid) {
+            for (u8 i = 1; i < map.WIDTH; i++) {
+                DrawLineV({map.pos.x + i * map.GRID_WIDTH, map.pos.y + map.GRID_HEIGHT}, {map.pos.x + i * map.GRID_WIDTH, map.pos.y + map.GRID_HEIGHT * (map.HEIGHT - 1)}, WHITE);
+            }
+            for (u8 i = 1; i < map.HEIGHT; i++) {
+                DrawLineV({map.pos.x + map.GRID_WIDTH, map.pos.y + i * map.GRID_HEIGHT}, {map.pos.x + map.GRID_WIDTH * (map.WIDTH - 1), map.pos.y + i * map.GRID_HEIGHT}, WHITE);
+            }
+        }
+
         if (game.show_fps) {
             DrawFPS(10, 10);
         }

@@ -67,6 +67,7 @@ public:
         bool exit_btn{};
         bool save_btn{};
         bool map_name_textbox{};
+        bool display_grid{};
 
         bool show_map_name_textbox{};
         enum class ErrMsgType {
