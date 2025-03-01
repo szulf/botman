@@ -88,6 +88,7 @@ void MapData::load(std::string_view map_file_path) {
 
             case ' ':
             case '.':
+                tiles[i] = Tile::EMPTY;
                 break;
 
             default:

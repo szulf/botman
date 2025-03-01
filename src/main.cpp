@@ -7,17 +7,13 @@
 #include <ctime>
 
 // TODO
-// map selector
-// - separate button in the main menu
-//
-// TODO
 // better win and lost screens
 //
 // TODO
 // art
 // - for
-//   - robot with and without hammer (death animations)
-//   - bugs (death animations, when entering/leaving the hole(?))
+//   - robot with and without hammer (death animation, smashing animation)
+//   - bugs (death animation, when entering/leaving the hole(?))
 //   - spawner (hole)
 //   - robot smashing bug for title screen
 //

@@ -57,7 +57,7 @@ GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/asse
     GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, 0x59ddffff);
 
     GuiSetStyle(DEFAULT, TEXT_COLOR_PRESSED, 0xffffffff);
-    GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, 0x000000ff);
+    GuiSetStyle(DEFAULT, BASE_COLOR_PRESSED, 0xadd8e6ff);
     GuiSetStyle(DEFAULT, BORDER_COLOR_FOCUSED, 0x59ddffff);
 
     SetTargetFPS(fps_count);
@@ -530,8 +530,6 @@ void GameData::SettingsType::run(GameData& game) {
     }
 }
 
-// TODO
-// button to refresh maps
 void GameData::MapSelectorType::run(GameData& game) {
     {
         if (maps_reload) {
@@ -546,6 +544,10 @@ void GameData::MapSelectorType::run(GameData& game) {
             }
 
             maps_reload = false;
+            selected_map_idx = 0;
+        }
+
+        if (selected_map_idx == -1) {
             selected_map_idx = 0;
         }
 
