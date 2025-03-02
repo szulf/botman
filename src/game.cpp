@@ -4,6 +4,7 @@
 #include "raygui.h"
 #include "raylib.h"
 #include "raymath.h"
+#include "robot.hpp"
 
 #include <cstring>
 #include <filesystem>
@@ -631,9 +632,11 @@ void GameData::RunningType::run(GameData& game) {
     game.dt = current_frame - game.last_frame;
     game.last_frame = current_frame;
 
-    if (robot.is_dead) {
+    if (robot.state == RobotState::DYING) {
         if (GetTime() - robot.dead_delay < 1) {
-            return;
+            if (game.textures.robot.frame != game.textures.robot.frame_count) {
+                game.textures.robot.progress(game.dt);
+            }
         } else {
             if (robot.lifes == 0) {
                 game.change_state(GameState::LOST);
@@ -642,7 +645,7 @@ void GameData::RunningType::run(GameData& game) {
                 first = true;
                 reset_game(bugs, robot, map);
             }
-            robot.is_dead = false;
+            robot.state = RobotState::NORMAL;
         }
     }
 
@@ -651,7 +654,7 @@ void GameData::RunningType::run(GameData& game) {
         first = false;
     }
 
-    {
+    if (robot.state != RobotState::DYING) {
         if (exit_btn) {
             game.change_state(GameState::START_SCREEN);
         }
@@ -669,7 +672,7 @@ void GameData::RunningType::run(GameData& game) {
         }
     }
 
-    {
+    if (robot.state != RobotState::DYING) {
         if (robot.collect(map, game)) {
             return;
         }
@@ -679,9 +682,14 @@ void GameData::RunningType::run(GameData& game) {
 
             bug.collide(robot, map);
         }
+
+        // hate this but whatever at this point
+        if (robot.state == RobotState::DYING) {
+            game.textures.robot.reset();
+        }
     }
 
-    {
+    if (robot.state != RobotState::DYING) {
         if (robot.movement != v2{0, 0}) {
             game.textures.robot.progress(game.dt);
         }
@@ -722,10 +730,6 @@ void GameData::RunningType::run(GameData& game) {
         }
 
         DrawText(std::to_string(map.score).c_str(), 50, 100, 50, WHITE);
-
-        if (robot.smashing_mode) {
-            DrawText("s", 50, 150, 50, WHITE);
-        }
 
         if (game.show_fps) {
             DrawFPS(10, 10);

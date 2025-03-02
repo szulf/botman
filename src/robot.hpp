@@ -20,6 +20,12 @@ enum class Flip : i8 {
     RIGHT = 1,
 };
 
+enum class RobotState : u8 {
+    NORMAL,
+    SMASHING,
+    DYING,
+};
+
 struct RobotData {
 public:
     RobotData() = default;
@@ -42,9 +48,8 @@ public:
 
     Flip flip{Flip::LEFT};
 
-    bool smashing_mode{};
+    RobotState state{};
 
-    bool is_dead{};
     float dead_delay{};
 
     bool teleported{};

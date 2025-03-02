@@ -10,9 +10,12 @@
 // better win and lost screens
 //
 // TODO
+// better running screen(better score display)
+//
+// TODO
 // art
 // - for
-//   - robot with and without hammer (death animation, smashing animation)
+//   - robot (smashing animation)
 //   - spawner (hole)
 //   - bugs (death animation, when entering/leaving the hole(?))
 //   - robot smashing bug for title screen

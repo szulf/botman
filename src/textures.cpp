@@ -11,6 +11,11 @@ void AnimatedTexture::progress(float dt) {
     frame = fmod(accumulator * fps, frame_count);
 }
 
+void AnimatedTexture::reset() {
+    accumulator = 0.0f;
+    frame = 0;
+}
+
 AnimatedTextureList::~AnimatedTextureList() {
     UnloadTexture(texture);
 }

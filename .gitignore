@@ -5,4 +5,4 @@ commit_msg.txt
 perf.data
 makeprg
 *.aseprite
-maps/
+maps/*

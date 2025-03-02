@@ -87,7 +87,7 @@ void BugData::move(float dt, const RobotData& robot_data, const MapData& map_dat
     if (map_data.in_about_center(pos) && last_pos != grid_pos) {
         if (state == BugState::DEAD) {
             path = find_path(grid_pos, map_data.spawner_pos, map_data);
-        } else if (robot_data.smashing_mode) {
+        } else if (robot_data.state == RobotState::SMASHING) {
             path = find_path(grid_pos, find_furthest_grid_pos(map_data.get_grid_from_pos(robot_data.pos), map_data), map_data);
         } else {
             path = find_path(grid_pos, map_data.get_grid_from_pos(robot_data.pos), map_data);
@@ -143,15 +143,18 @@ void BugData::collide(RobotData& robot_data, MapData& map_data) {
     }
 
     if (CheckCollisionRecs(collision_rect(map_data), robot_data.collision_rect(map_data))) {
-        if (robot_data.smashing_mode) {
+        if (robot_data.state == RobotState::SMASHING) {
             state = BugState::DEAD;
             dead_time = GetTime();
             map_data.score += 100;
         } else {
-            if (!robot_data.is_dead) {
+            // TODO
+            // this could be moved to be handled in the robot struct
+            // but i dont think i care
+            if (robot_data.state != RobotState::DYING) {
                 robot_data.lifes -= 1;
             }
-            robot_data.is_dead = true;
+            robot_data.state = RobotState::DYING;
             robot_data.dead_delay = GetTime();
         }
     }

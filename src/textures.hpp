@@ -14,6 +14,7 @@ public:
     ~AnimatedTexture();
 
     void progress(float dt);
+    void reset();
 
 public:
     Texture2D texture{};
