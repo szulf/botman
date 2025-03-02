@@ -185,7 +185,7 @@ void RobotData::move(Movement move, float dt, const MapData& map_data) {
             teleported = false;
         }
 
-        pos -= movement * dt * MOVEMENT_SPEED;
+        pos += movement * dt * MOVEMENT_SPEED;
     }
 }
 

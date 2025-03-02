@@ -15,7 +15,7 @@
 inline static void reset_game(std::vector<BugData>& bugs, RobotData& robot, MapData& map) {
     robot = RobotData{map.get_pos_from_grid(map.start_pos), robot.lifes};
 
-    bugs = std::vector<BugData>{5, map.get_pos_from_grid(map.spawner_pos)};
+    bugs = std::vector<BugData>{bugs.size(), map.get_pos_from_grid(map.spawner_pos)};
     set_bugs_dead_time(bugs);
 }
 
@@ -83,10 +83,6 @@ void GameData::change_state(GameState new_state) {
 
         case GameState::EDIT_MODE:
             load_from_file(get_map_path_from_map_name(selected_map, map_selector.selected_map_idx), edit_mode.map, edit_mode.robot_lifes, edit_mode.bugs_count);
-            break;
-
-        case GameState::MAP_SELECTOR:
-            map_selector.maps_reload = true;
             break;
 
         default:
@@ -168,12 +164,9 @@ void GameData::StartScreenType::run(GameData& game) {
     }
 }
 
-// TODO
-// make an option to display a grid
-// so you know what square you are clicking at
 void GameData::EditModeType::run(GameData& game) {
     float current_frame = GetTime();
-    game.dt = game.last_frame - current_frame;
+    game.dt = current_frame - game.last_frame;
     game.last_frame = current_frame;
 
     {
@@ -554,9 +547,8 @@ void GameData::MapSelectorType::run(GameData& game) {
 
             maps.emplace_back("DEFAULT");
             for (const auto& dir_entry : std::filesystem::directory_iterator{ROOT_PATH "/maps"}) {
-                std::string map_name{dir_entry.path().string()};
-                map_name = map_name.substr(map_name.find_last_of('/') + 1);
-                map_name = map_name.substr(0, map_name.find('.'));
+                std::string map_name{dir_entry.path().filename().string()};
+                map_name = map_name.substr(0, map_name.find_last_of('.'));
                 maps.push_back(std::move(map_name));
             }
 
@@ -636,7 +628,7 @@ void GameData::MapSelectorType::run(GameData& game) {
 
 void GameData::RunningType::run(GameData& game) {
     float current_frame = GetTime();
-    game.dt = game.last_frame - current_frame;
+    game.dt = current_frame - game.last_frame;
     game.last_frame = current_frame;
 
     if (robot.is_dead) {

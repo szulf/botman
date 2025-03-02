@@ -80,13 +80,12 @@ void MapData::load(std::string_view map_file_path) {
                 tiles[i] = Tile::HAMMER;
                 break;
 
-            case '1':
+            case 'O':
                 tiles[i] = Tile::PORTAL;
                 portal_pos[portal_count] = {static_cast<float>(i % WIDTH), static_cast<float>((i - (i % WIDTH)) / WIDTH)};
                 portal_count++;
                 break;
 
-            case ' ':
             case '.':
                 tiles[i] = Tile::EMPTY;
                 break;
@@ -123,7 +122,7 @@ void MapData::save(std::string_view map_name) const {
                 map_file << "S";
                 break;
             case Tile::PORTAL:
-                map_file << "1";
+                map_file << "O";
                 break;
         }
         if (i % WIDTH == 0) {

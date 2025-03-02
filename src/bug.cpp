@@ -28,7 +28,12 @@ void set_bugs_dead_time(std::vector<BugData>& bugs) {
 }
 
 Rectangle BugData::collision_rect(const MapData& map_data) const {
-    return {pos.x - map_data.GRID_WIDTH / 2.0f, pos.y - map_data.GRID_HEIGHT / 2.0f, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)};
+    return {
+        .x = (pos.x - map_data.GRID_WIDTH / 2.0f),
+        .y = (pos.y - map_data.GRID_HEIGHT / 2.0f) + (map_data.GRID_HEIGHT * 0.125f),
+        .width = static_cast<float>(map_data.GRID_WIDTH),
+        .height = map_data.GRID_HEIGHT - (map_data.GRID_HEIGHT * 0.25f)
+    };
 }
 
 void BugData::render(const MapData& map_data, const TexturesType& textures, u8 idx) const {
@@ -127,7 +132,7 @@ void BugData::move(float dt, const RobotData& robot_data, const MapData& map_dat
             teleported = false;
         }
 
-        pos -= movement * dt * MOVEMENT_SPEED * 0.85f;
+        pos += movement * dt * MOVEMENT_SPEED * 0.85f;
         moving = true;
     }
 }

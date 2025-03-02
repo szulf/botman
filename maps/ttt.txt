@@ -12,13 +12,13 @@
 ####P#PPPPP#P####
 ####P#PPPPP#P####
 #PPPPPPPPPPPPPPP#
-#P##P#######P##P#
-#HP#PPP#S#PPP#PH#
+#P##PPPPPPPPP##P#
+#HP#PPPPSPPPP#PH#
 ##P#PP#####PP#P##
 ##P#PPPP#PPPP#P##
 #PPPP#PP#PP#PPPP#
 #P#####P#P#####P#
 #PPPPPPPPPPPPPPP#
 #################
-1
-5
+9
+9

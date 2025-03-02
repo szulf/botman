@@ -89,7 +89,7 @@ public:
     } settings;
 
     struct MapSelectorType {
-        bool maps_reload{};
+        bool maps_reload{true};
         std::vector<std::string> maps{};
         i32 selected_map_idx{};
         i32 scroll_map_list_view{};

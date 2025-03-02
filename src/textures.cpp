@@ -8,7 +8,7 @@ AnimatedTexture::~AnimatedTexture() {
 void AnimatedTexture::progress(float dt) {
     accumulator += dt;
 
-    frame = fmod(-accumulator * fps, frame_count);
+    frame = fmod(accumulator * fps, frame_count);
 }
 
 AnimatedTextureList::~AnimatedTextureList() {
@@ -18,12 +18,12 @@ AnimatedTextureList::~AnimatedTextureList() {
 void AnimatedTextureList::progress(u8 idx, float dt) {
     accumulator[idx] += dt;
 
-    frame[idx] = fmod(-accumulator[idx] * fps, frame_count);
+    frame[idx] = fmod(accumulator[idx] * fps, frame_count);
 }
 
 void AnimatedTextureList::set_count(u8 count) {
-    accumulator.reserve(count);
-    frame.reserve(count);
+    accumulator.resize(count);
+    frame.resize(count);
 }
 
 TexturesType::~TexturesType() {

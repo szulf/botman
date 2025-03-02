@@ -13,8 +13,8 @@
 // art
 // - for
 //   - robot with and without hammer (death animation, smashing animation)
-//   - bugs (death animation, when entering/leaving the hole(?))
 //   - spawner (hole)
+//   - bugs (death animation, when entering/leaving the hole(?))
 //   - robot smashing bug for title screen
 //
 // TODO
