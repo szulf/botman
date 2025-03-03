@@ -693,13 +693,13 @@ void GameData::RunningType::run(GameData& game) {
         }
 
         // hate this, but whatever at this point
-        if (robot.state == RobotState::DYING) {
+        if (robot.state == RobotState::DYING || robot.state == RobotState::KILLING) {
             game.textures.robot.reset();
         }
     }
 
     {
-        if (robot.state == RobotState::DYING) {
+        if (robot.state == RobotState::DYING || robot.state == RobotState::KILLING) {
             // No idea why -2
             if (game.textures.robot.frame != game.textures.robot.frame_count - 2) {
                 game.textures.robot.progress(game.dt);

@@ -15,13 +15,11 @@
 // TODO
 // art
 // - for
-//   - robot (smashing animation)
 //   - spawner (hole)
-//   - bugs (death animation)
-//     - remove flashing
-//     - pause the game during this animation
-//     - totally hide bugs when they return to the hole???
 //   - robot smashing bug for title screen
+//
+// TODO
+// make bugs maybe a little visible when they return to the hole
 //
 // TODO
 // replace all the 'GetTime's with something
