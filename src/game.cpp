@@ -1,6 +1,7 @@
 #include "game.hpp"
 
 #include "bug.hpp"
+#include "constants.hpp"
 #include "raygui.h"
 #include "raylib.h"
 #include "raymath.h"
@@ -745,7 +746,7 @@ void GameData::RunningType::run(GameData& game) {
             DrawTexturePro(game.textures.heart, {0, 0, static_cast<float>(game.textures.heart.width), static_cast<float>(game.textures.heart.height)}, {((WINDOW_WIDTH + (map.GRID_WIDTH * map.WIDTH)) * 0.5f) + (WINDOW_WIDTH * 0.05f * ((i % 3) + 1)), WINDOW_HEIGHT * 0.05f * (std::floor(i / 3.0f) + 1), map.GRID_WIDTH * 2.0f, map.GRID_HEIGHT * 2.0f}, {0, 0}, 0.0f, WHITE);
         }
 
-        DrawText(std::to_string(map.score).c_str(), 50, 100, 50, WHITE);
+        DrawText(("score: " + std::to_string(map.score)).c_str(), ((WINDOW_WIDTH - (map.WIDTH * map.GRID_WIDTH)) * 0.5f) - (WINDOW_WIDTH * 0.05f) - map.GRID_WIDTH - MeasureText("score: 200", 40), WINDOW_HEIGHT * 0.2f, 40, WHITE);
 
         if (game.show_fps) {
             DrawFPS(10, 10);
@@ -757,6 +758,10 @@ void GameData::RunningType::run(GameData& game) {
 
 void GameData::WonType::run(GameData& game) {
     {
+        if (change_map_btn) {
+            game.change_state(GameState::MAP_SELECTOR);
+        }
+
         if (exit_btn) {
             game.change_state(GameState::START_SCREEN);
         }
@@ -766,14 +771,22 @@ void GameData::WonType::run(GameData& game) {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        DrawText("YOU WON!", 100, 100, 50, WHITE);
+        DrawText("YOU WON!", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.1f, 60, WHITE);
+        DrawText("maybe try a different map?", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.2f, 30, WHITE);
+
+        change_map_btn = GuiButton({
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.3f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "change map");
 
         exit_btn = GuiButton({
                     WINDOW_WIDTH * 0.05f,
                     WINDOW_HEIGHT * 0.9f,
                     0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
-                }, "go back");
+                }, "go to menu");
 
         if (game.show_fps) {
             DrawFPS(10, 10);
@@ -785,6 +798,10 @@ void GameData::WonType::run(GameData& game) {
 
 void GameData::LostType::run(GameData& game) {
     {
+        if (retry_btn) {
+            game.change_state(GameState::RUNNING);
+        }
+
         if (exit_btn) {
             game.change_state(GameState::START_SCREEN);
         }
@@ -794,14 +811,22 @@ void GameData::LostType::run(GameData& game) {
         BeginDrawing();
         ClearBackground(BLACK);
 
-        DrawText("YOU LOST!", 100, 100, 50, WHITE);
+        DrawText("YOU LOST!", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.1f, 60, WHITE);
+        DrawText("maybe try again?", WINDOW_WIDTH * 0.05f, WINDOW_HEIGHT * 0.2f, 30, WHITE);
+
+        retry_btn = GuiButton({
+                    WINDOW_WIDTH * 0.05f,
+                    WINDOW_HEIGHT * 0.3f,
+                    0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
+                    50
+                }, "retry");
 
         exit_btn = GuiButton({
                     WINDOW_WIDTH * 0.05f,
                     WINDOW_HEIGHT * 0.9f,
                     0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
-                }, "go back");
+                }, "go to menu");
 
         if (game.show_fps) {
             DrawFPS(10, 10);

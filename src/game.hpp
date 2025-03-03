@@ -115,12 +115,14 @@ public:
     } running;
 
     struct WonType {
+        bool change_map_btn{};
         bool exit_btn{};
 
         void run(GameData& game);
     } won;
 
     struct LostType {
+        bool retry_btn{};
         bool exit_btn{};
 
         void run(GameData& game);

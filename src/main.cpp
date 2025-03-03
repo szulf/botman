@@ -10,20 +10,15 @@
 // better win and lost screens
 //
 // TODO
-// better running screen(better score display)
-//
-// TODO
 // art
 // - for
 //   - spawner (hole)
 //   - robot smashing bug for title screen
+//   - sad robot for the lost screen
+//   - happy robot for the won screen
 //
 // TODO
 // make bugs maybe a little visible when they return to the hole
-//
-// TODO
-// replace all the 'GetTime's with something
-// probably accumulators like for animations
 //
 // TODO
 // turns out the ROOT_PATH macro is a pretty bad idea(when you try to send a already compiled version of the game to someone it will not work)
