@@ -1,5 +1,6 @@
 #include "bug.hpp"
 #include "path.hpp"
+#include "robot.hpp"
 #include "textures.hpp"
 
 #include "raylib.h"
@@ -41,23 +42,19 @@ void BugData::render(const MapData& map_data, const TexturesType& textures, u8 i
         DrawText("100", pos.x - 20, pos.y - 25, 20, GREEN);
     }
 
-    DrawTexturePro(textures.bug.texture, {static_cast<float>(textures.bug.width * textures.bug.frame[idx]), 0, static_cast<float>(textures.bug.width), static_cast<float>(textures.bug.height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, tint);
+    DrawTexturePro(textures.bug.texture, {static_cast<float>(textures.bug.width * textures.bug.frame[idx]), static_cast<float>(textures.bug.height * death_display), static_cast<float>(textures.bug.width), static_cast<float>(textures.bug.height)}, {pos.x, pos.y, static_cast<float>(map_data.GRID_WIDTH), static_cast<float>(map_data.GRID_HEIGHT)}, {map_data.GRID_WIDTH / 2.0f, map_data.GRID_HEIGHT / 2.0f}, 0.0f, tint);
 }
 
 void BugData::move(float dt, const RobotData& robot_data, const MapData& map_data) {
     if (state == BugState::DEAD && GetTime() - dead_time < 1) {
         death_display = true;
-        if (GetTime() - flash_delay > 0.2) {
-            tint.a = tint.a == 255 ? 80 : 255;
-            flash_delay = GetTime();
-        }
         moving = false;
         return;
     }
 
     if (state == BugState::DEAD) {
+        tint.a = 0;
         death_display = false;
-        tint.a = 80;
         moving = false;
     }
 
@@ -65,7 +62,6 @@ void BugData::move(float dt, const RobotData& robot_data, const MapData& map_dat
         state = BugState::RESPAWNING;
         dead_time = GetTime();
         pos = map_data.get_grid_center(pos);
-        tint.a = 0;
         moving = false;
         return;
     }
@@ -143,14 +139,15 @@ void BugData::collide(RobotData& robot_data, MapData& map_data) {
     }
 
     if (CheckCollisionRecs(collision_rect(map_data), robot_data.collision_rect(map_data))) {
-        if (robot_data.state == RobotState::SMASHING) {
+        if (robot_data.state == RobotState::SMASHING || robot_data.state == RobotState::KILLING) {
             state = BugState::DEAD;
             dead_time = GetTime();
             map_data.score += 100;
+            death_display = true;
+
+            robot_data.state = RobotState::KILLING;
+            robot_data.dead_delay = GetTime();
         } else {
-            // TODO
-            // this could be moved to be handled in the robot struct
-            // but i dont think i care
             if (robot_data.state != RobotState::DYING) {
                 robot_data.lifes -= 1;
             }

@@ -24,6 +24,7 @@ enum class RobotState : u8 {
     NORMAL,
     SMASHING,
     DYING,
+    KILLING,
 };
 
 struct RobotData {

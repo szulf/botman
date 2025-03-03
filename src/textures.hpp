@@ -35,6 +35,7 @@ public:
     ~AnimatedTextureList();
 
     void progress(u8 idx, float dt);
+    void reset(u8 idx);
 
     void set_count(u8 count);
 

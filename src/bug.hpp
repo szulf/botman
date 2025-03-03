@@ -37,16 +37,14 @@ public:
     float dead_time{};
     bool death_display{};
 
-    // not proud of this
-    float flash_delay{};
     bool moving{};
 
     std::vector<v2> path{};
     v2 last_pos{};
     v2 last_movement{};
     bool teleported;
-
 };
+
 void set_bugs_dead_time(std::vector<BugData>& bugs);
 std::string_view print_bug_state(BugState bug_state);
 

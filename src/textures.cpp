@@ -26,6 +26,11 @@ void AnimatedTextureList::progress(u8 idx, float dt) {
     frame[idx] = fmod(accumulator[idx] * fps, frame_count);
 }
 
+void AnimatedTextureList::reset(u8 idx) {
+    accumulator[idx] = 0.0f;
+    frame[idx] = 0;
+}
+
 void AnimatedTextureList::set_count(u8 count) {
     accumulator.resize(count);
     frame.resize(count);

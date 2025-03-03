@@ -524,7 +524,7 @@ void GameData::SettingsType::run(GameData& game) {
                     WINDOW_HEIGHT * 0.2f - (MapData::GRID_HEIGHT * 0.25f),
                     0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     MapData::GRID_HEIGHT
-                }, nullptr, nullptr, &game.fps_count, 30, 500);
+                }, nullptr, std::to_string(static_cast<i32>(game.fps_count)).c_str(), &game.fps_count, 30, 500);
 
         exit_btn = GuiButton({
                     WINDOW_WIDTH * 0.05f,
@@ -633,11 +633,7 @@ void GameData::RunningType::run(GameData& game) {
     game.last_frame = current_frame;
 
     if (robot.state == RobotState::DYING) {
-        if (GetTime() - robot.dead_delay < 1) {
-            if (game.textures.robot.frame != game.textures.robot.frame_count) {
-                game.textures.robot.progress(game.dt);
-            }
-        } else {
+        if (GetTime() - robot.dead_delay >= 1) {
             if (robot.lifes == 0) {
                 game.change_state(GameState::LOST);
                 return;
@@ -649,12 +645,18 @@ void GameData::RunningType::run(GameData& game) {
         }
     }
 
+    if (robot.state == RobotState::KILLING) {
+        if (GetTime() - robot.dead_delay >= 1) {
+            robot.state = RobotState::SMASHING;
+        }
+    }
+
     if (first) {
         game.dt = 0.0f;
         first = false;
     }
 
-    if (robot.state != RobotState::DYING) {
+    if (robot.state != RobotState::DYING && robot.state != RobotState::KILLING) {
         if (exit_btn) {
             game.change_state(GameState::START_SCREEN);
         }
@@ -672,30 +674,44 @@ void GameData::RunningType::run(GameData& game) {
         }
     }
 
-    if (robot.state != RobotState::DYING) {
+    if (robot.state != RobotState::DYING && robot.state != RobotState::KILLING) {
         if (robot.collect(map, game)) {
             return;
         }
 
-        for (auto& bug : bugs) {
+        for (u8 bug_idx = 0; auto& bug : bugs) {
             bug.move(game.dt, robot, map);
 
             bug.collide(robot, map);
+
+            // hate this, but whatever at this point
+            if (robot.state == RobotState::KILLING) {
+                game.textures.bug.reset(bug_idx);
+            }
+
+            bug_idx = 0;
         }
 
-        // hate this but whatever at this point
+        // hate this, but whatever at this point
         if (robot.state == RobotState::DYING) {
             game.textures.robot.reset();
         }
     }
 
-    if (robot.state != RobotState::DYING) {
-        if (robot.movement != v2{0, 0}) {
-            game.textures.robot.progress(game.dt);
+    {
+        if (robot.state == RobotState::DYING) {
+            // No idea why -2
+            if (game.textures.robot.frame != game.textures.robot.frame_count - 2) {
+                game.textures.robot.progress(game.dt);
+            }
+        } else {
+            if (robot.movement != v2{0, 0}) {
+                game.textures.robot.progress(game.dt);
+            }
         }
 
         for (u8 bug_idx = 0; const auto& bug : bugs) {
-            if (bug.moving) {
+            if (bug.moving || (bug.death_display && game.textures.bug.frame[bug_idx] != game.textures.bug.frame_count - 2)) {
                 game.textures.bug.progress(bug_idx, game.dt);
             }
 

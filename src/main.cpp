@@ -17,7 +17,10 @@
 // - for
 //   - robot (smashing animation)
 //   - spawner (hole)
-//   - bugs (death animation, when entering/leaving the hole(?))
+//   - bugs (death animation)
+//     - remove flashing
+//     - pause the game during this animation
+//     - totally hide bugs when they return to the hole???
 //   - robot smashing bug for title screen
 //
 // TODO
