@@ -54,7 +54,7 @@ public:
 
 struct TexturesType {
 public:
-    TexturesType(std::string_view hammer_path, std::string_view pellet_path, std::string_view spawner_path, std::string_view wall_path, std::string_view portal_path, std::string_view robot_path, std::string_view robot_hammer_path, std::string_view bug_path, std::string_view start_pos_path, std::string_view empty_path, std::string_view heart_path) : hammer{LoadTexture(hammer_path.data())}, pellet{LoadTexture(pellet_path.data())}, spawner{LoadTexture(spawner_path.data())}, wall{LoadTexture(wall_path.data())}, portal{portal_path, 4, 4}, robot{robot_path, 5, 4}, robot_hammer{robot_hammer_path, 5, 4}, bug{bug_path, 4, 4}, start_pos{LoadTexture(start_pos_path.data())}, empty{LoadTexture(empty_path.data())}, heart{LoadTexture(heart_path.data())} { }
+    TexturesType(std::string_view hammer_path, std::string_view pellet_path, std::string_view spawner_path, std::string_view wall_path, std::string_view portal_path, std::string_view robot_path, std::string_view robot_hammer_path, std::string_view bug_path, std::string_view start_pos_path, std::string_view empty_path, std::string_view heart_path, std::string_view title_path) : hammer{LoadTexture(hammer_path.data())}, pellet{LoadTexture(pellet_path.data())}, spawner{LoadTexture(spawner_path.data())}, wall{LoadTexture(wall_path.data())}, portal{portal_path, 4, 4}, robot{robot_path, 5, 4}, robot_hammer{robot_hammer_path, 5, 4}, bug{bug_path, 4, 4}, start_pos{LoadTexture(start_pos_path.data())}, empty{LoadTexture(empty_path.data())}, heart{LoadTexture(heart_path.data())}, title{LoadTexture(title_path.data())} { }
 
     ~TexturesType();
 
@@ -81,6 +81,8 @@ public:
     Texture2D empty;
 
     Texture2D heart;
+
+    Texture2D title;
 
     const Texture2D& get_texture_from_tile(Tile tile) const;
 };

@@ -46,14 +46,8 @@ void BugData::render(const MapData& map_data, const TexturesType& textures, u8 i
 }
 
 void BugData::move(float dt, const RobotData& robot_data, const MapData& map_data) {
-    if (state == BugState::DEAD && GetTime() - dead_time < 1) {
-        death_display = true;
-        moving = false;
-        return;
-    }
-
     if (state == BugState::DEAD) {
-        tint.a = 0;
+        tint.a = 50;
         death_display = false;
         moving = false;
     }

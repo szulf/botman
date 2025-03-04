@@ -7,22 +7,9 @@
 #include <ctime>
 
 // TODO
-// better win and lost screens
-//
-// TODO
-// art
-// - for
-//   - spawner (hole)
-//   - robot smashing bug for title screen
-//   - sad robot for the lost screen
-//   - happy robot for the won screen
-//
-// TODO
-// make bugs maybe a little visible when they return to the hole
-//
-// TODO
 // turns out the ROOT_PATH macro is a pretty bad idea(when you try to send a already compiled version of the game to someone it will not work)
 // gotta figure out something else
+// or maybe gon figure something on the next project lol
 int main() {
     srand(time(0));
 

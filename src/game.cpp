@@ -44,7 +44,7 @@ static std::string get_map_path_from_map_name(const std::string& map_name, i32 m
     return ROOT_PATH "/maps/" + map_name + ".txt";
 }
 
-GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/assets/gold_coin.png", ROOT_PATH "/assets/spawner.png", ROOT_PATH "/assets/wall.png", ROOT_PATH "/assets/portal.png", ROOT_PATH "/assets/robot.png", ROOT_PATH "/assets/robot_hammer.png", ROOT_PATH "/assets/bug.png", ROOT_PATH "/assets/start.png", ROOT_PATH "/assets/empty.png", ROOT_PATH "/assets/heart.png"} {
+GameData::GameData() : textures{ROOT_PATH "/assets/hammer.png", ROOT_PATH "/assets/gold_coin.png", ROOT_PATH "/assets/spawner.png", ROOT_PATH "/assets/wall.png", ROOT_PATH "/assets/portal.png", ROOT_PATH "/assets/robot.png", ROOT_PATH "/assets/robot_hammer.png", ROOT_PATH "/assets/bug.png", ROOT_PATH "/assets/start.png", ROOT_PATH "/assets/empty.png", ROOT_PATH "/assets/heart.png", ROOT_PATH "/assets/title.png"} {
     change_state(GameState::START_SCREEN);
 
     GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
@@ -157,6 +157,8 @@ void GameData::StartScreenType::run(GameData& game) {
                     0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "quit");
+
+        DrawTexturePro(game.textures.title, {0, 0, static_cast<float>(game.textures.title.width), 16}, {WINDOW_WIDTH * 0.3f, WINDOW_HEIGHT * 0.25f, (game.textures.title.width / static_cast<float>(MapData::GRID_WIDTH)) * MapData::GRID_WIDTH * 24, (16 / static_cast<float>(MapData::GRID_HEIGHT)) * MapData::GRID_HEIGHT * 24}, {0, 0}, 0.0f, WHITE);
 
         if (game.show_fps) {
             DrawFPS(10, 10);
@@ -788,6 +790,8 @@ void GameData::WonType::run(GameData& game) {
                     50
                 }, "go to menu");
 
+        DrawTexturePro(game.textures.title, {0, 0, static_cast<float>(game.textures.title.width), 16}, {WINDOW_WIDTH * 0.3f, WINDOW_HEIGHT * 0.25f, (game.textures.title.width / static_cast<float>(MapData::GRID_WIDTH)) * MapData::GRID_WIDTH * 24, (16 / static_cast<float>(MapData::GRID_HEIGHT)) * MapData::GRID_HEIGHT * 24}, {0, 0}, 0.0f, WHITE);
+
         if (game.show_fps) {
             DrawFPS(10, 10);
         }
@@ -827,6 +831,8 @@ void GameData::LostType::run(GameData& game) {
                     0.4f * WINDOW_WIDTH - 0.5f * (MapData::WIDTH * MapData::GRID_WIDTH),
                     50
                 }, "go to menu");
+
+        DrawTexturePro(game.textures.title, {0, 16, static_cast<float>(game.textures.title.width), 16}, {WINDOW_WIDTH * 0.3f, WINDOW_HEIGHT * 0.25f, (game.textures.title.width / static_cast<float>(MapData::GRID_WIDTH)) * MapData::GRID_WIDTH * 24, (16 / static_cast<float>(MapData::GRID_HEIGHT)) * MapData::GRID_HEIGHT * 24}, {0, 0}, 0.0f, WHITE);
 
         if (game.show_fps) {
             DrawFPS(10, 10);
