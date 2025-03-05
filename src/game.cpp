@@ -241,7 +241,7 @@ void GameData::EditModeType::run(GameData& game) {
             if (std::string_view{""} == map_name) {
                 err_msg = ErrMsgType::MAP_NAME;
             } else {
-                std::filesystem::create_directory("maps");
+                std::filesystem::create_directory(ROOT_PATH "/maps");
                 save_to_file(map_name, map, robot_lifes, bugs_count);
                 std::memset(map_name, 0, 128);
             }
@@ -552,7 +552,7 @@ void GameData::MapSelectorType::run(GameData& game) {
 
             maps.emplace_back("DEFAULT");
 
-            std::filesystem::create_directory("maps");
+            std::filesystem::create_directory(ROOT_PATH "/maps");
 
             for (const auto& dir_entry : std::filesystem::directory_iterator{ROOT_PATH "/maps"}) {
                 std::string map_name{dir_entry.path().filename().string()};
