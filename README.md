@@ -38,3 +38,11 @@ build/botman
 ```
 
 Or you can just use the import feature in VS.
+
+## Known bugs
+- not winning after collecting all pellets
+- bugs get stuck in a corner of the map
+- maps directory doesnt get created and game crashes
+- Bugs sometimes walk through walls
+- score doesnt reset after losing the game
+
