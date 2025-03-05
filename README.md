@@ -12,7 +12,7 @@ Pacman like game, written in c++ with raylib.
 ## Gameplay
 Use arrow keys to move the robot. \
 Collect hammers to smash bugs. \
-Collect all coins to win. \
+Collect all coins to win.
 
 ## Compilation
 
@@ -22,7 +22,6 @@ git clone https://github.com/szulf/botman && cd botman
 ```
 
 Build the cmake cache file
-Build with cmake
 ```bash
 mkdir build
 cmake -B build -S .
